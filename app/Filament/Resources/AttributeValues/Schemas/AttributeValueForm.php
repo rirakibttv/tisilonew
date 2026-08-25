@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AttributeValues\Schemas;
 
 use App\Models\Attribute;
+use App\Models\AttributeValue;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -11,6 +12,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Unique;
 
 class AttributeValueForm
 {
@@ -41,6 +43,16 @@ class AttributeValueForm
                             ->placeholder('Example: Red, XL, Cotton')
                             ->required()
                             ->maxLength(255)
+                            ->unique(
+                                table: AttributeValue::class,
+                                column: 'value',
+                                ignoreRecord: true,
+                                modifyRuleUsing: fn (Unique $rule, Get $get): Unique => $rule
+                                    ->where('attribute_id', $get('attribute_id')),
+                            )
+                            ->validationMessages([
+                                'unique' => 'এই Attribute-এর জন্য এই Value ইতোমধ্যে যোগ করা আছে। অন্য Value দিন।',
+                            ])
                             ->live(onBlur: true)
                             ->afterStateUpdated(
                                 fn ($state, callable $set) => $set('slug', Str::slug($state))
@@ -49,7 +61,17 @@ class AttributeValueForm
                         TextInput::make('slug')
                             ->label('Slug')
                             ->required()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->unique(
+                                table: AttributeValue::class,
+                                column: 'slug',
+                                ignoreRecord: true,
+                                modifyRuleUsing: fn (Unique $rule, Get $get): Unique => $rule
+                                    ->where('attribute_id', $get('attribute_id')),
+                            )
+                            ->validationMessages([
+                                'unique' => 'এই Attribute-এর জন্য এই Slug ইতোমধ্যে ব্যবহার হয়েছে। অন্য Value বা Slug দিন।',
+                            ]),
 
                         ColorPicker::make('color_code')
                             ->label('Color Code')
