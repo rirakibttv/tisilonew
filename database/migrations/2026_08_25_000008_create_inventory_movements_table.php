@@ -19,7 +19,11 @@ return new class extends Migration
             $table->unsignedInteger('quantity_after');
             $table->unsignedInteger('reserved_before');
             $table->unsignedInteger('reserved_after');
-            $table->nullableMorphs('reference');
+            // Keep the polymorphic index below the 1000-byte key limit used by
+            // older MySQL/MariaDB installations on shared hosting.
+            $table->string('reference_type', 191)->nullable();
+            $table->unsignedBigInteger('reference_id')->nullable();
+            $table->index(['reference_type', 'reference_id'], 'inventory_movements_reference_index');
             $table->string('idempotency_key')->nullable()->unique();
             $table->text('reason')->nullable();
             $table->json('metadata')->nullable();
