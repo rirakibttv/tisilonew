@@ -23,6 +23,8 @@ sync_public_files() {
         "${REPOSITORY}/public/" "${PUBLIC_ROOT}/"
 
     chmod 755 "${PUBLIC_ROOT}"
+    find "${PUBLIC_ROOT}" -type d -exec chmod 755 {} +
+    find "${PUBLIC_ROOT}" -type f -exec chmod 644 {} +
 }
 
 install_dependencies() {
