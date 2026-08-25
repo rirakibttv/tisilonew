@@ -10,6 +10,11 @@ const contentRoots = [
     path.resolve('vendor/laravel/framework/src/Illuminate/Pagination/resources/views'),
 ];
 
+const cssEntries = [
+    path.resolve('resources/css/app.css'),
+    path.resolve('resources/css/filament/admin/theme.css'),
+];
+
 function contentFiles(directory) {
     if (! fs.existsSync(directory)) {
         return [];
@@ -27,7 +32,7 @@ function tisiloTailwind() {
         name: 'tisilo-tailwind',
         enforce: 'pre',
         async transform(source, id) {
-            if (path.normalize(id) !== path.resolve('resources/css/app.css')) {
+            if (! cssEntries.includes(path.normalize(id))) {
                 return null;
             }
 
@@ -60,7 +65,11 @@ function tisiloTailwind() {
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            input: [
+                'resources/css/app.css',
+                'resources/css/filament/admin/theme.css',
+                'resources/js/app.js',
+            ],
             refresh: true,
         }),
         tisiloTailwind(),

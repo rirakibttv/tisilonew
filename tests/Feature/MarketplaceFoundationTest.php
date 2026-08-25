@@ -122,6 +122,10 @@ class MarketplaceFoundationTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin')
             ->assertOk()
+            ->assertSee('Congratulations')
+            ->assertSee('Marketplace Activity')
+            ->assertSee('Recent Products')
+            ->assertSee('Recent Customers')
             ->assertSeeInOrder(array_map(
                 fn (AdminNavigationGroup $group): string => $group->getLabel(),
                 AdminNavigationGroup::cases(),

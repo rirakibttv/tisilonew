@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Enums\AdminNavigationGroup;
+use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\ModuleOverview;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
@@ -12,11 +13,11 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationItem;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Icons\Heroicon;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -36,8 +37,15 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->brandName('Tisilo')
             ->sidebarCollapsibleOnDesktop()
+            ->sidebarWidth('15.5rem')
+            ->darkMode(false)
+            ->viteTheme('resources/css/filament/admin/theme.css')
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_START,
+                fn () => view('filament.partials.visit-site'),
+            )
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Indigo,
             ])
 
             ->navigationGroups(AdminNavigationGroup::class)

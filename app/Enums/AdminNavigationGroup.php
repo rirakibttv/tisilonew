@@ -2,11 +2,12 @@
 
 namespace App\Enums;
 
+use Filament\Support\Contracts\Collapsible;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 use Filament\Support\Icons\Heroicon;
 
-enum AdminNavigationGroup implements HasIcon, HasLabel
+enum AdminNavigationGroup implements Collapsible, HasIcon, HasLabel
 {
     case PosSystem;
     case FraudCheckerApi;
@@ -101,5 +102,15 @@ enum AdminNavigationGroup implements HasIcon, HasLabel
         }
 
         return null;
+    }
+
+    public function isCollapsed(): bool
+    {
+        return true;
+    }
+
+    public function isCollapsible(): bool
+    {
+        return true;
     }
 }
