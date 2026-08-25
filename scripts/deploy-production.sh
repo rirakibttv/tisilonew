@@ -26,11 +26,24 @@ sync_public_files() {
 }
 
 install_dependencies() {
-    local composer_bin
+    local composer_bin candidate
     composer_bin="$(command -v composer || true)"
 
     if [[ -z "${composer_bin}" ]]; then
-        composer_bin="/opt/cpanel/composer/bin/composer"
+        for candidate in \
+            /home/rirakib/bin/composer \
+            /opt/cpanel/composer/bin/composer \
+            /usr/local/bin/composer; do
+            if [[ -f "${candidate}" ]]; then
+                composer_bin="${candidate}"
+                break
+            fi
+        done
+    fi
+
+    if [[ -z "${composer_bin}" ]]; then
+        log "Composer executable was not found."
+        return 1
     fi
 
     "${PHP_BIN}" "${composer_bin}" install \
