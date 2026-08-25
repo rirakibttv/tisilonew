@@ -175,6 +175,7 @@ main() {
     git merge --ff-only "${target_commit}"
     install_dependencies
     "${PHP_BIN}" artisan migrate --force
+    "${PHP_BIN}" artisan db:seed --class='Database\Seeders\ProductionRequiredDataSeeder' --force
     sync_public_files
     "${PHP_BIN}" artisan optimize
     "${PHP_BIN}" artisan up
