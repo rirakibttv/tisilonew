@@ -15,3 +15,5 @@ When it finds a new commit, it runs `scripts/deploy-production.sh`, which:
 Deployment output is recorded in `storage/logs/deploy.log` on the server.
 
 Automatic deployment verification marker: `production-v1`.
+
+Public asset permission repair marker: `production-v2`.
