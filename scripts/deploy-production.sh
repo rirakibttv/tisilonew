@@ -25,6 +25,14 @@ sync_public_files() {
     chmod 755 "${PUBLIC_ROOT}"
     find "${PUBLIC_ROOT}" -type d -exec chmod 755 {} +
     find "${PUBLIC_ROOT}" -type f -exec chmod 644 {} +
+
+    local media_directory
+    for media_directory in brands categories products; do
+        if [[ -d "${REPOSITORY}/storage/app/public/${media_directory}" ]]; then
+            find "${REPOSITORY}/storage/app/public/${media_directory}" -type d -exec chmod 755 {} +
+            find "${REPOSITORY}/storage/app/public/${media_directory}" -type f -exec chmod 644 {} +
+        fi
+    done
 }
 
 install_dependencies() {
