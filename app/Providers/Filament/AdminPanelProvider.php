@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Enums\AdminNavigationGroup;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\ModuleOverview;
+use App\Filament\Pages\SeoOverview;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\Pages\PendingProducts;
@@ -74,8 +75,38 @@ class AdminPanelProvider extends PanelProvider
                         ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.module-overview')
                             && request()->string('module')->toString() === $group->slug())
                         ->url(fn (): string => ModuleOverview::getUrl(['module' => $group->slug()])),
-                    AdminNavigationGroup::cases(),
+                    array_values(array_filter(
+                        AdminNavigationGroup::cases(),
+                        fn (AdminNavigationGroup $group): bool => $group !== AdminNavigationGroup::SeoOverview,
+                    )),
                 ),
+
+                NavigationItem::make('Visitor Analytics')
+                    ->key('seo-overview-master')
+                    ->group(AdminNavigationGroup::SeoOverview)
+                    ->icon(Heroicon::OutlinedChartBarSquare)
+                    ->sort(-100)
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.seo-overview')
+                        && request()->string('platform', 'all')->toString() === 'all')
+                    ->url(fn (): string => SeoOverview::getUrl(['platform' => 'all'])),
+
+                NavigationItem::make('Facebook Overview')
+                    ->key('seo-overview-facebook')
+                    ->group(AdminNavigationGroup::SeoOverview)
+                    ->icon(Heroicon::OutlinedShare)
+                    ->sort(-99)
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.seo-overview')
+                        && request()->string('platform')->toString() === 'facebook')
+                    ->url(fn (): string => SeoOverview::getUrl(['platform' => 'facebook'])),
+
+                NavigationItem::make('Google Overview')
+                    ->key('seo-overview-google')
+                    ->group(AdminNavigationGroup::SeoOverview)
+                    ->icon(Heroicon::OutlinedMagnifyingGlass)
+                    ->sort(-98)
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.seo-overview')
+                        && request()->string('platform')->toString() === 'google')
+                    ->url(fn (): string => SeoOverview::getUrl(['platform' => 'google'])),
 
                 NavigationItem::make('Add New Product')
                     ->group(AdminNavigationGroup::ProductsInfo)

@@ -8,10 +8,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\VendorListingItem;
+use App\Services\VisitorAnalyticsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class CartController extends Controller
 {
@@ -25,7 +27,7 @@ class CartController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, VisitorAnalyticsService $analytics): RedirectResponse
     {
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
@@ -49,6 +51,21 @@ class CartController extends Controller
         $line['quantity'] = $newQuantity;
         $cart[$line['key']] = $line;
         $request->session()->put('store_cart', $cart);
+
+        try {
+            $analytics->record($request, [
+                'event_type' => 'add_to_cart',
+                'product_id' => $product->getKey(),
+                'value' => $line['price'] * (int) $validated['quantity'],
+                'metadata' => [
+                    'product_name' => $product->name,
+                    'quantity' => (int) $validated['quantity'],
+                    'currency' => 'BDT',
+                ],
+            ]);
+        } catch (Throwable) {
+            // Analytics must never block the cart workflow.
+        }
 
         return to_route('store.cart.index')->with('success', 'পণ্যটি কার্টে যোগ হয়েছে।');
     }

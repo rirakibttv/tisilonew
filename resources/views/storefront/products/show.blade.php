@@ -2,6 +2,18 @@
 
 @section('title', ($product->seo_title ?: $product->name).' — Tisilo')
 
+@push('scripts')
+    <script>
+        if (window.TisiloAnalytics) {
+            window.TisiloAnalytics.track('product_view', {
+                product_id: {{ $product->getKey() }},
+                value: {{ (float) $summary['price'] }},
+                metadata: { product_name: @json($product->name), currency: 'BDT' }
+            });
+        }
+    </script>
+@endpush
+
 @section('content')
     @php
         $offers = $product->vendorListings->flatMap(fn ($listing) => $listing->items->map(fn ($item) => ['listing' => $listing, 'item' => $item]))

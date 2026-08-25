@@ -16,5 +16,7 @@
     </main>
 
     @include('storefront.partials.footer')
+    @include('storefront.partials.visitor-analytics')
+    @stack('scripts')
 </body>
 </html>
