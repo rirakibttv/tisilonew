@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+set -eu
+
+php artisan deployment-data:export --quiet
+git add -- database/data/deployable-catalog.json

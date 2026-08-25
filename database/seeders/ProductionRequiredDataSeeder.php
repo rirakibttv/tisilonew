@@ -2,20 +2,18 @@
 
 namespace Database\Seeders;
 
+use App\Services\DeploymentDataSnapshot;
 use Illuminate\Database\Seeder;
 
 class ProductionRequiredDataSeeder extends Seeder
 {
     /**
-     * Seed only application-owned reference data required in every environment.
-     *
-     * Every write added here must be idempotent (for example, updateOrInsert or
-     * updateOrCreate). Customer accounts, administrators, products, inventory,
-     * orders, and other production-owned records must never be seeded here.
+     * Merge the Git-versioned, non-sensitive catalog snapshot after migrations.
+     * Users, credentials, orders, sessions, purchase prices and live inventory
+     * are deliberately excluded from the snapshot.
      */
     public function run(): void
     {
-        // No shared reference records are required yet. The deployment pipeline
-        // executes this seeder after every successful database migration.
+        app(DeploymentDataSnapshot::class)->import();
     }
 }

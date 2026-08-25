@@ -1,0 +1,401 @@
+{
+    "version": 1,
+    "brands": [
+        {
+            "name": "Home Tex",
+            "slug": "home-tex",
+            "logo": null,
+            "description": "<p></p>",
+            "website": null,
+            "status": true,
+            "sort_order": 0,
+            "seo_title": null,
+            "meta_description": null
+        },
+        {
+            "name": "Samsung",
+            "slug": "samsung",
+            "logo": null,
+            "description": "<p></p>",
+            "website": null,
+            "status": true,
+            "sort_order": 1,
+            "seo_title": null,
+            "meta_description": null
+        }
+    ],
+    "categories": [
+        {
+            "name": "Automotive & Motorbike",
+            "slug": "automotive-motorbike",
+            "image": null,
+            "description": "<p></p>",
+            "status": true,
+            "sort_order": 9,
+            "seo_title": null,
+            "meta_description": null,
+            "parent_slug": null
+        },
+        {
+            "name": "Babys & Toys",
+            "slug": "babys-toys",
+            "image": null,
+            "description": "<p></p>",
+            "status": true,
+            "sort_order": 10,
+            "seo_title": null,
+            "meta_description": null,
+            "parent_slug": null
+        },
+        {
+            "name": "Beauty & Cosmetic",
+            "slug": "beauty-cosmetic",
+            "image": null,
+            "description": "<p></p>",
+            "status": true,
+            "sort_order": 6,
+            "seo_title": null,
+            "meta_description": null,
+            "parent_slug": null
+        },
+        {
+            "name": "Books & Stationery",
+            "slug": "books-stationery",
+            "image": null,
+            "description": "<p></p>",
+            "status": true,
+            "sort_order": 12,
+            "seo_title": null,
+            "meta_description": null,
+            "parent_slug": null
+        },
+        {
+            "name": "Computer & Laptop",
+            "slug": "computer-laptop",
+            "image": null,
+            "description": "<p></p>",
+            "status": true,
+            "sort_order": 4,
+            "seo_title": null,
+            "meta_description": null,
+            "parent_slug": null
+        },
+        {
+            "name": "Electronics & Electrical",
+            "slug": "electronics-electrical",
+            "image": null,
+            "description": "<p></p>",
+            "status": true,
+            "sort_order": 3,
+            "seo_title": null,
+            "meta_description": null,
+            "parent_slug": null
+        },
+        {
+            "name": "Groceries & Pets",
+            "slug": "groceries-pets",
+            "image": null,
+            "description": "<p></p>",
+            "status": true,
+            "sort_order": 11,
+            "seo_title": null,
+            "meta_description": null,
+            "parent_slug": null
+        },
+        {
+            "name": "Home & Kitchen",
+            "slug": "home-kitchen",
+            "image": null,
+            "description": "<p></p>",
+            "status": true,
+            "sort_order": 7,
+            "seo_title": null,
+            "meta_description": null,
+            "parent_slug": null
+        },
+        {
+            "name": "Men's Fashion",
+            "slug": "mens-fashion",
+            "image": null,
+            "description": "<p></p>",
+            "status": true,
+            "sort_order": 1,
+            "seo_title": null,
+            "meta_description": null,
+            "parent_slug": null
+        },
+        {
+            "name": "Mobile & Accessories",
+            "slug": "mobile-accessories",
+            "image": null,
+            "description": "<p></p>",
+            "status": true,
+            "sort_order": 5,
+            "seo_title": null,
+            "meta_description": null,
+            "parent_slug": null
+        },
+        {
+            "name": "Sports",
+            "slug": "sports",
+            "image": null,
+            "description": "<p></p>",
+            "status": true,
+            "sort_order": 8,
+            "seo_title": null,
+            "meta_description": null,
+            "parent_slug": null
+        },
+        {
+            "name": "T- Shirt",
+            "slug": "t-shirt",
+            "image": null,
+            "description": "<p></p>",
+            "status": true,
+            "sort_order": 0,
+            "seo_title": null,
+            "meta_description": null,
+            "parent_slug": "mens-fashion"
+        },
+        {
+            "name": "Women's Fashion",
+            "slug": "womens-fashion",
+            "image": null,
+            "description": "<p></p>",
+            "status": true,
+            "sort_order": 2,
+            "seo_title": null,
+            "meta_description": null,
+            "parent_slug": null
+        }
+    ],
+    "attributes": [
+        {
+            "name": "Color",
+            "slug": "color",
+            "type": "color",
+            "sort_order": 1,
+            "status": true,
+            "values": [
+                {
+                    "value": "Blue",
+                    "slug": "blue",
+                    "color_code": null,
+                    "sort_order": 2,
+                    "status": true
+                },
+                {
+                    "value": "Red",
+                    "slug": "red",
+                    "color_code": "#FF0000",
+                    "sort_order": 1,
+                    "status": true
+                }
+            ]
+        },
+        {
+            "name": "কোল বালিশের কাভার",
+            "slug": "kol-baliser-kavar",
+            "type": "text",
+            "sort_order": 3,
+            "status": true,
+            "values": [
+                {
+                    "value": "কোল বালিশের কাভার ছাড়া",
+                    "slug": "kol-baliser-kavar-chara",
+                    "color_code": null,
+                    "sort_order": 1,
+                    "status": true
+                },
+                {
+                    "value": "কোল বালিশের কাভার সহ",
+                    "slug": "kol-baliser-kavar-sh",
+                    "color_code": null,
+                    "sort_order": 2,
+                    "status": true
+                }
+            ]
+        },
+        {
+            "name": "SiZE",
+            "slug": "size",
+            "type": "text",
+            "sort_order": 0,
+            "status": true,
+            "values": [
+                {
+                    "value": "XXL",
+                    "slug": "xxl",
+                    "color_code": null,
+                    "sort_order": 0,
+                    "status": true
+                }
+            ]
+        }
+    ],
+    "product_tags": [
+        {
+            "name": "Best Seller",
+            "slug": "best-seller",
+            "description": "<p></p>",
+            "sort_order": 1,
+            "status": true,
+            "seo_title": null,
+            "meta_description": null
+        },
+        {
+            "name": "Electronics",
+            "slug": "electronics",
+            "description": "<p></p>",
+            "sort_order": 1,
+            "status": true,
+            "seo_title": null,
+            "meta_description": null
+        }
+    ],
+    "products": [
+        {
+            "name": "Premium Quality Panel Cotton Bed Sheets",
+            "slug": "premium-quality-panel-cotton-bed-sheets",
+            "product_type": "variable",
+            "sku": null,
+            "barcode": null,
+            "regular_price": "0.00",
+            "sale_price": null,
+            "short_description": "ফেব্রিক্স: ১০০% কটন ।\n১০০% কালার গ্যারান্টি।\nবেডশীট সাইজ: ( ৭.৫ ফিট × ৮ ফিট )\nবালিশের কভার: ( ২০ ইঞ্চি × ২৮ ইঞ্চি )",
+            "description": "<p><strong>King Size Panel Cotton Bed Sheet</strong></p><p>ফেব্রিক্স: ১০০% কটন ।</p><p>১০০% কালার গ্যারান্টি।</p><p>বেডশীট সাইজ: ( ৭.৫ ফিট × ৮ ফিট )</p><p>বালিশের কভার: ( ২০ ইঞ্চি × ২৮ ইঞ্চি )</p><p>কোলবালিশের কভার: সেলাই থেকে সেলাই ( ৪০ ইঞ্চি )</p><p>এই বেডশীট গুলো ডাবল বেডের জন্য ।</p><p><strong>৩ পিসের সেট এ যা পাচ্ছেনঃ</strong></p><p>১টি কিং সাইজ বিছানার চাঁদর (৭.৫ ফিট × ৮ ফিট )</p><p>২টি বালিশ কভার ( ২০ ইঞ্চি × ২৮ ইঞ্চি )</p><p>মূল্য: <strong>১০৫০</strong> টাকা</p><p><strong>৪ পিসের সেট এ যা পাচ্ছেনঃ</strong></p><p>১টি কিং সাইজ বিছানার চাঁদর (৭.৫ ফিট × ৮ ফিট )</p><p>২টি বালিশ কভার ( ২০ ইঞ্চি × ২৮ ইঞ্চি )</p><p>১টি কোলবালিশের কভার ( ৪০ ইঞ্চি )</p><p>মূল্য: <strong>১২০০</strong> টাকা</p>",
+            "featured_image": "products/featured/01M0WV6KR81PZN9GTJ8RRR6BZK.jpg",
+            "gallery_images": [],
+            "weight": null,
+            "length": null,
+            "width": null,
+            "height": null,
+            "status": "published",
+            "featured": true,
+            "sort_order": 0,
+            "seo_title": null,
+            "meta_description": null,
+            "meta_keywords": null,
+            "brand_slug": "home-tex",
+            "category_slug": "home-kitchen",
+            "tag_slugs": [],
+            "attribute_slugs": [
+                "kol-baliser-kavar"
+            ],
+            "variations": []
+        },
+        {
+            "name": "Test Product",
+            "slug": "test-product",
+            "product_type": "variable",
+            "sku": "Test-oo1",
+            "barcode": null,
+            "regular_price": "1000.00",
+            "sale_price": "900.00",
+            "short_description": null,
+            "description": "<p></p>",
+            "featured_image": null,
+            "gallery_images": [],
+            "weight": null,
+            "length": null,
+            "width": null,
+            "height": null,
+            "status": "published",
+            "featured": false,
+            "sort_order": 0,
+            "seo_title": null,
+            "meta_description": null,
+            "meta_keywords": null,
+            "brand_slug": "samsung",
+            "category_slug": "mens-fashion",
+            "tag_slugs": [
+                "best-seller"
+            ],
+            "attribute_slugs": [
+                "color",
+                "size"
+            ],
+            "variations": [
+                {
+                    "sku": "TEST-BLUE-XXL",
+                    "barcode": null,
+                    "regular_price": "1000.00",
+                    "sale_price": "900.00",
+                    "low_stock_threshold": 5,
+                    "image": null,
+                    "weight": null,
+                    "status": true,
+                    "is_default": true,
+                    "sort_order": 0,
+                    "attribute_values": [
+                        "color:blue",
+                        "size:xxl"
+                    ]
+                },
+                {
+                    "sku": "TEST-RED-XXL",
+                    "barcode": null,
+                    "regular_price": "1000.00",
+                    "sale_price": "900.00",
+                    "low_stock_threshold": 5,
+                    "image": null,
+                    "weight": null,
+                    "status": true,
+                    "is_default": false,
+                    "sort_order": 0,
+                    "attribute_values": [
+                        "color:red",
+                        "size:xxl"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Test Variable Product",
+            "slug": "test-variable-product",
+            "product_type": "variable",
+            "sku": null,
+            "barcode": null,
+            "regular_price": "0.00",
+            "sale_price": null,
+            "short_description": null,
+            "description": "<p></p>",
+            "featured_image": null,
+            "gallery_images": [],
+            "weight": null,
+            "length": null,
+            "width": null,
+            "height": null,
+            "status": "published",
+            "featured": false,
+            "sort_order": 0,
+            "seo_title": null,
+            "meta_description": null,
+            "meta_keywords": null,
+            "brand_slug": null,
+            "category_slug": null,
+            "tag_slugs": [],
+            "attribute_slugs": [
+                "color"
+            ],
+            "variations": [
+                {
+                    "sku": "TEST-XXL-RED",
+                    "barcode": null,
+                    "regular_price": "1000.00",
+                    "sale_price": null,
+                    "low_stock_threshold": 5,
+                    "image": null,
+                    "weight": null,
+                    "status": true,
+                    "is_default": true,
+                    "sort_order": 0,
+                    "attribute_values": [
+                        "color:red",
+                        "size:xxl"
+                    ]
+                }
+            ]
+        }
+    ]
+}

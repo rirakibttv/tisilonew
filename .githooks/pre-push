@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+set -eu
+
+php artisan deployment-data:export --quiet
+
+if ! git diff --quiet -- database/data/deployable-catalog.json; then
+    echo "Deployable database data changed after the last commit."
+    echo "Commit database/data/deployable-catalog.json, then push again."
+    exit 1
+fi
