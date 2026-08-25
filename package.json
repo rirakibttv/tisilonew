@@ -1,0 +1,18 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "node scripts/build.mjs",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@tailwindcss/node": "^4.3.3",
+        "axios": "^1.7.4",
+        "concurrently": "^9.0.1",
+        "esbuild": "npm:esbuild-wasm@^0.25.12",
+        "laravel-vite-plugin": "^1.2.0",
+        "rollup": "npm:@rollup/wasm-node@^4.62.5",
+        "tailwindcss": "^4.0.0",
+        "vite": "^6.0.11"
+    }
+}
