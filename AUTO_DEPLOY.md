@@ -13,3 +13,5 @@ When it finds a new commit, it runs `scripts/deploy-production.sh`, which:
 8. rolls the code back to the previous commit if deployment fails.
 
 Deployment output is recorded in `storage/logs/deploy.log` on the server.
+
+Automatic deployment verification marker: `production-v1`.
