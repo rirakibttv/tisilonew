@@ -60,6 +60,7 @@ class DeploymentDataSnapshot
                 ->map(fn (Product $product): array => [
                     ...Arr::only($product->toArray(), [
                         'name', 'slug', 'product_type', 'sku', 'barcode', 'regular_price', 'sale_price',
+                        'purchase_price', 'manage_stock', 'stock_quantity', 'low_stock_threshold', 'stock_status',
                         'short_description', 'description', 'featured_image', 'gallery_images', 'weight',
                         'length', 'width', 'height', 'status', 'featured', 'sort_order', 'seo_title',
                         'meta_description', 'meta_keywords',
@@ -70,8 +71,9 @@ class DeploymentDataSnapshot
                     'attribute_slugs' => $product->attributes->pluck('slug')->sort()->values()->all(),
                     'variations' => $product->variations->map(fn (ProductVariation $variation): array => [
                         ...Arr::only($variation->toArray(), [
-                            'sku', 'barcode', 'regular_price', 'sale_price', 'low_stock_threshold',
-                            'image', 'weight', 'status', 'is_default', 'sort_order',
+                            'sku', 'barcode', 'purchase_price', 'regular_price', 'sale_price',
+                            'stock_quantity', 'low_stock_threshold', 'stock_status', 'image', 'weight',
+                            'status', 'is_default', 'sort_order',
                         ]),
                         'attribute_values' => $variation->attributeValues
                             ->map(fn (AttributeValue $value): string => $value->attribute->slug.':'.$value->slug)
