@@ -1,3 +1,7 @@
+# LiteSpeed/Apache front-controller fallback for hosts where mod_rewrite
+# rules inside an IfModule block are not evaluated.
+FallbackResource /index.php
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
