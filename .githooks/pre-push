@@ -8,3 +8,9 @@ if ! git diff --quiet -- database/data/deployable-catalog.json; then
     echo "Commit database/data/deployable-catalog.json, then push again."
     exit 1
 fi
+
+if [ -n "$(git status --porcelain --untracked-files=normal -- storage/app/public)" ]; then
+    echo "Deployable catalog images changed after the last commit."
+    echo "Commit storage/app/public catalog media, then push again."
+    exit 1
+fi
