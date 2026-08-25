@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductTag;
 use App\Models\ProductVariation;
+use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -46,6 +47,15 @@ class DeploymentDataSnapshot
                 $tag->toArray(),
                 ['name', 'slug', 'description', 'sort_order', 'status', 'seo_title', 'meta_description'],
             ))->all(),
+            'users' => User::query()->orderBy('email')->get()->map(fn (User $user): array => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'password_hash' => $user->getRawOriginal('password'),
+                'role' => $user->role->value,
+                'status' => $user->status->value,
+                'email_verified_at' => $user->email_verified_at?->toISOString(),
+            ])->all(),
             'products' => Product::query()
                 ->with([
                     'brand:id,slug',
@@ -114,7 +124,7 @@ class DeploymentDataSnapshot
         }
 
         return DB::transaction(function () use ($snapshot): array {
-            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'products' => 0, 'product_variations' => 0];
+            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'users' => 0, 'products' => 0, 'product_variations' => 0];
 
             foreach ($snapshot['brands'] ?? [] as $data) {
                 Brand::query()->updateOrCreate(['slug' => $data['slug']], $data);
@@ -148,6 +158,23 @@ class DeploymentDataSnapshot
             foreach ($snapshot['product_tags'] ?? [] as $data) {
                 ProductTag::query()->updateOrCreate(['slug' => $data['slug']], $data);
                 $counts['product_tags']++;
+            }
+
+            foreach ($snapshot['users'] ?? [] as $data) {
+                $passwordHash = Arr::pull($data, 'password_hash');
+                $user = User::query()->where('email', $data['email'])->first();
+
+                if (! $user && filled($data['phone'] ?? null)) {
+                    $user = User::query()->where('phone', $data['phone'])->first();
+                }
+
+                $user ??= new User;
+                $user->forceFill($data)->save();
+
+                if (filled($passwordHash)) {
+                    DB::table('users')->where('id', $user->id)->update(['password' => $passwordHash]);
+                }
+                $counts['users']++;
             }
 
             foreach ($snapshot['products'] ?? [] as $data) {

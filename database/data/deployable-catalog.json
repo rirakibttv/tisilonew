@@ -253,6 +253,17 @@
             "meta_description": null
         }
     ],
+    "users": [
+        {
+            "name": "Md Rakibul Islam",
+            "email": "tisiloint@gmail.com",
+            "phone": null,
+            "password_hash": "$2y$12$sa6U1WMXF7F9/JvTkujlQuPabkBQC5POVM2MKB8SsZXCrdW9DBWBq",
+            "role": "super_admin",
+            "status": "active",
+            "email_verified_at": null
+        }
+    ],
     "products": [
         {
             "name": "Premium Quality Panel Cotton Bed Sheets",

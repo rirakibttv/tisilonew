@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Product;
 use App\Models\ProductVariation;
+use App\Models\User;
 use App\Services\DeploymentDataSnapshot;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -14,7 +16,7 @@ class DeploymentDataSnapshotTest extends TestCase
 {
     use DatabaseTransactions;
 
-    public function test_snapshot_includes_complete_catalog_data_and_excludes_personal_data(): void
+    public function test_snapshot_includes_complete_catalog_and_user_data_without_session_secrets(): void
     {
         $token = Str::lower(Str::random(10));
         $product = Product::query()->create([
@@ -41,6 +43,14 @@ class DeploymentDataSnapshotTest extends TestCase
             'status' => true,
             'is_default' => true,
         ]);
+        $user = User::query()->create([
+            'name' => 'Deployment User '.$token,
+            'email' => 'deployment-'.$token.'@example.test',
+            'phone' => '01'.random_int(100000000, 999999999),
+            'password' => 'DeploymentPassword!123',
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
         $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tisilo-deployment-'.$token.'.json';
 
         try {
@@ -49,13 +59,19 @@ class DeploymentDataSnapshotTest extends TestCase
             $snapshot = json_decode(File::get($path), true, 512, JSON_THROW_ON_ERROR);
             $keys = $this->recursiveKeys($snapshot);
 
-            foreach (['password', 'email', 'phone', 'session_id'] as $forbidden) {
+            foreach (['password', 'remember_token', 'session_id', 'last_login_at'] as $forbidden) {
                 $this->assertNotContains($forbidden, $keys);
             }
 
             $this->assertContains('purchase_price', $keys);
             $this->assertContains('stock_quantity', $keys);
             $this->assertContains('stock_status', $keys);
+            $this->assertContains('password_hash', $keys);
+
+            $userData = collect($snapshot['users'])->firstWhere('email', $user->email);
+            $this->assertSame($user->phone, $userData['phone']);
+            $this->assertSame('admin', $userData['role']);
+            $this->assertTrue(Hash::check('DeploymentPassword!123', $userData['password_hash']));
 
             $product->update([
                 'regular_price' => 1000,
@@ -68,9 +84,16 @@ class DeploymentDataSnapshotTest extends TestCase
                 'stock_quantity' => 2,
                 'stock_status' => 'out_of_stock',
             ]);
+            $user->update([
+                'name' => 'Changed User',
+                'password' => 'ChangedPassword!123',
+                'role' => 'customer',
+                'status' => 'suspended',
+            ]);
             $service->import($path);
             $product->refresh();
             $variation->refresh();
+            $user->refresh();
 
             $this->assertSame('900.00', $product->regular_price);
             $this->assertSame('500.00', $product->purchase_price);
@@ -79,6 +102,10 @@ class DeploymentDataSnapshotTest extends TestCase
             $this->assertSame('950.00', $variation->regular_price);
             $this->assertSame(23, $variation->stock_quantity);
             $this->assertSame('in_stock', $variation->stock_status);
+            $this->assertSame('Deployment User '.$token, $user->name);
+            $this->assertSame('admin', $user->role->value);
+            $this->assertSame('active', $user->status->value);
+            $this->assertTrue(Hash::check('DeploymentPassword!123', $user->password));
         } finally {
             File::delete($path);
         }
