@@ -6,6 +6,7 @@ use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\View\View as IlluminateView;
 use Throwable;
 
 class AppServiceProvider extends ServiceProvider
@@ -28,19 +29,18 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
-            $general = SiteSetting::valuesFor('general');
-            $seo = SiteSetting::valuesFor('seo');
-            $contact = SiteSetting::valuesFor('contact');
-            $social = SiteSetting::valuesFor('social')['links'] ?? [];
-            $pages = collect(SiteSetting::valuesFor('pages')['pages'] ?? [])->where('status', true)->values()->all();
-
-            View::share([
-                'generalSettings' => $general,
-                'seoSettings' => $seo,
-                'contactSettings' => $contact,
-                'socialLinks' => $social,
-                'contentPages' => $pages,
-            ]);
+            View::composer('*', function (IlluminateView $view): void {
+                $view->with([
+                    'generalSettings' => SiteSetting::valuesFor('general'),
+                    'seoSettings' => SiteSetting::valuesFor('seo'),
+                    'contactSettings' => SiteSetting::valuesFor('contact'),
+                    'socialLinks' => SiteSetting::valuesFor('social')['links'] ?? [],
+                    'contentPages' => collect(SiteSetting::valuesFor('pages')['pages'] ?? [])
+                        ->where('status', true)
+                        ->values()
+                        ->all(),
+                ]);
+            });
 
             $mail = SiteSetting::valuesFor('email');
             $mailSecrets = SiteSetting::secretsFor('email');

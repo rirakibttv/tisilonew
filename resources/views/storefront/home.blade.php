@@ -1,6 +1,6 @@
 @extends('layouts.storefront')
 
-@section('title', 'Tisilo — আপনার বিশ্বস্ত অনলাইন মার্কেটপ্লেস')
+@section('title', $seoSettings['meta_title'] ?? 'Tisilo — আপনার বিশ্বস্ত অনলাইন মার্কেটপ্লেস')
 
 @section('content')
     <section class="overflow-hidden bg-slate-950">

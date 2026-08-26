@@ -61,4 +61,33 @@ class GeneralSettingsModuleTest extends TestCase
 
         $this->get('/page/draft-page')->assertNotFound();
     }
+
+    public function test_storefront_uses_saved_logo_favicon_and_head_settings(): void
+    {
+        SiteSetting::put('general', [
+            'site_name' => 'Tisilo Enterprise',
+            'top_headline' => 'Enterprise Marketplace Headline',
+            'primary_color' => '#123456',
+            'dark_logo' => 'settings/logos/store-logo.png',
+            'favicon' => 'settings/icons/store-favicon.png',
+            'og_banner' => 'settings/social/store-banner.png',
+        ]);
+        SiteSetting::put('seo', [
+            'meta_title' => 'Tisilo SEO Title',
+            'meta_description' => 'Tisilo SEO Description',
+            'meta_tags' => 'tisilo, marketplace',
+            'search_console_verification' => 'google-site-verification=verification-token',
+        ]);
+
+        $response = $this->get('/');
+
+        $response->assertOk()
+            ->assertSee('<title>Tisilo SEO Title</title>', false)
+            ->assertSee('content="Tisilo SEO Description"', false)
+            ->assertSee('content="verification-token"', false)
+            ->assertSee('Enterprise Marketplace Headline')
+            ->assertSee('storage/settings/logos/store-logo.png?v=', false)
+            ->assertSee('storage/settings/icons/store-favicon.png?v=', false)
+            ->assertSee('storage/settings/social/store-banner.png?v=', false);
+    }
 }

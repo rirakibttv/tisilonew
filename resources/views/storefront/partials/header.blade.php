@@ -13,7 +13,8 @@
     <div class="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <a href="{{ route('store.home') }}" class="shrink-0" aria-label="{{ $generalSettings['site_name'] ?? 'Tisilo' }} homepage">
             @if(filled($generalSettings['dark_logo'] ?? null))
-                <img src="{{ asset('storage/'.$generalSettings['dark_logo']) }}" alt="{{ $generalSettings['site_name'] ?? 'Tisilo' }}" class="h-10 w-auto">
+                @php($headerLogo = $generalSettings['dark_logo'])
+                <img src="{{ asset('storage/'.ltrim($headerLogo, '/')) }}?v={{ substr(sha1($headerLogo), 0, 12) }}" alt="{{ $generalSettings['site_name'] ?? 'Tisilo' }}" class="h-10 w-auto" width="180" height="40">
             @else
             <span class="text-2xl font-black tracking-tight text-orange-600 sm:text-3xl">{{ strtoupper($generalSettings['site_name'] ?? 'Tisilo') }}</span>
             <span class="block text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-500">Marketplace</span>
