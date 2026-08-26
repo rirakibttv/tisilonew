@@ -1,0 +1,7 @@
+{
+    "service": "tisilo-production-auto-deploy",
+    "branch": "main",
+    "check_frequency_minutes": 1,
+    "overlap_lock": "flock",
+    "marker": "production-v3"
+}
