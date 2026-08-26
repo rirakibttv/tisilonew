@@ -39,6 +39,14 @@ class OrdersTable
                     ->formatStateUsing(fn (PaymentStatus $state): string => $state->label())
                     ->color(fn (PaymentStatus $state): string => $state->color())
                     ->sortable(),
+                TextColumn::make('payment_method')
+                    ->label('Method')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'cod' => 'Cash on Delivery',
+                        default => ucfirst(str_replace('_', ' ', $state)),
+                    })
+                    ->toggleable(),
                 TextColumn::make('total_amount')
                     ->label('Total')
                     ->money(fn ($record): string => $record->currency ?: 'BDT')

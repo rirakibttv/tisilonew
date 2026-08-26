@@ -67,7 +67,7 @@
                         <div class="flex justify-between text-slate-500"><span>ডেলিভারি</span><span class="font-bold text-emerald-600">পরের ধাপে</span></div>
                     </div>
                     <div class="mt-5 flex justify-between border-t border-slate-200 pt-5 text-lg font-black"><span>মোট</span><span class="text-orange-600">৳{{ number_format($subtotal, 0) }}</span></div>
-                    <button type="button" class="mt-6 h-12 w-full rounded-xl bg-orange-500 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600">চেকআউট করুন</button>
+                    <a href="{{ route('store.checkout.index') }}" class="mt-6 grid h-12 w-full place-items-center rounded-xl bg-orange-500 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600">চেকআউট করুন</a>
                     <p class="mt-3 text-center text-xs text-slate-400">পরবর্তী ধাপে ডেলিভারি ও পেমেন্ট নির্বাচন করবেন।</p>
                     <a href="{{ route('store.products.index') }}" class="mt-5 block text-center text-sm font-bold text-orange-600">আরও শপিং করুন</a>
                 </aside>

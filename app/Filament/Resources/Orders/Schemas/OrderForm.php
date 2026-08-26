@@ -21,6 +21,10 @@ class OrderForm
                 TextInput::make('order_number')->label('Order Number')->disabled()->dehydrated(false),
                 Select::make('status')->options(OrderStatus::options())->required(),
                 Select::make('payment_status')->label('Payment Status')->options(PaymentStatus::options())->required(),
+                Select::make('payment_method')
+                    ->label('Payment Method')
+                    ->options(['cod' => 'Cash on Delivery'])
+                    ->required(),
                 TextInput::make('channel')->required()->maxLength(30),
                 TextInput::make('tracking_number')->label('Tracking Number')->maxLength(255),
                 DateTimePicker::make('placed_at')->label('Placed At'),
@@ -42,6 +46,7 @@ class OrderForm
                 TextInput::make('subtotal_amount')->numeric()->minValue(0)->required()->prefix('৳'),
                 TextInput::make('discount_amount')->numeric()->minValue(0)->required()->prefix('৳'),
                 TextInput::make('shipping_amount')->numeric()->minValue(0)->required()->prefix('৳'),
+                TextInput::make('shipping_zone')->label('Shipping Zone')->maxLength(255),
                 TextInput::make('tax_amount')->numeric()->minValue(0)->required()->prefix('৳'),
                 TextInput::make('total_amount')->numeric()->minValue(0)->required()->prefix('৳'),
                 TextInput::make('currency')->required()->maxLength(3),

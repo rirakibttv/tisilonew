@@ -110,12 +110,16 @@ class CartController extends Controller
         return [
             'key' => 'market-'.$item->getKey(),
             'product_id' => $product->getKey(),
+            'product_variation_id' => $item->product_variation_id,
+            'vendor_listing_item_id' => $item->getKey(),
+            'vendor_id' => $item->vendor_id,
             'name' => $product->name,
             'slug' => $product->slug,
             'option' => $item->productVariation
                 ? $item->productVariation->attributeValues->map(fn ($value) => $value->attribute->name.': '.$value->value)->join(', ')
                 : null,
             'vendor' => $item->listing->vendor->name,
+            'sku' => $item->seller_sku,
             'image' => $this->imageFor($product),
             'price' => (float) ($item->sale_price ?? $item->regular_price),
             'available' => $item->available_quantity,
@@ -140,14 +144,20 @@ class CartController extends Controller
         return [
             'key' => 'catalog-'.$product->getKey().'-'.($variation?->getKey() ?? 'base'),
             'product_id' => $product->getKey(),
+            'product_variation_id' => $variation?->getKey(),
+            'vendor_listing_item_id' => null,
+            'vendor_id' => null,
             'name' => $product->name,
             'slug' => $product->slug,
             'option' => $variation?->attributeValues->map(fn ($value) => $value->attribute->name.': '.$value->value)->join(', '),
             'vendor' => 'Tisilo',
+            'sku' => $variation?->sku ?? $product->sku,
             'image' => $this->imageFor($product),
             'price' => (float) ($variation?->sale_price ?? $variation?->regular_price ?? $product->sale_price ?? $product->regular_price),
-            'available' => (int) ($variation?->stock_quantity ?? $product->stock_quantity),
-            'backorders_allowed' => false,
+            'available' => $variation
+                ? (int) $variation->stock_quantity
+                : ($product->manage_stock ? (int) $product->stock_quantity : PHP_INT_MAX),
+            'backorders_allowed' => ! $variation && ! $product->manage_stock,
         ];
     }
 
