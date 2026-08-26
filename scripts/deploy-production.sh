@@ -8,9 +8,35 @@ readonly PUBLIC_ROOT="/home/rirakib/public_html"
 readonly BACKUP_ROOT="/home/rirakib/tisilo-deploy-backups"
 readonly PHP_BIN="/usr/local/bin/php"
 readonly LOCK_FILE="${REPOSITORY}/storage/framework/tisilo-auto-deploy.lock"
+readonly DEPLOY_LOG="${REPOSITORY}/storage/logs/deploy.log"
 
 log() {
     printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$*"
+}
+
+ensure_minute_auto_deploy_cron() {
+    local current_crontab desired_entry temporary_crontab
+
+    if ! command -v crontab >/dev/null 2>&1; then
+        log "crontab executable was not found; the one-minute auto-deploy schedule could not be verified."
+        return 1
+    fi
+
+    desired_entry="* * * * * /usr/bin/env bash ${REPOSITORY}/scripts/deploy-production.sh >> ${DEPLOY_LOG} 2>&1"
+    current_crontab="$(crontab -l 2>/dev/null || true)"
+
+    if grep -Fqx -- "${desired_entry}" <<< "${current_crontab}"; then
+        return 0
+    fi
+
+    temporary_crontab="$(mktemp "${TMPDIR:-/tmp}/tisilo-auto-deploy-cron.XXXXXX")"
+    awk -v script="${REPOSITORY}/scripts/deploy-production.sh" 'index($0, script) == 0' \
+        <<< "${current_crontab}" > "${temporary_crontab}"
+    printf '%s\n' "${desired_entry}" >> "${temporary_crontab}"
+    crontab "${temporary_crontab}"
+    rm -f "${temporary_crontab}"
+
+    log "Auto-deploy cron verified: GitHub main is checked once per minute."
 }
 
 sync_public_files() {
@@ -156,6 +182,8 @@ main() {
         log "Another deployment is already running; exiting."
         exit 0
     fi
+
+    ensure_minute_auto_deploy_cron
 
     if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
         log "Tracked server files have local changes; automatic deployment was stopped."

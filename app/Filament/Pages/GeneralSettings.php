@@ -340,11 +340,29 @@ class GeneralSettings extends Page
         return [
             Section::make('Laravel Scheduler')->columns(2)->schema([
                 Toggle::make('scheduler_enabled')->default(true),
-                TextInput::make('frequency_minutes')->numeric()->minValue(1)->maxValue(1440)->required(),
+                TextInput::make('frequency_minutes')->label('Scheduler Frequency (Minutes)')->numeric()->minValue(1)->maxValue(1440)->required(),
                 TextInput::make('batch_size')->numeric()->minValue(1)->maxValue(500)->required(),
                 TextInput::make('server_command')->disabled()->columnSpanFull(),
                 TextInput::make('last_run_at')->disabled(),
                 TextInput::make('last_run_status')->disabled(),
+            ]),
+            Section::make('GitHub Production Auto-Deploy')->columns(2)->schema([
+                TextInput::make('github_deploy_frequency_minutes')
+                    ->label('GitHub Check Frequency (Minutes)')
+                    ->numeric()
+                    ->disabled()
+                    ->dehydrated()
+                    ->default(1),
+                TextInput::make('github_deploy_branch')
+                    ->label('Deployment Branch')
+                    ->disabled()
+                    ->dehydrated()
+                    ->default('main'),
+                TextInput::make('github_deploy_command')
+                    ->label('cPanel Cron Schedule')
+                    ->disabled()
+                    ->dehydrated()
+                    ->columnSpanFull(),
             ]),
         ];
     }

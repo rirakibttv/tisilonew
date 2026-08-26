@@ -43,9 +43,12 @@ class GeneralSettingsSeeder extends Seeder
             ],
             'cronjob' => [
                 'scheduler_enabled' => true,
-                'frequency_minutes' => 5,
+                'frequency_minutes' => 1,
                 'batch_size' => 50,
                 'server_command' => '* * * * * php artisan schedule:run',
+                'github_deploy_frequency_minutes' => 1,
+                'github_deploy_branch' => 'main',
+                'github_deploy_command' => '* * * * * scripts/deploy-production.sh',
             ],
             'sitemap' => [
                 'auto_generate' => true,
