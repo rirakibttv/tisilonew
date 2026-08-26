@@ -2,10 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\InventoryStock;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\SiteSetting;
 use App\Models\User;
+use App\Models\Vendor;
+use App\Models\VendorListing;
+use App\Models\VendorListingItem;
+use App\Models\VendorWarehouse;
 use App\Services\DeploymentDataSnapshot;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\File;
@@ -57,6 +62,48 @@ class DeploymentDataSnapshotTest extends TestCase
         ], [
             'private_api_key' => 'never-export-this-secret-'.$token,
         ]);
+        $vendor = Vendor::query()->create([
+            'owner_id' => $user->id,
+            'name' => 'Deployment Vendor '.$token,
+            'slug' => 'deployment-vendor-'.$token,
+            'email' => 'vendor-'.$token.'@example.test',
+            'status' => 'active',
+            'commission_rate' => 8.5,
+        ]);
+        $warehouse = VendorWarehouse::query()->create([
+            'vendor_id' => $vendor->id,
+            'name' => 'Main Warehouse',
+            'code' => 'MAIN-'.$token,
+            'address_line_1' => 'Deployment Address',
+            'district' => 'Dhaka',
+            'is_default' => true,
+            'status' => true,
+        ]);
+        $listing = VendorListing::query()->create([
+            'vendor_id' => $vendor->id,
+            'product_id' => $product->id,
+            'status' => 'approved',
+            'condition' => 'new',
+            'fulfillment_type' => 'vendor',
+            'min_order_quantity' => 1,
+            'handling_time_days' => 1,
+        ]);
+        $listingItem = VendorListingItem::query()->create([
+            'vendor_listing_id' => $listing->id,
+            'product_variation_id' => $variation->id,
+            'seller_sku' => 'SELLER-'.$token,
+            'regular_price' => 990,
+            'status' => 'active',
+            'is_default' => true,
+        ]);
+        $stock = InventoryStock::query()->create([
+            'vendor_listing_item_id' => $listingItem->id,
+            'vendor_warehouse_id' => $warehouse->id,
+            'quantity' => 31,
+            'reserved_quantity' => 3,
+            'incoming_quantity' => 5,
+            'reorder_point' => 6,
+        ]);
         $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tisilo-deployment-'.$token.'.json';
 
         try {
@@ -81,6 +128,11 @@ class DeploymentDataSnapshotTest extends TestCase
             $settingData = collect($snapshot['site_settings'])->firstWhere('key', $setting->key);
             $this->assertSame('Deployment Store', $settingData['values']['site_name']);
             $this->assertStringNotContainsString('never-export-this-secret-'.$token, File::get($path));
+            $vendorData = collect($snapshot['vendors'])->firstWhere('slug', $vendor->slug);
+            $this->assertSame($user->email, $vendorData['owner_email']);
+            $this->assertSame('MAIN-'.$token, $vendorData['warehouses'][0]['code']);
+            $this->assertSame('SELLER-'.$token, $vendorData['listings'][0]['items'][0]['seller_sku']);
+            $this->assertSame(31, $vendorData['listings'][0]['items'][0]['stocks'][0]['quantity']);
 
             $product->update([
                 'regular_price' => 1000,
@@ -100,6 +152,10 @@ class DeploymentDataSnapshotTest extends TestCase
                 'status' => 'suspended',
             ]);
             SiteSetting::put($setting->key, ['site_name' => 'Changed Store'], ['private_api_key' => 'preserve-me']);
+            $vendor->update(['name' => 'Changed Vendor']);
+            $warehouse->update(['address_line_1' => 'Changed Address']);
+            $listingItem->update(['regular_price' => 1200]);
+            $stock->update(['quantity' => 2]);
             $service->import($path);
             $product->refresh();
             $variation->refresh();
@@ -119,6 +175,10 @@ class DeploymentDataSnapshotTest extends TestCase
             $setting->refresh();
             $this->assertSame('Deployment Store', $setting->values['site_name']);
             $this->assertSame('preserve-me', $setting->secret_values['private_api_key']);
+            $this->assertSame('Deployment Vendor '.$token, $vendor->fresh()->name);
+            $this->assertSame('Deployment Address', $warehouse->fresh()->address_line_1);
+            $this->assertSame('990.00', $listingItem->fresh()->regular_price);
+            $this->assertSame(31, $stock->fresh()->quantity);
         } finally {
             File::delete($path);
         }

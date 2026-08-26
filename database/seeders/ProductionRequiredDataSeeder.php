@@ -8,9 +8,9 @@ use Illuminate\Database\Seeder;
 class ProductionRequiredDataSeeder extends Seeder
 {
     /**
-     * Merge Git-versioned catalog, Add User and non-secret settings data after
-     * migrations. Session/reset tokens and encrypted settings secrets remain
-     * production-local.
+     * Merge Git-versioned catalog, Add User, vendor master data, inventory
+     * baselines and non-secret settings after migrations. Session/reset tokens,
+     * analytics/audit events and encrypted settings secrets remain production-local.
      */
     public function run(): void
     {

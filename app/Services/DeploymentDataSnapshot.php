@@ -6,11 +6,16 @@ use App\Models\Attribute;
 use App\Models\AttributeValue;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\InventoryStock;
 use App\Models\Product;
 use App\Models\ProductTag;
 use App\Models\ProductVariation;
 use App\Models\SiteSetting;
 use App\Models\User;
+use App\Models\Vendor;
+use App\Models\VendorListing;
+use App\Models\VendorListingItem;
+use App\Models\VendorWarehouse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -61,6 +66,65 @@ class DeploymentDataSnapshot
                 'key' => $setting->key,
                 'values' => $setting->values ?? [],
             ])->all(),
+            'vendors' => Vendor::query()
+                ->with([
+                    'owner:id,email',
+                    'approver:id,email',
+                    'members:id,email',
+                    'warehouses',
+                    'listings.product:id,slug',
+                    'listings.approver:id,email',
+                    'listings.items.productVariation:id,sku',
+                    'listings.items.stocks.warehouse:id,code',
+                ])
+                ->orderBy('slug')
+                ->get()
+                ->map(fn (Vendor $vendor): array => [
+                    ...Arr::only($vendor->toArray(), [
+                        'name', 'slug', 'legal_name', 'email', 'phone', 'website', 'logo', 'banner',
+                        'description', 'status', 'commission_rate', 'approved_at',
+                    ]),
+                    'owner_email' => $vendor->owner->email,
+                    'approved_by_email' => $vendor->approver?->email,
+                    'members' => $vendor->members->map(fn (User $member): array => [
+                        'email' => $member->email,
+                        'role' => $member->pivot->role,
+                        'status' => $member->pivot->status,
+                        'permissions' => is_array($member->pivot->permissions)
+                            ? $member->pivot->permissions
+                            : json_decode($member->pivot->permissions ?? '[]', true),
+                        'joined_at' => $member->pivot->joined_at,
+                    ])->all(),
+                    'warehouses' => $vendor->warehouses->map(fn (VendorWarehouse $warehouse): array => Arr::only(
+                        $warehouse->toArray(),
+                        [
+                            'name', 'code', 'contact_name', 'phone', 'address_line_1', 'address_line_2',
+                            'district', 'upazila', 'postal_code', 'is_default', 'status',
+                        ],
+                    ))->all(),
+                    'listings' => $vendor->listings->map(fn (VendorListing $listing): array => [
+                        ...Arr::only($listing->toArray(), [
+                            'status', 'condition', 'fulfillment_type', 'warranty', 'min_order_quantity',
+                            'max_order_quantity', 'handling_time_days', 'commission_rate_override',
+                            'is_featured', 'rejection_reason', 'approved_at', 'published_at',
+                        ]),
+                        'product_slug' => $listing->product->slug,
+                        'approved_by_email' => $listing->approver?->email,
+                        'items' => $listing->items->map(fn (VendorListingItem $item): array => [
+                            ...Arr::only($item->toArray(), [
+                                'seller_sku', 'barcode', 'purchase_price', 'regular_price', 'sale_price',
+                                'low_stock_threshold', 'backorders_allowed', 'status', 'is_default',
+                            ]),
+                            'product_variation_sku' => $item->productVariation?->sku,
+                            'stocks' => $item->stocks->map(fn (InventoryStock $stock): array => [
+                                'warehouse_code' => $stock->warehouse->code,
+                                ...Arr::only($stock->toArray(), [
+                                    'quantity', 'reserved_quantity', 'incoming_quantity', 'reorder_point',
+                                ]),
+                            ])->all(),
+                        ])->all(),
+                    ])->all(),
+                ])->all(),
             'products' => Product::query()
                 ->with([
                     'brand:id,slug',
@@ -129,7 +193,7 @@ class DeploymentDataSnapshot
         }
 
         return DB::transaction(function () use ($snapshot): array {
-            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'users' => 0, 'site_settings' => 0, 'products' => 0, 'product_variations' => 0];
+            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'users' => 0, 'site_settings' => 0, 'products' => 0, 'product_variations' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
 
             foreach ($snapshot['brands'] ?? [] as $data) {
                 Brand::query()->updateOrCreate(['slug' => $data['slug']], $data);
@@ -232,6 +296,93 @@ class DeploymentDataSnapshot
                     })->filter();
                     $variation->attributeValues()->syncWithoutDetaching($valueIds);
                     $counts['product_variations']++;
+                }
+            }
+
+            foreach ($snapshot['vendors'] ?? [] as $data) {
+                $ownerId = User::query()->where('email', $data['owner_email'])->value('id');
+                if (! $ownerId) {
+                    continue;
+                }
+
+                $vendorData = Arr::except($data, [
+                    'owner_email', 'approved_by_email', 'members', 'warehouses', 'listings',
+                ]);
+                $vendorData['owner_id'] = $ownerId;
+                $vendorData['approved_by'] = filled($data['approved_by_email'] ?? null)
+                    ? User::query()->where('email', $data['approved_by_email'])->value('id')
+                    : null;
+                $vendor = Vendor::query()->updateOrCreate(['slug' => $data['slug']], $vendorData);
+                $counts['vendors']++;
+
+                foreach ($data['members'] ?? [] as $memberData) {
+                    $memberId = User::query()->where('email', $memberData['email'])->value('id');
+                    if (! $memberId) {
+                        continue;
+                    }
+                    $vendor->members()->syncWithoutDetaching([
+                        $memberId => Arr::only($memberData, ['role', 'status', 'permissions', 'joined_at']),
+                    ]);
+                    $counts['vendor_members']++;
+                }
+
+                foreach ($data['warehouses'] ?? [] as $warehouseData) {
+                    VendorWarehouse::query()->updateOrCreate(
+                        ['vendor_id' => $vendor->id, 'code' => $warehouseData['code']],
+                        $warehouseData,
+                    );
+                    $counts['vendor_warehouses']++;
+                }
+
+                foreach ($data['listings'] ?? [] as $listingData) {
+                    $productId = Product::query()->where('slug', $listingData['product_slug'])->value('id');
+                    if (! $productId) {
+                        continue;
+                    }
+
+                    $items = Arr::pull($listingData, 'items', []);
+                    $approvedByEmail = Arr::pull($listingData, 'approved_by_email');
+                    Arr::forget($listingData, 'product_slug');
+                    $listingData['approved_by'] = filled($approvedByEmail)
+                        ? User::query()->where('email', $approvedByEmail)->value('id')
+                        : null;
+                    $listing = VendorListing::query()->updateOrCreate(
+                        ['vendor_id' => $vendor->id, 'product_id' => $productId],
+                        $listingData,
+                    );
+                    $counts['vendor_listings']++;
+
+                    foreach ($items as $itemData) {
+                        $stocks = Arr::pull($itemData, 'stocks', []);
+                        $variationSku = Arr::pull($itemData, 'product_variation_sku');
+                        $itemData['product_variation_id'] = filled($variationSku)
+                            ? ProductVariation::query()->where('product_id', $productId)->where('sku', $variationSku)->value('id')
+                            : null;
+                        $item = VendorListingItem::query()->updateOrCreate(
+                            ['vendor_id' => $vendor->id, 'seller_sku' => $itemData['seller_sku']],
+                            ['vendor_listing_id' => $listing->id, ...$itemData],
+                        );
+                        $counts['vendor_listing_items']++;
+
+                        foreach ($stocks as $stockData) {
+                            $warehouseCode = Arr::pull($stockData, 'warehouse_code');
+                            $warehouseId = VendorWarehouse::query()
+                                ->where('vendor_id', $vendor->id)
+                                ->where('code', $warehouseCode)
+                                ->value('id');
+                            if (! $warehouseId) {
+                                continue;
+                            }
+                            InventoryStock::query()->updateOrCreate(
+                                [
+                                    'vendor_listing_item_id' => $item->id,
+                                    'vendor_warehouse_id' => $warehouseId,
+                                ],
+                                $stockData,
+                            );
+                            $counts['inventory_stocks']++;
+                        }
+                    }
                 }
             }
 

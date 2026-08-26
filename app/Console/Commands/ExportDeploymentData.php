@@ -14,7 +14,7 @@ class ExportDeploymentData extends Command
     public function handle(DeploymentDataSnapshot $snapshot): int
     {
         $path = $snapshot->export($this->option('path') ?: null);
-        $this->components->info('Deployable catalog snapshot updated: '.$path);
+        $this->components->info('Deployable business data snapshot updated: '.$path);
 
         return self::SUCCESS;
     }

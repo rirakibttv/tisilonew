@@ -8,3 +8,5 @@
 !products/**
 !settings/
 !settings/**
+!vendors/
+!vendors/**
