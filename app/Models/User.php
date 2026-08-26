@@ -82,4 +82,14 @@ class User extends Authenticatable implements FilamentUser
             ->withPivot(['role', 'status', 'permissions', 'joined_at'])
             ->withTimestamps();
     }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function incompleteOrders(): HasMany
+    {
+        return $this->hasMany(IncompleteOrder::class);
+    }
 }

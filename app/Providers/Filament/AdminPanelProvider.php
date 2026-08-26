@@ -7,6 +7,10 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\GeneralSettings;
 use App\Filament\Pages\ModuleOverview;
 use App\Filament\Pages\SeoOverview;
+use App\Filament\Resources\IncompleteOrders\Pages\ListIncompleteOrders;
+use App\Filament\Resources\Orders\Pages\ListOrders;
+use App\Filament\Resources\Orders\Pages\ListPendingOrders;
+use App\Filament\Resources\Orders\Pages\ListVendorOrders;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\Pages\PendingProducts;
@@ -79,11 +83,14 @@ class AdminPanelProvider extends PanelProvider
                     array_values(array_filter(
                         AdminNavigationGroup::cases(),
                         fn (AdminNavigationGroup $group): bool => ! in_array($group, [
+                            AdminNavigationGroup::OrderPanel,
                             AdminNavigationGroup::SeoOverview,
                             AdminNavigationGroup::GeneralSettings,
                         ], true),
                     )),
                 ),
+
+                ...$this->orderPanelNavigationItems(),
 
                 ...$this->generalSettingsNavigationItems(),
 
@@ -157,6 +164,44 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    /** @return array<NavigationItem> */
+    private function orderPanelNavigationItems(): array
+    {
+        return [
+            NavigationItem::make('Pending Order')
+                ->key('order-panel-pending')
+                ->group(AdminNavigationGroup::OrderPanel)
+                ->icon(Heroicon::OutlinedClock)
+                ->sort(0)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.orders.pending'))
+                ->url(fn (): string => ListPendingOrders::getUrl()),
+
+            NavigationItem::make('Incomplete Order')
+                ->key('order-panel-incomplete')
+                ->group(AdminNavigationGroup::OrderPanel)
+                ->icon(Heroicon::OutlinedExclamationTriangle)
+                ->sort(1)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.incomplete-orders.*'))
+                ->url(fn (): string => ListIncompleteOrders::getUrl()),
+
+            NavigationItem::make('Vendor Order')
+                ->key('order-panel-vendor')
+                ->group(AdminNavigationGroup::OrderPanel)
+                ->icon(Heroicon::OutlinedBuildingStorefront)
+                ->sort(2)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.orders.vendor'))
+                ->url(fn (): string => ListVendorOrders::getUrl()),
+
+            NavigationItem::make('All Order')
+                ->key('order-panel-all')
+                ->group(AdminNavigationGroup::OrderPanel)
+                ->icon(Heroicon::OutlinedClipboardDocumentList)
+                ->sort(3)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.orders.index'))
+                ->url(fn (): string => ListOrders::getUrl()),
+        ];
     }
 
     /** @return array<NavigationItem> */

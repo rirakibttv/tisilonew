@@ -102,4 +102,9 @@ class Product extends Model
     {
         return $this->hasMany(VendorListing::class);
     }
+
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
+    }
 }

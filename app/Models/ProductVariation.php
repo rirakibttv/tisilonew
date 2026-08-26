@@ -60,4 +60,9 @@ class ProductVariation extends Model
     {
         return $this->hasMany(VendorListingItem::class);
     }
+
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
+    }
 }
