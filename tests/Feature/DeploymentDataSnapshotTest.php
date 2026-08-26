@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Product;
 use App\Models\ProductVariation;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\DeploymentDataSnapshot;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -51,6 +52,11 @@ class DeploymentDataSnapshotTest extends TestCase
             'role' => 'admin',
             'status' => 'active',
         ]);
+        $setting = SiteSetting::put('deployment-'.$token, [
+            'site_name' => 'Deployment Store',
+        ], [
+            'private_api_key' => 'never-export-this-secret-'.$token,
+        ]);
         $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tisilo-deployment-'.$token.'.json';
 
         try {
@@ -72,6 +78,9 @@ class DeploymentDataSnapshotTest extends TestCase
             $this->assertSame($user->phone, $userData['phone']);
             $this->assertSame('admin', $userData['role']);
             $this->assertTrue(Hash::check('DeploymentPassword!123', $userData['password_hash']));
+            $settingData = collect($snapshot['site_settings'])->firstWhere('key', $setting->key);
+            $this->assertSame('Deployment Store', $settingData['values']['site_name']);
+            $this->assertStringNotContainsString('never-export-this-secret-'.$token, File::get($path));
 
             $product->update([
                 'regular_price' => 1000,
@@ -90,6 +99,7 @@ class DeploymentDataSnapshotTest extends TestCase
                 'role' => 'customer',
                 'status' => 'suspended',
             ]);
+            SiteSetting::put($setting->key, ['site_name' => 'Changed Store'], ['private_api_key' => 'preserve-me']);
             $service->import($path);
             $product->refresh();
             $variation->refresh();
@@ -106,6 +116,9 @@ class DeploymentDataSnapshotTest extends TestCase
             $this->assertSame('admin', $user->role->value);
             $this->assertSame('active', $user->status->value);
             $this->assertTrue(Hash::check('DeploymentPassword!123', $user->password));
+            $setting->refresh();
+            $this->assertSame('Deployment Store', $setting->values['site_name']);
+            $this->assertSame('preserve-me', $setting->secret_values['private_api_key']);
         } finally {
             File::delete($path);
         }

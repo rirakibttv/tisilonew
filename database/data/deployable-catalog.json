@@ -264,6 +264,150 @@
             "email_verified_at": null
         }
     ],
+    "site_settings": [
+        {
+            "key": "contact",
+            "values": {
+                "hotline": null,
+                "phone": "01794313455",
+                "email": null,
+                "hotmail": null,
+                "whatsapp": "01794313455",
+                "maplink": null,
+                "address": "Baya, Rajshahi",
+                "status": true
+            }
+        },
+        {
+            "key": "cronjob",
+            "values": {
+                "scheduler_enabled": true,
+                "frequency_minutes": 5,
+                "batch_size": 50,
+                "server_command": "* * * * * php artisan schedule:run"
+            }
+        },
+        {
+            "key": "email",
+            "values": {
+                "MAIL_MAILER": "smtp",
+                "MAIL_PORT": 587,
+                "MAIL_ENCRYPTION": "tls",
+                "MAIL_FROM_NAME": "Tisilo"
+            }
+        },
+        {
+            "key": "fraud",
+            "values": {
+                "enabled": true,
+                "provider": "BD Courier",
+                "endpoint": "https://api.bdcourier.com/courier-check"
+            }
+        },
+        {
+            "key": "general",
+            "values": {
+                "site_name": "TISILO Supermarket",
+                "facebook_page_username": null,
+                "top_headline": "Biggest Shopping Zone In Bangladesh",
+                "footer_about_text": "বিশ্বস্ত বিক্রেতা, মানসম্মত পণ্য এবং নিরাপদ কেনাকাটার আধুনিক বাংলাদেশি মার্কেটপ্লেস।",
+                "google_play_link": null,
+                "app_store_link": null,
+                "primary_color": "#f97316",
+                "secondary_color": "#0f172a",
+                "footer_color": "#020617",
+                "copyright_color": "#0f172a",
+                "white_logo": "settings/logos/01M0XG3XZ6G644TR8TSPNGRETG.png",
+                "dark_logo": "settings/logos/01M0XG3XZBKAEZ8G4J1Z5XFD27.png",
+                "favicon": "settings/icons/01M0XG3XZD6HD17TTJPGXWMBXG.png",
+                "og_banner": null,
+                "hot_deal_end_date": null,
+                "flash_sale_end_date": null,
+                "show_all_products": true,
+                "show_category_wise_products": true,
+                "vendor_enabled": true,
+                "reseller_enabled": false,
+                "reseller_deposit_min": 100,
+                "reseller_deposit_max": 1000000,
+                "reseller_wallet_min_balance": 0,
+                "checkout_note": "<p></p>",
+                "order_policy": "<p></p>"
+            }
+        },
+        {
+            "key": "order_restriction",
+            "values": {
+                "order_limit_time": 24,
+                "order_limit_qty": 2,
+                "enabled": false
+            }
+        },
+        {
+            "key": "pages",
+            "values": {
+                "pages": []
+            }
+        },
+        {
+            "key": "seo",
+            "values": {
+                "meta_title": "TISILO Supermarket",
+                "meta_description": "Biggest Shopping Zone In Bangladesh",
+                "meta_tags": "tisilo, marketplace, ecommerce, bangladesh",
+                "search_console_verification": "google-site-verification=biipSAmJftxSJw96oTGhpBYZzg16Do_-kiaEe8OiSOw"
+            }
+        },
+        {
+            "key": "shipping",
+            "values": {
+                "zones": [
+                    {
+                        "name": "Inside Dhaka",
+                        "amount": 80,
+                        "estimated_days": 2,
+                        "status": true
+                    },
+                    {
+                        "name": "Outside Dhaka",
+                        "amount": 130,
+                        "estimated_days": 4,
+                        "status": true
+                    }
+                ]
+            }
+        },
+        {
+            "key": "sitemap",
+            "values": {
+                "auto_generate": true,
+                "change_frequency": "always",
+                "include_products": true,
+                "include_pages": true,
+                "last_generated_at": "2026-08-25T22:27:11.248516Z"
+            }
+        },
+        {
+            "key": "social",
+            "values": {
+                "links": [
+                    {
+                        "title": "Facebook",
+                        "icon": "fab fa-facebook-f",
+                        "link": "https://www.facebook.com/tisilosupermarket",
+                        "color": "#2563eb",
+                        "status": true
+                    },
+                    {
+                        "title": "Whatsapp",
+                        "icon": "fab fa-whatsapp",
+                        "link": "https://wa.me/8801794313455",
+                        "color": "#2563eb",
+                        "status": true
+                    }
+                ]
+            }
+        }
+    ],
     "products": [
         {
             "name": "Premium Quality Panel Cotton Bed Sheets",

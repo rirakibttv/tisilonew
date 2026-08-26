@@ -1,6 +1,6 @@
 <div class="bg-slate-950 text-slate-300">
     <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 text-xs sm:px-6 lg:px-8">
-        <p>সারাদেশে দ্রুত ডেলিভারি</p>
+        <p>{{ $generalSettings['top_headline'] ?? 'সারাদেশে দ্রুত ডেলিভারি' }}</p>
         <div class="hidden items-center gap-5 sm:flex">
             <span>নিরাপদ পেমেন্ট</span>
             <span>সহায়তা: ২৪/৭</span>
@@ -11,9 +11,13 @@
 
 <header class="sticky top-0 z-40 border-b border-orange-100 bg-white/95 backdrop-blur">
     <div class="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <a href="{{ route('store.home') }}" class="shrink-0" aria-label="Tisilo homepage">
-            <span class="text-2xl font-black tracking-tight text-orange-600 sm:text-3xl">TISILO</span>
+        <a href="{{ route('store.home') }}" class="shrink-0" aria-label="{{ $generalSettings['site_name'] ?? 'Tisilo' }} homepage">
+            @if(filled($generalSettings['dark_logo'] ?? null))
+                <img src="{{ asset('storage/'.$generalSettings['dark_logo']) }}" alt="{{ $generalSettings['site_name'] ?? 'Tisilo' }}" class="h-10 w-auto">
+            @else
+            <span class="text-2xl font-black tracking-tight text-orange-600 sm:text-3xl">{{ strtoupper($generalSettings['site_name'] ?? 'Tisilo') }}</span>
             <span class="block text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-500">Marketplace</span>
+            @endif
         </a>
 
         <form action="{{ route('store.products.index') }}" method="GET" class="relative hidden flex-1 md:block">

@@ -8,12 +8,13 @@ use Illuminate\Database\Seeder;
 class ProductionRequiredDataSeeder extends Seeder
 {
     /**
-     * Merge the Git-versioned, non-sensitive catalog snapshot after migrations.
-     * Users, credentials, orders, sessions, purchase prices and live inventory
-     * are deliberately excluded from the snapshot.
+     * Merge Git-versioned catalog, Add User and non-secret settings data after
+     * migrations. Session/reset tokens and encrypted settings secrets remain
+     * production-local.
      */
     public function run(): void
     {
+        $this->call(GeneralSettingsSeeder::class);
         app(DeploymentDataSnapshot::class)->import();
     }
 }

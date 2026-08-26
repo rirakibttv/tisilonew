@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductTag;
 use App\Models\ProductVariation;
+use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -55,6 +56,10 @@ class DeploymentDataSnapshot
                 'role' => $user->role->value,
                 'status' => $user->status->value,
                 'email_verified_at' => $user->email_verified_at?->toISOString(),
+            ])->all(),
+            'site_settings' => SiteSetting::query()->orderBy('key')->get()->map(fn (SiteSetting $setting): array => [
+                'key' => $setting->key,
+                'values' => $setting->values ?? [],
             ])->all(),
             'products' => Product::query()
                 ->with([
@@ -124,7 +129,7 @@ class DeploymentDataSnapshot
         }
 
         return DB::transaction(function () use ($snapshot): array {
-            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'users' => 0, 'products' => 0, 'product_variations' => 0];
+            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'users' => 0, 'site_settings' => 0, 'products' => 0, 'product_variations' => 0];
 
             foreach ($snapshot['brands'] ?? [] as $data) {
                 Brand::query()->updateOrCreate(['slug' => $data['slug']], $data);
@@ -175,6 +180,14 @@ class DeploymentDataSnapshot
                     DB::table('users')->where('id', $user->id)->update(['password' => $passwordHash]);
                 }
                 $counts['users']++;
+            }
+
+            foreach ($snapshot['site_settings'] ?? [] as $data) {
+                $setting = SiteSetting::query()->firstOrNew(['key' => $data['key']]);
+                $setting->values = $data['values'] ?? [];
+                $setting->save();
+                SiteSetting::forget($data['key']);
+                $counts['site_settings']++;
             }
 
             foreach ($snapshot['products'] ?? [] as $data) {

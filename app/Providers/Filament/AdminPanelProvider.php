@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Enums\AdminNavigationGroup;
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\GeneralSettings;
 use App\Filament\Pages\ModuleOverview;
 use App\Filament\Pages\SeoOverview;
 use App\Filament\Resources\Products\Pages\CreateProduct;
@@ -77,9 +78,14 @@ class AdminPanelProvider extends PanelProvider
                         ->url(fn (): string => ModuleOverview::getUrl(['module' => $group->slug()])),
                     array_values(array_filter(
                         AdminNavigationGroup::cases(),
-                        fn (AdminNavigationGroup $group): bool => $group !== AdminNavigationGroup::SeoOverview,
+                        fn (AdminNavigationGroup $group): bool => ! in_array($group, [
+                            AdminNavigationGroup::SeoOverview,
+                            AdminNavigationGroup::GeneralSettings,
+                        ], true),
                     )),
                 ),
+
+                ...$this->generalSettingsNavigationItems(),
 
                 NavigationItem::make('Visitor Analytics')
                     ->key('seo-overview-master')
@@ -151,5 +157,36 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    /** @return array<NavigationItem> */
+    private function generalSettingsNavigationItems(): array
+    {
+        $items = [
+            ['general', 'General Setting', Heroicon::OutlinedCog6Tooth],
+            ['seo', 'SEO Settings', Heroicon::OutlinedMagnifyingGlass],
+            ['social', 'Social Media', Heroicon::OutlinedShare],
+            ['contact', 'Contact', Heroicon::OutlinedPhone],
+            ['pages', 'Create Page', Heroicon::OutlinedDocumentPlus],
+            ['order_restriction', 'Order Restriction', Heroicon::OutlinedAdjustmentsHorizontal],
+            ['email', 'Email Settings', Heroicon::OutlinedEnvelope],
+            ['cronjob', 'Cronjob', Heroicon::OutlinedClock],
+            ['sitemap', 'Sitemap Settings', Heroicon::OutlinedGlobeAlt],
+            ['fraud', 'Fraud API Settings', Heroicon::OutlinedShieldExclamation],
+            ['shipping', 'Shipping Settings', Heroicon::OutlinedTruck],
+        ];
+
+        return array_map(
+            fn (array $item, int $sort): NavigationItem => NavigationItem::make($item[1])
+                ->key('general-settings-'.$item[0])
+                ->group(AdminNavigationGroup::GeneralSettings)
+                ->icon($item[2])
+                ->sort($sort)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.general-settings')
+                    && request()->string('section', 'general')->toString() === $item[0])
+                ->url(fn (): string => GeneralSettings::getUrl(['section' => $item[0]])),
+            $items,
+            array_keys($items),
+        );
     }
 }
