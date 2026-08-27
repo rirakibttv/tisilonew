@@ -107,4 +107,11 @@ class Product extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function landingPages(): BelongsToMany
+    {
+        return $this->belongsToMany(LandingPage::class)
+            ->withPivot('sort_order')
+            ->withTimestamps();
+    }
 }

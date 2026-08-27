@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Storefront;
 use App\Enums\VendorListingItemStatus;
 use App\Enums\VendorListingStatus;
 use App\Http\Controllers\Controller;
+use App\Models\LandingPage;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\VendorListingItem;
@@ -34,12 +35,24 @@ class CartController extends Controller
             'product_variation_id' => ['nullable', 'integer'],
             'vendor_listing_item_id' => ['nullable', 'integer'],
             'quantity' => ['required', 'integer', 'min:1', 'max:99'],
+            'landing_page_id' => ['nullable', 'integer', 'exists:landing_pages,id'],
+            'redirect_to' => ['nullable', 'in:cart,checkout'],
         ]);
 
         $product = Product::query()->where('status', 'published')->findOrFail($validated['product_id']);
         $line = isset($validated['vendor_listing_item_id'])
             ? $this->marketplaceLine($product, (int) $validated['vendor_listing_item_id'])
             : $this->catalogLine($product, isset($validated['product_variation_id']) ? (int) $validated['product_variation_id'] : null);
+
+        $landingPageId = $validated['landing_page_id'] ?? null;
+        $landingPage = $landingPageId
+            ? LandingPage::query()
+                ->published()
+                ->whereKey($landingPageId)
+                ->whereHas('products', fn ($query) => $query->whereKey($product->getKey()))
+                ->first()
+            : null;
+        $line['landing_page_id'] = $landingPage?->getKey();
 
         $cart = $request->session()->get('store_cart', []);
         $newQuantity = ($cart[$line['key']]['quantity'] ?? 0) + (int) $validated['quantity'];
@@ -67,7 +80,11 @@ class CartController extends Controller
             // Analytics must never block the cart workflow.
         }
 
-        return to_route('store.cart.index')->with('success', 'পণ্যটি কার্টে যোগ হয়েছে।');
+        $destination = ($validated['redirect_to'] ?? 'cart') === 'checkout'
+            ? 'store.checkout.index'
+            : 'store.cart.index';
+
+        return to_route($destination)->with('success', 'পণ্যটি কার্টে যোগ হয়েছে।');
     }
 
     public function update(Request $request, string $line): RedirectResponse
@@ -138,7 +155,19 @@ class CartController extends Controller
                 ->when($variationId, fn ($query) => $query->whereKey($variationId))
                 ->when(! $variationId, fn ($query) => $query->orderByDesc('is_default')->orderBy('sort_order'))
                 ->with('attributeValues.attribute:id,name')
-                ->firstOrFail();
+                ->first();
+
+            if ($variationId && ! $variation) {
+                throw ValidationException::withMessages([
+                    'product_variation_id' => 'নির্বাচিত ভ্যারিয়েশনটি পাওয়া যায়নি।',
+                ]);
+            }
+
+            if (! $variation && (float) ($product->sale_price ?? $product->regular_price) <= 0) {
+                throw ValidationException::withMessages([
+                    'product_variation_id' => 'এই পণ্যের মূল্য বা ভ্যারিয়েশন এখনো প্রস্তুত নয়।',
+                ]);
+            }
         }
 
         return [

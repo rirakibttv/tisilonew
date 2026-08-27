@@ -7,6 +7,7 @@ use App\Models\AttributeValue;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\InventoryStock;
+use App\Models\LandingPage;
 use App\Models\Product;
 use App\Models\ProductTag;
 use App\Models\ProductVariation;
@@ -19,6 +20,8 @@ use App\Models\VendorWarehouse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class DeploymentDataSnapshot
@@ -56,8 +59,6 @@ class DeploymentDataSnapshot
             'users' => User::query()->orderBy('email')->get()->map(fn (User $user): array => [
                 'name' => $user->name,
                 'email' => $user->email,
-                'phone' => $user->phone,
-                'password_hash' => $user->getRawOriginal('password'),
                 'role' => $user->role->value,
                 'status' => $user->status->value,
                 'email_verified_at' => $user->email_verified_at?->toISOString(),
@@ -131,7 +132,7 @@ class DeploymentDataSnapshot
                     'category:id,slug',
                     'tags:id,slug',
                     'attributes:id,slug',
-                    'variations' => fn ($query) => $query->whereNotNull('sku')->orderBy('sku'),
+                    'variations' => fn ($query) => $query->orderByRaw('sku is null')->orderBy('sku')->orderBy('id'),
                     'variations.attributeValues.attribute:id,slug',
                 ])
                 ->orderBy('slug')
@@ -160,6 +161,20 @@ class DeploymentDataSnapshot
                             ->values()
                             ->all(),
                     ])->all(),
+                ])->all(),
+            'landing_pages' => LandingPage::query()
+                ->with('products:id,slug')
+                ->orderBy('slug')
+                ->get()
+                ->map(fn (LandingPage $landingPage): array => [
+                    ...Arr::only($landingPage->toArray(), [
+                        'name', 'slug', 'status', 'hero_badge', 'headline', 'subheadline', 'cta_text',
+                        'hero_image', 'theme_color', 'offer_title', 'offer_body', 'trust_title',
+                        'benefits', 'gallery_images', 'reviews', 'faqs', 'video_url',
+                        'countdown_ends_at', 'facebook_pixel_id', 'meta_title', 'meta_description',
+                        'og_image', 'published_at',
+                    ]),
+                    'product_slugs' => $landingPage->products->pluck('slug')->values()->all(),
                 ])->all(),
         ];
     }
@@ -193,7 +208,7 @@ class DeploymentDataSnapshot
         }
 
         return DB::transaction(function () use ($snapshot): array {
-            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'users' => 0, 'site_settings' => 0, 'products' => 0, 'product_variations' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
+            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'users' => 0, 'site_settings' => 0, 'products' => 0, 'product_variations' => 0, 'landing_pages' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
 
             foreach ($snapshot['brands'] ?? [] as $data) {
                 Brand::query()->updateOrCreate(['slug' => $data['slug']], $data);
@@ -230,18 +245,15 @@ class DeploymentDataSnapshot
             }
 
             foreach ($snapshot['users'] ?? [] as $data) {
-                $passwordHash = Arr::pull($data, 'password_hash');
                 $user = User::query()->where('email', $data['email'])->first();
 
-                if (! $user && filled($data['phone'] ?? null)) {
-                    $user = User::query()->where('phone', $data['phone'])->first();
-                }
-
-                $user ??= new User;
-                $user->forceFill($data)->save();
-
-                if (filled($passwordHash)) {
-                    DB::table('users')->where('id', $user->id)->update(['password' => $passwordHash]);
+                if ($user) {
+                    $user->forceFill($data)->save();
+                } else {
+                    User::query()->create([
+                        ...$data,
+                        'password' => Hash::make(Str::random(64)),
+                    ]);
                 }
                 $counts['users']++;
             }
@@ -280,12 +292,14 @@ class DeploymentDataSnapshot
                 $product->tags()->syncWithoutDetaching($tagIds);
                 $product->attributes()->syncWithoutDetaching($attributeIds);
 
+                $unclaimedSkuLessVariations = $product->variations()
+                    ->whereNull('sku')
+                    ->with('attributeValues:id')
+                    ->orderBy('id')
+                    ->get();
+
                 foreach ($data['variations'] ?? [] as $variationData) {
                     $valueKeys = Arr::pull($variationData, 'attribute_values', []);
-                    $variation = ProductVariation::query()->updateOrCreate(
-                        ['product_id' => $product->id, 'sku' => $variationData['sku']],
-                        $variationData,
-                    );
                     $valueIds = collect($valueKeys)->map(function (string $key): ?int {
                         [$attributeSlug, $valueSlug] = array_pad(explode(':', $key, 2), 2, null);
                         $attributeId = Attribute::query()->where('slug', $attributeSlug)->value('id');
@@ -293,10 +307,49 @@ class DeploymentDataSnapshot
                         return $attributeId
                             ? AttributeValue::query()->where('attribute_id', $attributeId)->where('slug', $valueSlug)->value('id')
                             : null;
-                    })->filter();
-                    $variation->attributeValues()->syncWithoutDetaching($valueIds);
+                    })->filter()->map(fn ($id): int => (int) $id)->sort()->values();
+
+                    if (filled($variationData['sku'] ?? null)) {
+                        $variation = ProductVariation::query()->updateOrCreate(
+                            ['product_id' => $product->id, 'sku' => $variationData['sku']],
+                            $variationData,
+                        );
+                    } else {
+                        $variation = $unclaimedSkuLessVariations->first(
+                            fn (ProductVariation $candidate): bool => $candidate->attributeValues
+                                ->pluck('id')
+                                ->map(fn ($id): int => (int) $id)
+                                ->sort()
+                                ->values()
+                                ->all() === $valueIds->all(),
+                        ) ?? $unclaimedSkuLessVariations->first();
+
+                        if ($variation) {
+                            $variation->update($variationData);
+                            $unclaimedSkuLessVariations = $unclaimedSkuLessVariations
+                                ->reject(fn (ProductVariation $candidate): bool => $candidate->is($variation));
+                        } else {
+                            $variation = ProductVariation::query()->create([
+                                'product_id' => $product->id,
+                                ...$variationData,
+                            ]);
+                        }
+                    }
+
+                    $variation->attributeValues()->sync($valueIds);
                     $counts['product_variations']++;
                 }
+            }
+
+            foreach ($snapshot['landing_pages'] ?? [] as $data) {
+                $productSlugs = Arr::pull($data, 'product_slugs', []);
+                $landingPage = LandingPage::query()->updateOrCreate(
+                    ['slug' => $data['slug']],
+                    $data,
+                );
+                $productIds = Product::query()->whereIn('slug', $productSlugs)->pluck('id');
+                $landingPage->products()->sync($productIds);
+                $counts['landing_pages']++;
             }
 
             foreach ($snapshot['vendors'] ?? [] as $data) {

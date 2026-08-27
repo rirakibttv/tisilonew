@@ -49,6 +49,18 @@ class DeploymentDataSnapshotTest extends TestCase
             'status' => true,
             'is_default' => true,
         ]);
+        $skuLessVariation = ProductVariation::query()->create([
+            'product_id' => $product->id,
+            'sku' => null,
+            'purchase_price' => 600,
+            'regular_price' => 1100,
+            'sale_price' => 999,
+            'stock_quantity' => 17,
+            'stock_status' => 'in_stock',
+            'status' => true,
+            'is_default' => false,
+            'sort_order' => 2,
+        ]);
         $user = User::query()->create([
             'name' => 'Deployment User '.$token,
             'email' => 'deployment-'.$token.'@example.test',
@@ -57,6 +69,7 @@ class DeploymentDataSnapshotTest extends TestCase
             'role' => 'admin',
             'status' => 'active',
         ]);
+        $userPhone = $user->phone;
         $setting = SiteSetting::put('deployment-'.$token, [
             'site_name' => 'Deployment Store',
         ], [
@@ -112,19 +125,18 @@ class DeploymentDataSnapshotTest extends TestCase
             $snapshot = json_decode(File::get($path), true, 512, JSON_THROW_ON_ERROR);
             $keys = $this->recursiveKeys($snapshot);
 
-            foreach (['password', 'remember_token', 'session_id', 'last_login_at'] as $forbidden) {
+            foreach (['password', 'password_hash', 'remember_token', 'session_id', 'last_login_at'] as $forbidden) {
                 $this->assertNotContains($forbidden, $keys);
             }
 
             $this->assertContains('purchase_price', $keys);
             $this->assertContains('stock_quantity', $keys);
             $this->assertContains('stock_status', $keys);
-            $this->assertContains('password_hash', $keys);
 
             $userData = collect($snapshot['users'])->firstWhere('email', $user->email);
-            $this->assertSame($user->phone, $userData['phone']);
+            $this->assertArrayNotHasKey('phone', $userData);
+            $this->assertArrayNotHasKey('password_hash', $userData);
             $this->assertSame('admin', $userData['role']);
-            $this->assertTrue(Hash::check('DeploymentPassword!123', $userData['password_hash']));
             $settingData = collect($snapshot['site_settings'])->firstWhere('key', $setting->key);
             $this->assertSame('Deployment Store', $settingData['values']['site_name']);
             $this->assertStringNotContainsString('never-export-this-secret-'.$token, File::get($path));
@@ -133,6 +145,9 @@ class DeploymentDataSnapshotTest extends TestCase
             $this->assertSame('MAIN-'.$token, $vendorData['warehouses'][0]['code']);
             $this->assertSame('SELLER-'.$token, $vendorData['listings'][0]['items'][0]['seller_sku']);
             $this->assertSame(31, $vendorData['listings'][0]['items'][0]['stocks'][0]['quantity']);
+            $productData = collect($snapshot['products'])->firstWhere('slug', $product->slug);
+            $this->assertCount(2, $productData['variations']);
+            $this->assertSame('999.00', collect($productData['variations'])->firstWhere('sku', null)['sale_price']);
 
             $product->update([
                 'regular_price' => 1000,
@@ -144,6 +159,10 @@ class DeploymentDataSnapshotTest extends TestCase
                 'regular_price' => 1200,
                 'stock_quantity' => 2,
                 'stock_status' => 'out_of_stock',
+            ]);
+            $skuLessVariation->update([
+                'sale_price' => 1300,
+                'stock_quantity' => 1,
             ]);
             $user->update([
                 'name' => 'Changed User',
@@ -159,6 +178,7 @@ class DeploymentDataSnapshotTest extends TestCase
             $service->import($path);
             $product->refresh();
             $variation->refresh();
+            $skuLessVariation->refresh();
             $user->refresh();
 
             $this->assertSame('900.00', $product->regular_price);
@@ -168,10 +188,13 @@ class DeploymentDataSnapshotTest extends TestCase
             $this->assertSame('950.00', $variation->regular_price);
             $this->assertSame(23, $variation->stock_quantity);
             $this->assertSame('in_stock', $variation->stock_status);
+            $this->assertSame('999.00', $skuLessVariation->sale_price);
+            $this->assertSame(17, $skuLessVariation->stock_quantity);
             $this->assertSame('Deployment User '.$token, $user->name);
             $this->assertSame('admin', $user->role->value);
             $this->assertSame('active', $user->status->value);
-            $this->assertTrue(Hash::check('DeploymentPassword!123', $user->password));
+            $this->assertTrue(Hash::check('ChangedPassword!123', $user->password));
+            $this->assertSame($userPhone, $user->phone);
             $setting->refresh();
             $this->assertSame('Deployment Store', $setting->values['site_name']);
             $this->assertSame('preserve-me', $setting->secret_values['private_api_key']);

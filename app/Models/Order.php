@@ -18,6 +18,7 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'user_id',
+        'landing_page_id',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -34,6 +35,7 @@ class Order extends Model
         'currency',
         'shipping_address',
         'billing_address',
+        'marketing_attribution',
         'tracking_number',
         'notes',
         'placed_at',
@@ -53,6 +55,7 @@ class Order extends Model
             'total_amount' => 'decimal:2',
             'shipping_address' => 'array',
             'billing_address' => 'array',
+            'marketing_attribution' => 'array',
             'placed_at' => 'datetime',
             'confirmed_at' => 'datetime',
             'fulfilled_at' => 'datetime',
@@ -89,6 +92,11 @@ class Order extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function landingPage(): BelongsTo
+    {
+        return $this->belongsTo(LandingPage::class);
     }
 
     public function items(): HasMany

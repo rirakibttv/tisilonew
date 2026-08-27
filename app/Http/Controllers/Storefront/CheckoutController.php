@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Storefront;
 use App\Enums\IncompleteOrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\IncompleteOrder;
+use App\Models\LandingPage;
 use App\Models\Order;
 use App\Models\SiteSetting;
 use App\Services\CheckoutService;
@@ -77,6 +78,8 @@ class CheckoutController extends Controller
         ]);
 
         $zone = $zones[$validated['shipping_zone']];
+        $validated['landing_page_id'] = $this->activeLandingPage($request)?->getKey();
+        $validated['marketing_attribution'] = $this->marketingAttribution($request);
         $order = $checkout->place($cart, $validated, $zone);
 
         $this->completeIncompleteOrder($request, $order);
@@ -107,6 +110,38 @@ class CheckoutController extends Controller
     public function success(Order $order): View
     {
         return view('storefront.checkout.success', compact('order'));
+    }
+
+    private function activeLandingPage(Request $request): ?LandingPage
+    {
+        $landingPageIds = collect($request->session()->get('store_cart', []))
+            ->pluck('landing_page_id')
+            ->filter()
+            ->unique();
+
+        if ($landingPageIds->count() !== 1) {
+            return null;
+        }
+
+        return LandingPage::query()->published()->find($landingPageIds->first());
+    }
+
+    /** @return array<string, string>|null */
+    private function marketingAttribution(Request $request): ?array
+    {
+        $decoded = json_decode(urldecode((string) $request->cookie('tisilo_attr')), true);
+        if (! is_array($decoded)) {
+            return null;
+        }
+
+        $safe = [];
+        foreach (['source', 'medium', 'campaign', 'content', 'term', 'click_source'] as $key) {
+            if (isset($decoded[$key]) && is_scalar($decoded[$key])) {
+                $safe[$key] = str((string) $decoded[$key])->stripTags()->limit(191, '')->toString();
+            }
+        }
+
+        return $safe ?: null;
     }
 
     /** @return array<string, array<string, mixed>> */

@@ -8,6 +8,8 @@ use App\Filament\Pages\GeneralSettings;
 use App\Filament\Pages\ModuleOverview;
 use App\Filament\Pages\SeoOverview;
 use App\Filament\Resources\IncompleteOrders\Pages\ListIncompleteOrders;
+use App\Filament\Resources\LandingPages\Pages\CreateLandingPage;
+use App\Filament\Resources\LandingPages\Pages\ListLandingPages;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\ListPendingOrders;
 use App\Filament\Resources\Orders\Pages\ListVendorOrders;
@@ -84,6 +86,7 @@ class AdminPanelProvider extends PanelProvider
                         AdminNavigationGroup::cases(),
                         fn (AdminNavigationGroup $group): bool => ! in_array($group, [
                             AdminNavigationGroup::OrderPanel,
+                            AdminNavigationGroup::LandingPage,
                             AdminNavigationGroup::SeoOverview,
                             AdminNavigationGroup::GeneralSettings,
                         ], true),
@@ -91,6 +94,8 @@ class AdminPanelProvider extends PanelProvider
                 ),
 
                 ...$this->orderPanelNavigationItems(),
+
+                ...$this->landingPageNavigationItems(),
 
                 ...$this->generalSettingsNavigationItems(),
 
@@ -164,6 +169,28 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    /** @return array<NavigationItem> */
+    private function landingPageNavigationItems(): array
+    {
+        return [
+            NavigationItem::make('Create Landing Page')
+                ->key('landing-page-create')
+                ->group(AdminNavigationGroup::LandingPage)
+                ->icon(Heroicon::OutlinedPlusCircle)
+                ->sort(0)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.landing-pages.create'))
+                ->url(fn (): string => CreateLandingPage::getUrl()),
+
+            NavigationItem::make('All Landing Pages')
+                ->key('landing-page-all')
+                ->group(AdminNavigationGroup::LandingPage)
+                ->icon(Heroicon::OutlinedWindow)
+                ->sort(1)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.landing-pages.index'))
+                ->url(fn (): string => ListLandingPages::getUrl()),
+        ];
     }
 
     /** @return array<NavigationItem> */

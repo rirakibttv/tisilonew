@@ -28,6 +28,11 @@ class OrdersTable
                     ->separator(', ')
                     ->limitList(2)
                     ->toggleable(),
+                TextColumn::make('landingPage.name')
+                    ->label('Landing Campaign')
+                    ->placeholder('Direct / Storefront')
+                    ->searchable()
+                    ->toggleable(),
                 TextColumn::make('status')
                     ->badge()
                     ->formatStateUsing(fn (OrderStatus $state): string => $state->label())

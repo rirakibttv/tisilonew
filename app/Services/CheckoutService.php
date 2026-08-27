@@ -36,6 +36,7 @@ class CheckoutService
             $shippingAmount = round((float) ($shippingZone['amount'] ?? 0), 2);
             $order = Order::query()->create([
                 'user_id' => auth()->id(),
+                'landing_page_id' => $customer['landing_page_id'] ?? null,
                 'customer_name' => $customer['customer_name'],
                 'customer_email' => $customer['customer_email'] ?? null,
                 'customer_phone' => $customer['customer_phone'],
@@ -51,6 +52,7 @@ class CheckoutService
                     'upazila',
                     'postal_code',
                 ]),
+                'marketing_attribution' => $customer['marketing_attribution'] ?? null,
                 'notes' => $customer['notes'] ?? null,
             ]);
 
