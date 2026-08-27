@@ -277,6 +277,14 @@
             }
         },
         {
+            "key": "courier",
+            "values": {
+                "steadfast_enabled": false,
+                "pathao_enabled": false,
+                "redx_enabled": false
+            }
+        },
+        {
             "key": "cronjob",
             "values": {
                 "scheduler_enabled": true,
@@ -295,6 +303,28 @@
                 "MAIL_PORT": 587,
                 "MAIL_ENCRYPTION": "tls",
                 "MAIL_FROM_NAME": "Tisilo"
+            }
+        },
+        {
+            "key": "facebook_auto_post",
+            "values": {
+                "enabled": false,
+                "post_on_product_publish": false,
+                "api_version": "v23.0"
+            }
+        },
+        {
+            "key": "facebook_capi",
+            "values": {
+                "enabled": false,
+                "api_version": "v23.0",
+                "events": [
+                    "PageView",
+                    "ViewContent",
+                    "AddToCart",
+                    "InitiateCheckout",
+                    "Purchase"
+                ]
             }
         },
         {
@@ -336,6 +366,20 @@
             }
         },
         {
+            "key": "google_analytics",
+            "values": {
+                "enabled": false,
+                "enhanced_ecommerce": true,
+                "anonymize_ip": true
+            }
+        },
+        {
+            "key": "google_tag_manager",
+            "values": {
+                "enabled": false
+            }
+        },
+        {
             "key": "order_restriction",
             "values": {
                 "order_limit_time": 24,
@@ -347,6 +391,14 @@
             "key": "pages",
             "values": {
                 "pages": []
+            }
+        },
+        {
+            "key": "payment",
+            "values": {
+                "cod_enabled": true,
+                "default_gateway": "cod",
+                "currency": "BDT"
             }
         },
         {
@@ -385,6 +437,16 @@
                 "include_products": true,
                 "include_pages": true,
                 "last_generated_at": "2026-08-25T22:27:11.248516Z"
+            }
+        },
+        {
+            "key": "sms",
+            "values": {
+                "enabled": false,
+                "provider": "bulksmsbd",
+                "order_confirmation": true,
+                "password_reset": true,
+                "admin_new_order_alert": true
             }
         },
         {

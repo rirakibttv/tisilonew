@@ -68,6 +68,13 @@ class GeneralSettingsSeeder extends Seeder
                     ['name' => 'Outside Dhaka', 'amount' => 130, 'estimated_days' => 4, 'status' => true],
                 ],
             ],
+            'payment' => ['cod_enabled' => true, 'default_gateway' => 'cod', 'currency' => 'BDT'],
+            'sms' => ['enabled' => false, 'provider' => 'bulksmsbd', 'order_confirmation' => true, 'password_reset' => true, 'admin_new_order_alert' => true],
+            'courier' => ['steadfast_enabled' => false, 'pathao_enabled' => false, 'redx_enabled' => false],
+            'facebook_capi' => ['enabled' => false, 'api_version' => 'v23.0', 'events' => ['PageView', 'ViewContent', 'AddToCart', 'InitiateCheckout', 'Purchase']],
+            'facebook_auto_post' => ['enabled' => false, 'post_on_product_publish' => false, 'api_version' => 'v23.0'],
+            'google_analytics' => ['enabled' => false, 'enhanced_ecommerce' => true, 'anonymize_ip' => true],
+            'google_tag_manager' => ['enabled' => false],
         ];
 
         foreach ($defaults as $key => $values) {

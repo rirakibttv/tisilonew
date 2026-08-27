@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Enums\AdminNavigationGroup;
+use App\Filament\Pages\ApiIntegrationSettings;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\GeneralSettings;
 use App\Filament\Pages\ModuleOverview;
@@ -88,6 +89,7 @@ class AdminPanelProvider extends PanelProvider
                             AdminNavigationGroup::OrderPanel,
                             AdminNavigationGroup::LandingPage,
                             AdminNavigationGroup::SeoOverview,
+                            AdminNavigationGroup::ApiIntegration,
                             AdminNavigationGroup::GeneralSettings,
                         ], true),
                     )),
@@ -96,6 +98,8 @@ class AdminPanelProvider extends PanelProvider
                 ...$this->orderPanelNavigationItems(),
 
                 ...$this->landingPageNavigationItems(),
+
+                ...$this->apiIntegrationNavigationItems(),
 
                 ...$this->generalSettingsNavigationItems(),
 
@@ -229,6 +233,35 @@ class AdminPanelProvider extends PanelProvider
                 ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.orders.index'))
                 ->url(fn (): string => ListOrders::getUrl()),
         ];
+    }
+
+    /** @return array<NavigationItem> */
+    private function apiIntegrationNavigationItems(): array
+    {
+        $items = [
+            ['payment', 'Payment Gateway', Heroicon::OutlinedCreditCard],
+            ['sms', 'SMS Gateway', Heroicon::OutlinedChatBubbleLeftRight],
+            ['courier', 'Courier API', Heroicon::OutlinedTruck],
+            ['facebook_capi', 'Facebook CAPI', Heroicon::OutlinedShare],
+            ['facebook_auto_post', 'FB Auto Post', Heroicon::OutlinedPaperAirplane],
+            ['search_console', 'Google Search Console', Heroicon::OutlinedMagnifyingGlass],
+            ['fraud', 'Manage Fraud API', Heroicon::OutlinedShieldCheck],
+            ['google_analytics', 'Google Analytics', Heroicon::OutlinedChartBarSquare],
+            ['google_tag_manager', 'Google Tag Manager', Heroicon::OutlinedTag],
+        ];
+
+        return array_map(
+            fn (array $item, int $sort): NavigationItem => NavigationItem::make($item[1])
+                ->key('api-integration-'.$item[0])
+                ->group(AdminNavigationGroup::ApiIntegration)
+                ->icon($item[2])
+                ->sort($sort)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.api-integrations')
+                    && request()->string('section', 'payment')->toString() === $item[0])
+                ->url(fn (): string => ApiIntegrationSettings::getUrl(['section' => $item[0]])),
+            $items,
+            array_keys($items),
+        );
     }
 
     /** @return array<NavigationItem> */
