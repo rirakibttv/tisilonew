@@ -126,6 +126,15 @@
                 <div class="rounded-2xl border border-slate-200 bg-white p-4"><p class="text-xs text-slate-500">ডেলিভারি</p><p class="mt-1 text-sm font-black">সারাদেশে ২–৫ কার্যদিবস</p></div>
                 <div class="rounded-2xl border border-slate-200 bg-white p-4"><p class="text-xs text-slate-500">পেমেন্ট</p><p class="mt-1 text-sm font-black">COD, bKash, Nagad ও Card</p></div>
             </div>
+            @php($productWishlisted = collect(session('store_wishlist', []))->contains($product->id))
+            <form method="POST" action="{{ $productWishlisted ? route('store.wishlist.destroy', $product) : route('store.wishlist.store', $product) }}" class="mt-4">
+                @csrf
+                @if ($productWishlisted) @method('DELETE') @endif
+                <button class="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-black {{ $productWishlisted ? 'text-rose-600' : 'text-slate-700 hover:border-rose-200 hover:text-rose-600' }}">
+                    @svg($productWishlisted ? 'heroicon-s-heart' : 'heroicon-o-heart', 'size-5')
+                    {{ $productWishlisted ? 'উইশলিস্ট থেকে সরান' : 'উইশলিস্টে সংরক্ষণ করুন' }}
+                </button>
+            </form>
         </div>
     </section>
 

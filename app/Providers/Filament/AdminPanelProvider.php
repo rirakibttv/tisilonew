@@ -6,7 +6,7 @@ use App\Enums\AdminNavigationGroup;
 use App\Filament\Pages\ApiIntegrationSettings;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\GeneralSettings;
-use App\Filament\Pages\ModuleOverview;
+use App\Filament\Pages\OperationsModule;
 use App\Filament\Pages\SeoOverview;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
 use App\Filament\Resources\IncompleteOrders\Pages\ListIncompleteOrders;
@@ -78,27 +78,7 @@ class AdminPanelProvider extends PanelProvider
             ])
 
             ->navigationItems([
-                ...array_map(
-                    fn (AdminNavigationGroup $group): NavigationItem => NavigationItem::make('Overview')
-                        ->key('module-overview-'.$group->name)
-                        ->group($group)
-                        ->icon($group->getIcon())
-                        ->sort(-100)
-                        ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.module-overview')
-                            && request()->string('module')->toString() === $group->slug())
-                        ->url(fn (): string => ModuleOverview::getUrl(['module' => $group->slug()])),
-                    array_values(array_filter(
-                        AdminNavigationGroup::cases(),
-                        fn (AdminNavigationGroup $group): bool => ! in_array($group, [
-                            AdminNavigationGroup::OrderPanel,
-                            AdminNavigationGroup::LandingPage,
-                            AdminNavigationGroup::SeoOverview,
-                            AdminNavigationGroup::ApiIntegration,
-                            AdminNavigationGroup::User,
-                            AdminNavigationGroup::GeneralSettings,
-                        ], true),
-                    )),
-                ),
+                ...$this->operationsNavigationItems(),
 
                 ...$this->orderPanelNavigationItems(),
 
@@ -338,5 +318,102 @@ class AdminPanelProvider extends PanelProvider
                 ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.customers.*'))
                 ->url(fn (): string => ListCustomers::getUrl()),
         ];
+    }
+
+    /** @return array<NavigationItem> */
+    private function operationsNavigationItems(): array
+    {
+        $groups = [
+            [AdminNavigationGroup::PosSystem, [
+                ['new-sale', 'New Sale', Heroicon::OutlinedCalculator],
+                ['sales-history', 'Sales History', Heroicon::OutlinedClock],
+            ]],
+            [AdminNavigationGroup::FraudCheckerApi, [
+                ['check', 'Fraud Check', Heroicon::OutlinedShieldCheck],
+                ['history', 'Check History', Heroicon::OutlinedClipboardDocumentCheck],
+            ]],
+            [AdminNavigationGroup::Shipping, [
+                ['charges', 'Shipping Charge', Heroicon::OutlinedBanknotes],
+            ]],
+            [AdminNavigationGroup::OfferPanel, [
+                ['banners', 'Banner & Sliders', Heroicon::OutlinedPhoto],
+                ['popup', 'Popup Offer', Heroicon::OutlinedChatBubbleBottomCenterText],
+            ]],
+            [AdminNavigationGroup::Vendors, [
+                ['verifications', 'Vendor Verifications', Heroicon::OutlinedShieldCheck],
+                ['withdrawals', 'Vendor Withdrawals', Heroicon::OutlinedBanknotes],
+            ]],
+            [AdminNavigationGroup::Refunds, [
+                ['all', 'All Refunds', Heroicon::OutlinedRectangleStack],
+                ['pending', 'Pending Refunds', Heroicon::OutlinedClock],
+                ['approved', 'Approved Refunds', Heroicon::OutlinedCheckCircle],
+                ['processed', 'Processed Refunds', Heroicon::OutlinedCheckBadge],
+            ]],
+            [AdminNavigationGroup::Coupons, [
+                ['all', 'All Coupons', Heroicon::OutlinedTicket],
+                ['create', 'Add New Coupon', Heroicon::OutlinedPlusCircle],
+            ]],
+            [AdminNavigationGroup::Blog, [
+                ['all', 'All Blogs', Heroicon::OutlinedBookOpen],
+                ['create', 'Add New Blog', Heroicon::OutlinedDocumentPlus],
+            ]],
+            [AdminNavigationGroup::Accounts, [
+                ['purchases', 'Purchases', Heroicon::OutlinedShoppingBag],
+                ['suppliers', 'Suppliers', Heroicon::OutlinedTruck],
+                ['funds', 'Fund / Accounts', Heroicon::OutlinedBanknotes],
+                ['expenses', 'Expenses', Heroicon::OutlinedCreditCard],
+            ]],
+            [AdminNavigationGroup::CrmHr, [
+                ['employees', 'Employees', Heroicon::OutlinedUsers],
+                ['attendance', 'Attendance', Heroicon::OutlinedCheckCircle],
+                ['leaves', 'Leaves', Heroicon::OutlinedCalendarDays],
+                ['salaries', 'Salaries', Heroicon::OutlinedCurrencyBangladeshi],
+                ['bonuses', 'Bonuses', Heroicon::OutlinedGift],
+                ['salary-payments', 'Salary Payments', Heroicon::OutlinedCreditCard],
+            ]],
+            [AdminNavigationGroup::Reviews, [
+                ['pending', 'Pending Reviews', Heroicon::OutlinedClock],
+                ['all', 'All Reviews', Heroicon::OutlinedStar],
+                ['create', 'Create Review', Heroicon::OutlinedPlusCircle],
+            ]],
+            [AdminNavigationGroup::Complaints, [
+                ['all', 'All Complaints', Heroicon::OutlinedExclamationCircle],
+            ]],
+            [AdminNavigationGroup::Marketing, [
+                ['sms', 'Send Custom SMS', Heroicon::OutlinedPaperAirplane],
+                ['messages', 'Contact Messages', Heroicon::OutlinedChatBubbleLeftRight],
+                ['newsletter', 'Newsletter Subscribers', Heroicon::OutlinedEnvelope],
+            ]],
+            [AdminNavigationGroup::LiveAdsResult, [
+                ['overview', 'Overview', Heroicon::OutlinedChartBarSquare],
+                ['facebook', 'Facebook Ads', Heroicon::OutlinedShare],
+                ['google', 'Google Ads', Heroicon::OutlinedGlobeAlt],
+                ['tiktok', 'TikTok Ads', Heroicon::OutlinedVideoCamera],
+            ]],
+            [AdminNavigationGroup::Pages, [
+                ['all', 'All Pages', Heroicon::OutlinedDocumentText],
+                ['create', 'Create Page', Heroicon::OutlinedDocumentPlus],
+            ]],
+        ];
+
+        $items = [];
+        foreach ($groups as [$group, $definitions]) {
+            foreach ($definitions as $sort => [$section, $label, $icon]) {
+                $items[] = NavigationItem::make($label)
+                    ->key('operations-'.$group->slug().'-'.$section)
+                    ->group($group)
+                    ->icon($icon)
+                    ->sort($sort)
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.operations')
+                        && request()->string('module')->toString() === $group->slug()
+                        && request()->string('section')->toString() === $section)
+                    ->url(fn (): string => OperationsModule::getUrl([
+                        'module' => $group->slug(),
+                        'section' => $section,
+                    ]));
+            }
+        }
+
+        return $items;
     }
 }
