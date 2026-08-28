@@ -61,6 +61,18 @@ class DeploymentDataSnapshotTest extends TestCase
             'is_default' => false,
             'sort_order' => 2,
         ]);
+        $conflictingSkuVariation = ProductVariation::query()->create([
+            'product_id' => $product->id,
+            'sku' => 'DEPLOY-CONFLICT-'.$token,
+            'purchase_price' => 650,
+            'regular_price' => 1050,
+            'sale_price' => 925,
+            'stock_quantity' => 11,
+            'stock_status' => 'in_stock',
+            'status' => true,
+            'is_default' => false,
+            'sort_order' => 3,
+        ]);
         $user = User::query()->create([
             'name' => 'Deployment User '.$token,
             'email' => 'deployment-'.$token.'@example.test',
@@ -146,13 +158,28 @@ class DeploymentDataSnapshotTest extends TestCase
             $this->assertSame('SELLER-'.$token, $vendorData['listings'][0]['items'][0]['seller_sku']);
             $this->assertSame(31, $vendorData['listings'][0]['items'][0]['stocks'][0]['quantity']);
             $productData = collect($snapshot['products'])->firstWhere('slug', $product->slug);
-            $this->assertCount(2, $productData['variations']);
+            $this->assertCount(3, $productData['variations']);
             $this->assertSame('999.00', collect($productData['variations'])->firstWhere('sku', null)['sale_price']);
 
             $product->update([
                 'regular_price' => 1000,
                 'purchase_price' => 700,
                 'stock_quantity' => 7,
+            ]);
+            $conflictingProduct = Product::query()->create([
+                'name' => 'Conflicting Deployment Product '.$token,
+                'slug' => 'conflicting-deployment-product-'.$token,
+                'product_type' => 'simple',
+                'sku' => 'CONFLICT-'.$token,
+                'regular_price' => 100,
+                'stock_quantity' => 1,
+                'stock_status' => 'in_stock',
+                'status' => 'published',
+            ]);
+            $conflictingSkuVariation->update([
+                'product_id' => $conflictingProduct->id,
+                'regular_price' => 1400,
+                'stock_quantity' => 2,
             ]);
             $variation->update([
                 'purchase_price' => 725,
@@ -179,12 +206,15 @@ class DeploymentDataSnapshotTest extends TestCase
             $product->refresh();
             $variation->refresh();
             $skuLessVariation->refresh();
+            $conflictingSkuVariation->refresh();
             $user->refresh();
 
             $this->assertSame('900.00', $product->regular_price);
             $this->assertSame('500.00', $product->purchase_price);
             $this->assertSame(42, $product->stock_quantity);
             $this->assertSame('550.00', $variation->purchase_price);
+            $this->assertSame($conflictingProduct->id, $conflictingSkuVariation->product_id);
+            $this->assertSame('1050.00', $conflictingSkuVariation->regular_price);
             $this->assertSame('950.00', $variation->regular_price);
             $this->assertSame(23, $variation->stock_quantity);
             $this->assertSame('in_stock', $variation->stock_status);

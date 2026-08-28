@@ -341,10 +341,18 @@ class DeploymentDataSnapshot
                     })->filter()->map(fn ($id): int => (int) $id)->sort()->values();
 
                     if (filled($variationData['sku'] ?? null)) {
-                        $variation = ProductVariation::query()->updateOrCreate(
-                            ['product_id' => $product->id, 'sku' => $variationData['sku']],
-                            $variationData,
-                        );
+                        $variation = ProductVariation::query()
+                            ->where('sku', $variationData['sku'])
+                            ->first();
+
+                        if ($variation) {
+                            $variation->update($variationData);
+                        } else {
+                            $variation = ProductVariation::query()->create([
+                                'product_id' => $product->id,
+                                ...$variationData,
+                            ]);
+                        }
                     } else {
                         $variation = $unclaimedSkuLessVariations->first(
                             fn (ProductVariation $candidate): bool => $candidate->attributeValues
