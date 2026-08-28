@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Role extends Model
 {
+    protected $table = 'rbac_roles';
+
     protected $fillable = [
         'name',
         'slug',
@@ -26,11 +28,11 @@ class Role extends Model
 
     public function permissions(): BelongsToMany
     {
-        return $this->belongsToMany(Permission::class)->orderBy('group')->orderBy('name');
+        return $this->belongsToMany(Permission::class, 'rbac_permission_role')->orderBy('group')->orderBy('name');
     }
 
     public function users(): HasMany
     {
-        return $this->hasMany(User::class, 'access_role_id');
+        return $this->hasMany(User::class, 'rbac_role_id');
     }
 }

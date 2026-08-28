@@ -70,7 +70,7 @@ class UserManagementModuleTest extends TestCase
         $user = User::factory()->create([
             'role' => UserRole::OperationsManager,
             'status' => UserStatus::Active,
-            'access_role_id' => $role->id,
+            'rbac_role_id' => $role->id,
         ]);
 
         $this->assertTrue($user->hasPermission('customers.manage'));

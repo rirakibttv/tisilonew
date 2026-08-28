@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Permission extends Model
 {
+    protected $table = 'rbac_permissions';
+
     protected $fillable = [
         'name',
         'slug',
@@ -24,6 +26,6 @@ class Permission extends Model
 
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class)->orderBy('name');
+        return $this->belongsToMany(Role::class, 'rbac_permission_role')->orderBy('name');
     }
 }

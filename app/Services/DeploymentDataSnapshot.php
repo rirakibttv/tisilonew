@@ -272,7 +272,7 @@ class DeploymentDataSnapshot
                 $hasAccessRole = array_key_exists('access_role_slug', $data);
                 $accessRoleSlug = Arr::pull($data, 'access_role_slug');
                 if ($hasAccessRole) {
-                    $data['access_role_id'] = filled($accessRoleSlug)
+                    $data['rbac_role_id'] = filled($accessRoleSlug)
                         ? Role::query()->where('slug', $accessRoleSlug)->value('id')
                         : null;
                 }

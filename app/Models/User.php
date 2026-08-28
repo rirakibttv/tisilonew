@@ -31,7 +31,7 @@ class User extends Authenticatable implements FilamentUser
         'phone',
         'password',
         'role',
-        'access_role_id',
+        'rbac_role_id',
         'status',
     ];
 
@@ -75,7 +75,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function accessRole(): BelongsTo
     {
-        return $this->belongsTo(Role::class, 'access_role_id');
+        return $this->belongsTo(Role::class, 'rbac_role_id');
     }
 
     public function hasPermission(string $permission): bool
@@ -84,10 +84,10 @@ class User extends Authenticatable implements FilamentUser
             return true;
         }
 
-        return $this->accessRole?->status === true
+            return $this->accessRole?->status === true
             && $this->accessRole->permissions()
-                ->where('permissions.status', true)
-                ->where('permissions.slug', $permission)
+                ->where('rbac_permissions.status', true)
+                ->where('rbac_permissions.slug', $permission)
                 ->exists();
     }
 

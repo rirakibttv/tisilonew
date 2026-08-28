@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('roles', function (Blueprint $table) {
+        Schema::create('rbac_roles', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('permissions', function (Blueprint $table) {
+        Schema::create('rbac_permissions', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
@@ -28,17 +28,17 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('permission_role', function (Blueprint $table) {
-            $table->foreignId('role_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('permission_id')->constrained()->cascadeOnDelete();
+        Schema::create('rbac_permission_role', function (Blueprint $table) {
+            $table->foreignId('role_id')->constrained('rbac_roles')->cascadeOnDelete();
+            $table->foreignId('permission_id')->constrained('rbac_permissions')->cascadeOnDelete();
             $table->primary(['role_id', 'permission_id']);
         });
 
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('access_role_id')
+            $table->foreignId('rbac_role_id')
                 ->nullable()
                 ->after('role')
-                ->constrained('roles')
+                ->constrained('rbac_roles')
                 ->nullOnDelete();
         });
     }
@@ -46,11 +46,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('access_role_id');
+            $table->dropConstrainedForeignId('rbac_role_id');
         });
 
-        Schema::dropIfExists('permission_role');
-        Schema::dropIfExists('permissions');
-        Schema::dropIfExists('roles');
+        Schema::dropIfExists('rbac_permission_role');
+        Schema::dropIfExists('rbac_permissions');
+        Schema::dropIfExists('rbac_roles');
     }
 };

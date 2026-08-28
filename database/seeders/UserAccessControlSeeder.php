@@ -80,8 +80,8 @@ class UserAccessControlSeeder extends Seeder
 
             User::query()
                 ->where('role', $slug)
-                ->whereNull('access_role_id')
-                ->update(['access_role_id' => $role->id]);
+                ->whereNull('rbac_role_id')
+                ->update(['rbac_role_id' => $role->id]);
         }
     }
 }

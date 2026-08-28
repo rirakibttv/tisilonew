@@ -44,7 +44,7 @@ class UserForm
                         ->default(UserRole::Customer->value)
                         ->required(),
 
-                    Select::make('access_role_id')
+                    Select::make('rbac_role_id')
                         ->label('Access Role')
                         ->relationship('accessRole', 'name', modifyQueryUsing: fn ($query) => $query->where('status', true))
                         ->searchable()
