@@ -17,6 +17,7 @@ class ProductionRequiredDataSeeder extends Seeder
     {
         $this->call(GeneralSettingsSeeder::class);
         app(DeploymentDataSnapshot::class)->import();
+        $this->call(UserAccessControlSeeder::class);
         $this->call(LandingPageTemplateSeeder::class);
     }
 }

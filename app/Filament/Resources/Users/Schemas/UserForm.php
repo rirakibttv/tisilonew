@@ -44,6 +44,13 @@ class UserForm
                         ->default(UserRole::Customer->value)
                         ->required(),
 
+                    Select::make('access_role_id')
+                        ->label('Access Role')
+                        ->relationship('accessRole', 'name', modifyQueryUsing: fn ($query) => $query->where('status', true))
+                        ->searchable()
+                        ->preload()
+                        ->helperText('Optional granular permission role. The account type above still controls panel login.'),
+
                     Select::make('status')
                         ->options(UserStatus::options())
                         ->default(UserStatus::Active->value)

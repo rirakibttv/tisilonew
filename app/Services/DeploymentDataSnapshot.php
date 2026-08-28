@@ -8,9 +8,11 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\InventoryStock;
 use App\Models\LandingPage;
+use App\Models\Permission;
 use App\Models\Product;
 use App\Models\ProductTag;
 use App\Models\ProductVariation;
+use App\Models\Role;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\Vendor;
@@ -56,10 +58,19 @@ class DeploymentDataSnapshot
                 $tag->toArray(),
                 ['name', 'slug', 'description', 'sort_order', 'status', 'seo_title', 'meta_description'],
             ))->all(),
-            'users' => User::query()->orderBy('email')->get()->map(fn (User $user): array => [
+            'permissions' => Permission::query()->orderBy('slug')->get()->map(fn (Permission $permission): array => Arr::only(
+                $permission->toArray(),
+                ['name', 'slug', 'group', 'description', 'status'],
+            ))->all(),
+            'roles' => Role::query()->with('permissions:id,slug')->orderBy('slug')->get()->map(fn (Role $role): array => [
+                ...Arr::only($role->toArray(), ['name', 'slug', 'description', 'is_system', 'status']),
+                'permission_slugs' => $role->permissions->pluck('slug')->values()->all(),
+            ])->all(),
+            'users' => User::query()->with('accessRole:id,slug')->orderBy('email')->get()->map(fn (User $user): array => [
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->role->value,
+                'access_role_slug' => $user->accessRole?->slug,
                 'status' => $user->status->value,
                 'email_verified_at' => $user->email_verified_at?->toISOString(),
             ])->all(),
@@ -208,7 +219,7 @@ class DeploymentDataSnapshot
         }
 
         return DB::transaction(function () use ($snapshot): array {
-            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'users' => 0, 'site_settings' => 0, 'products' => 0, 'product_variations' => 0, 'landing_pages' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
+            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'permissions' => 0, 'roles' => 0, 'users' => 0, 'site_settings' => 0, 'products' => 0, 'product_variations' => 0, 'landing_pages' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
 
             foreach ($snapshot['brands'] ?? [] as $data) {
                 Brand::query()->updateOrCreate(['slug' => $data['slug']], $data);
@@ -244,7 +255,27 @@ class DeploymentDataSnapshot
                 $counts['product_tags']++;
             }
 
+            foreach ($snapshot['permissions'] ?? [] as $data) {
+                Permission::query()->updateOrCreate(['slug' => $data['slug']], $data);
+                $counts['permissions']++;
+            }
+
+            foreach ($snapshot['roles'] ?? [] as $data) {
+                $permissionSlugs = Arr::pull($data, 'permission_slugs', []);
+                $role = Role::query()->updateOrCreate(['slug' => $data['slug']], $data);
+                $permissionIds = Permission::query()->whereIn('slug', $permissionSlugs)->pluck('id');
+                $role->permissions()->sync($permissionIds);
+                $counts['roles']++;
+            }
+
             foreach ($snapshot['users'] ?? [] as $data) {
+                $hasAccessRole = array_key_exists('access_role_slug', $data);
+                $accessRoleSlug = Arr::pull($data, 'access_role_slug');
+                if ($hasAccessRole) {
+                    $data['access_role_id'] = filled($accessRoleSlug)
+                        ? Role::query()->where('slug', $accessRoleSlug)->value('id')
+                        : null;
+                }
                 $user = User::query()->where('email', $data['email'])->first();
 
                 if ($user) {

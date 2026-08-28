@@ -253,11 +253,313 @@
             "meta_description": null
         }
     ],
+    "permissions": [
+        {
+            "name": "Manage Accounts",
+            "slug": "accounts.manage",
+            "group": "Accounts",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Live Ads",
+            "slug": "ads.manage",
+            "group": "Live Ads Result",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage API Integrations",
+            "slug": "api_integrations.manage",
+            "group": "API Integration",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Blog",
+            "slug": "blog.manage",
+            "group": "Blog",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Complaints",
+            "slug": "complaints.manage",
+            "group": "Complaints",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Coupons",
+            "slug": "coupons.manage",
+            "group": "Coupons",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage CRM / HR",
+            "slug": "crm_hr.manage",
+            "group": "CRM / HR",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Customers",
+            "slug": "customers.manage",
+            "group": "User",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "View Dashboard",
+            "slug": "dashboard.view",
+            "group": "Dashboard",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Fraud Checker",
+            "slug": "fraud.manage",
+            "group": "Fraud Checker API",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Landing Pages",
+            "slug": "landing_pages.manage",
+            "group": "Landing Page",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Marketing",
+            "slug": "marketing.manage",
+            "group": "Marketing",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Offers",
+            "slug": "offers.manage",
+            "group": "Offer Panel",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Orders",
+            "slug": "orders.manage",
+            "group": "Order Panel",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Pages",
+            "slug": "pages.manage",
+            "group": "Pages",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Permissions",
+            "slug": "permissions.manage",
+            "group": "User",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage POS System",
+            "slug": "pos.manage",
+            "group": "POS System",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Products",
+            "slug": "products.manage",
+            "group": "Products Info",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Refunds",
+            "slug": "refunds.manage",
+            "group": "Refunds",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Reviews",
+            "slug": "reviews.manage",
+            "group": "Reviews",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Roles",
+            "slug": "roles.manage",
+            "group": "User",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage SEO",
+            "slug": "seo.manage",
+            "group": "SEO Overview",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage General Settings",
+            "slug": "settings.manage",
+            "group": "General Settings",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Shipping",
+            "slug": "shipping.manage",
+            "group": "Shipping",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Users",
+            "slug": "users.manage",
+            "group": "User",
+            "description": null,
+            "status": true
+        },
+        {
+            "name": "Manage Vendors",
+            "slug": "vendors.manage",
+            "group": "Vendors",
+            "description": null,
+            "status": true
+        }
+    ],
+    "roles": [
+        {
+            "name": "Admin",
+            "slug": "admin",
+            "description": null,
+            "is_system": true,
+            "status": true,
+            "permission_slugs": [
+                "accounts.manage",
+                "api_integrations.manage",
+                "blog.manage",
+                "complaints.manage",
+                "coupons.manage",
+                "crm_hr.manage",
+                "dashboard.view",
+                "fraud.manage",
+                "settings.manage",
+                "landing_pages.manage",
+                "ads.manage",
+                "marketing.manage",
+                "offers.manage",
+                "orders.manage",
+                "pages.manage",
+                "pos.manage",
+                "products.manage",
+                "refunds.manage",
+                "reviews.manage",
+                "seo.manage",
+                "shipping.manage",
+                "customers.manage",
+                "permissions.manage",
+                "roles.manage",
+                "users.manage",
+                "vendors.manage"
+            ]
+        },
+        {
+            "name": "Customer",
+            "slug": "customer",
+            "description": null,
+            "is_system": true,
+            "status": true,
+            "permission_slugs": []
+        },
+        {
+            "name": "Operations Manager",
+            "slug": "operations_manager",
+            "description": null,
+            "is_system": true,
+            "status": true,
+            "permission_slugs": [
+                "coupons.manage",
+                "dashboard.view",
+                "fraud.manage",
+                "offers.manage",
+                "orders.manage",
+                "pos.manage",
+                "products.manage",
+                "refunds.manage",
+                "reviews.manage",
+                "shipping.manage",
+                "customers.manage",
+                "vendors.manage"
+            ]
+        },
+        {
+            "name": "Super Admin",
+            "slug": "super_admin",
+            "description": null,
+            "is_system": true,
+            "status": true,
+            "permission_slugs": [
+                "accounts.manage",
+                "api_integrations.manage",
+                "blog.manage",
+                "complaints.manage",
+                "coupons.manage",
+                "crm_hr.manage",
+                "dashboard.view",
+                "fraud.manage",
+                "settings.manage",
+                "landing_pages.manage",
+                "ads.manage",
+                "marketing.manage",
+                "offers.manage",
+                "orders.manage",
+                "pages.manage",
+                "pos.manage",
+                "products.manage",
+                "refunds.manage",
+                "reviews.manage",
+                "seo.manage",
+                "shipping.manage",
+                "customers.manage",
+                "permissions.manage",
+                "roles.manage",
+                "users.manage",
+                "vendors.manage"
+            ]
+        },
+        {
+            "name": "Vendor Owner",
+            "slug": "vendor_owner",
+            "description": null,
+            "is_system": true,
+            "status": true,
+            "permission_slugs": []
+        },
+        {
+            "name": "Vendor Staff",
+            "slug": "vendor_staff",
+            "description": null,
+            "is_system": true,
+            "status": true,
+            "permission_slugs": []
+        }
+    ],
     "users": [
         {
             "name": "Md Rakibul Islam",
             "email": "tisiloint@gmail.com",
             "role": "super_admin",
+            "access_role_slug": "super_admin",
             "status": "active",
             "email_verified_at": null
         }

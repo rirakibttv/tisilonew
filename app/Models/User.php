@@ -9,6 +9,7 @@ use Filament\Models\Contracts\FilamentUser;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -30,6 +31,7 @@ class User extends Authenticatable implements FilamentUser
         'phone',
         'password',
         'role',
+        'access_role_id',
         'status',
     ];
 
@@ -69,6 +71,24 @@ class User extends Authenticatable implements FilamentUser
             'admin' => $this->role->canAccessAdminPanel(),
             default => false,
         };
+    }
+
+    public function accessRole(): BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'access_role_id');
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        if (in_array($this->role, [UserRole::SuperAdmin, UserRole::Admin], true)) {
+            return true;
+        }
+
+        return $this->accessRole?->status === true
+            && $this->accessRole->permissions()
+                ->where('permissions.status', true)
+                ->where('permissions.slug', $permission)
+                ->exists();
     }
 
     public function ownedVendors(): HasMany

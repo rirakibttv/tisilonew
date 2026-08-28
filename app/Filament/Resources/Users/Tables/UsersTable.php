@@ -34,6 +34,12 @@ class UsersTable
                     )
                     ->sortable(),
 
+                TextColumn::make('accessRole.name')
+                    ->label('Access Role')
+                    ->badge()
+                    ->placeholder('Default access')
+                    ->sortable(),
+
                 TextColumn::make('status')
                     ->badge()
                     ->formatStateUsing(

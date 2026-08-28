@@ -8,6 +8,7 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\GeneralSettings;
 use App\Filament\Pages\ModuleOverview;
 use App\Filament\Pages\SeoOverview;
+use App\Filament\Resources\Customers\Pages\ListCustomers;
 use App\Filament\Resources\IncompleteOrders\Pages\ListIncompleteOrders;
 use App\Filament\Resources\LandingPages\Pages\CreateLandingPage;
 use App\Filament\Resources\LandingPages\Pages\ListLandingPages;
@@ -17,6 +18,9 @@ use App\Filament\Resources\Orders\Pages\ListVendorOrders;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\Pages\PendingProducts;
+use App\Filament\Resources\Permissions\Pages\ListPermissions;
+use App\Filament\Resources\Roles\Pages\ListRoles;
+use App\Filament\Resources\Users\Pages\ListUsers;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -90,6 +94,7 @@ class AdminPanelProvider extends PanelProvider
                             AdminNavigationGroup::LandingPage,
                             AdminNavigationGroup::SeoOverview,
                             AdminNavigationGroup::ApiIntegration,
+                            AdminNavigationGroup::User,
                             AdminNavigationGroup::GeneralSettings,
                         ], true),
                     )),
@@ -100,6 +105,8 @@ class AdminPanelProvider extends PanelProvider
                 ...$this->landingPageNavigationItems(),
 
                 ...$this->apiIntegrationNavigationItems(),
+
+                ...$this->userNavigationItems(),
 
                 ...$this->generalSettingsNavigationItems(),
 
@@ -293,5 +300,43 @@ class AdminPanelProvider extends PanelProvider
             $items,
             array_keys($items),
         );
+    }
+
+    /** @return array<NavigationItem> */
+    private function userNavigationItems(): array
+    {
+        return [
+            NavigationItem::make('User')
+                ->key('user-all')
+                ->group(AdminNavigationGroup::User)
+                ->icon(Heroicon::OutlinedUser)
+                ->sort(0)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.users.*'))
+                ->url(fn (): string => ListUsers::getUrl()),
+
+            NavigationItem::make('Roles')
+                ->key('user-roles')
+                ->group(AdminNavigationGroup::User)
+                ->icon(Heroicon::OutlinedIdentification)
+                ->sort(1)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.roles.*'))
+                ->url(fn (): string => ListRoles::getUrl()),
+
+            NavigationItem::make('Permission')
+                ->key('user-permissions')
+                ->group(AdminNavigationGroup::User)
+                ->icon(Heroicon::OutlinedKey)
+                ->sort(2)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.permissions.*'))
+                ->url(fn (): string => ListPermissions::getUrl()),
+
+            NavigationItem::make('Customer')
+                ->key('user-customers')
+                ->group(AdminNavigationGroup::User)
+                ->icon(Heroicon::OutlinedUsers)
+                ->sort(3)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.customers.*'))
+                ->url(fn (): string => ListCustomers::getUrl()),
+        ];
     }
 }
