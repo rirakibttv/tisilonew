@@ -37,15 +37,13 @@
         </form>
 
         <nav class="ml-auto flex items-center gap-1 sm:gap-2" aria-label="Customer actions">
-            <a href="{{ route('store.account.index') }}" class="store-action-link">
+            <a href="#" class="store-action-link">
                 @svg('heroicon-o-user', 'size-5')
                 <span class="hidden lg:inline">অ্যাকাউন্ট</span>
             </a>
-            <a href="{{ route('store.wishlist.index') }}" class="store-action-link relative hidden sm:flex">
+            <a href="#" class="store-action-link hidden sm:flex">
                 @svg('heroicon-o-heart', 'size-5')
                 <span class="hidden lg:inline">উইশলিস্ট</span>
-                @php($wishlistCount = collect(session('store_wishlist', []))->unique()->count())
-                @if ($wishlistCount > 0)<span class="absolute -right-1 -top-1 grid size-5 place-items-center rounded-full bg-rose-500 text-[10px] font-bold text-white">{{ $wishlistCount }}</span>@endif
             </a>
             <a href="{{ route('store.cart.index') }}" class="store-action-link relative">
                 @svg('heroicon-o-shopping-cart', 'size-5')
@@ -73,26 +71,24 @@
 
     <div class="hidden border-t border-slate-100 bg-white" data-mobile-menu>
         <nav class="mx-auto grid max-w-7xl gap-1 px-4 py-3 text-sm font-semibold text-slate-700">
-            <a href="{{ route('store.home') }}#categories" class="rounded-lg px-3 py-2 hover:bg-orange-50 hover:text-orange-600">ক্যাটাগরি</a>
-            <a href="{{ route('store.home') }}#featured" class="rounded-lg px-3 py-2 hover:bg-orange-50 hover:text-orange-600">আজকের অফার</a>
-            <a href="{{ route('store.products.index') }}" class="rounded-lg px-3 py-2 hover:bg-orange-50 hover:text-orange-600">সব পণ্য</a>
-            <a href="{{ route('store.wishlist.index') }}" class="rounded-lg px-3 py-2 hover:bg-orange-50 hover:text-orange-600">উইশলিস্ট</a>
-            <a href="{{ route('store.account.index') }}" class="rounded-lg px-3 py-2 hover:bg-orange-50 hover:text-orange-600">অর্ডার ট্র্যাকিং</a>
+            <a href="#categories" class="rounded-lg px-3 py-2 hover:bg-orange-50 hover:text-orange-600">ক্যাটাগরি</a>
+            <a href="#featured" class="rounded-lg px-3 py-2 hover:bg-orange-50 hover:text-orange-600">আজকের অফার</a>
+            <a href="#brands" class="rounded-lg px-3 py-2 hover:bg-orange-50 hover:text-orange-600">ব্র্যান্ড</a>
         </nav>
     </div>
 </header>
 
 <nav class="hidden border-b border-slate-200 bg-white md:block" aria-label="Main categories">
     <div class="mx-auto flex max-w-7xl items-center gap-7 overflow-x-auto px-6 py-3 text-sm font-semibold text-slate-700 lg:px-8">
-        <a href="{{ route('store.home') }}#categories" class="flex items-center gap-2 text-orange-600">
+        <a href="#categories" class="flex items-center gap-2 text-orange-600">
             @svg('heroicon-o-squares-2x2', 'size-5')
             সব ক্যাটাগরি
         </a>
-        <a href="{{ route('store.home') }}#featured" class="whitespace-nowrap hover:text-orange-600">আজকের ডিল</a>
-        <a href="{{ route('store.products.index', ['category' => 'electronics']) }}" class="whitespace-nowrap hover:text-orange-600">ইলেকট্রনিক্স</a>
-        <a href="{{ route('store.products.index', ['category' => 'fashion']) }}" class="whitespace-nowrap hover:text-orange-600">ফ্যাশন</a>
-        <a href="{{ route('store.products.index', ['category' => 'home-lifestyle']) }}" class="whitespace-nowrap hover:text-orange-600">হোম ও লাইফস্টাইল</a>
-        <a href="{{ route('store.products.index', ['category' => 'beauty-care']) }}" class="whitespace-nowrap hover:text-orange-600">বিউটি ও কেয়ার</a>
-        <a href="{{ route('store.home') }}#featured" class="ml-auto whitespace-nowrap rounded-full bg-orange-50 px-4 py-1.5 text-orange-700">Flash Sale</a>
+        <a href="#featured" class="whitespace-nowrap hover:text-orange-600">আজকের ডিল</a>
+        <a href="#featured" class="whitespace-nowrap hover:text-orange-600">ইলেকট্রনিক্স</a>
+        <a href="#featured" class="whitespace-nowrap hover:text-orange-600">ফ্যাশন</a>
+        <a href="#featured" class="whitespace-nowrap hover:text-orange-600">হোম ও লাইফস্টাইল</a>
+        <a href="#featured" class="whitespace-nowrap hover:text-orange-600">বিউটি ও কেয়ার</a>
+        <a href="#featured" class="ml-auto whitespace-nowrap rounded-full bg-orange-50 px-4 py-1.5 text-orange-700">Flash Sale</a>
     </div>
 </nav>

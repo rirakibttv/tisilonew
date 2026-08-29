@@ -1,17 +1,9 @@
 @php
     $item = $card;
     $product = $item['product'];
-    $wishlisted = collect(session('store_wishlist', []))->contains($product->id);
 @endphp
 
-<article class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-100/60">
-    <form method="POST" action="{{ $wishlisted ? route('store.wishlist.destroy', $product) : route('store.wishlist.store', $product) }}" class="absolute right-3 top-3 z-20">
-        @csrf
-        @if ($wishlisted) @method('DELETE') @endif
-        <button class="grid size-9 place-items-center rounded-full bg-white/95 shadow-sm transition {{ $wishlisted ? 'text-rose-500' : 'text-slate-500 hover:text-rose-500' }}" aria-label="{{ $wishlisted ? 'উইশলিস্ট থেকে সরান' : 'উইশলিস্টে যোগ করুন' }}">
-            @svg($wishlisted ? 'heroicon-s-heart' : 'heroicon-o-heart', 'size-5')
-        </button>
-    </form>
+<article class="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-100/60">
     <a href="{{ route('store.products.show', $product->slug) }}" class="block">
         <div class="relative aspect-square overflow-hidden bg-gradient-to-br from-slate-100 via-white to-orange-50">
             @if ($item['image'])
@@ -29,6 +21,9 @@
                 <span class="absolute left-3 top-3 rounded-full bg-rose-500 px-2.5 py-1 text-xs font-bold text-white">-{{ $item['discount'] }}%</span>
             @endif
 
+            <button type="button" class="absolute right-3 top-3 grid size-9 place-items-center rounded-full bg-white/90 text-slate-500 shadow-sm transition hover:text-rose-500" aria-label="উইশলিস্টে যোগ করুন">
+                @svg('heroicon-o-heart', 'size-5')
+            </button>
         </div>
 
         <div class="p-4">
