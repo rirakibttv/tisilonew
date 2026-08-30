@@ -6,6 +6,39 @@ FallbackResource /index.php
     Options -MultiViews -Indexes
 </IfModule>
 
+# Cache fingerprinted/static storefront files while keeping Laravel responses private.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 30 days"
+    ExpiresByType application/javascript "access plus 30 days"
+    ExpiresByType text/javascript "access plus 30 days"
+    ExpiresByType image/avif "access plus 30 days"
+    ExpiresByType image/gif "access plus 30 days"
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+    ExpiresByType image/webp "access plus 30 days"
+    ExpiresByType font/otf "access plus 30 days"
+    ExpiresByType font/ttf "access plus 30 days"
+    ExpiresByType font/woff "access plus 30 days"
+    ExpiresByType font/woff2 "access plus 30 days"
+    ExpiresByType audio/mpeg "access plus 30 days"
+    ExpiresByType video/mp4 "access plus 30 days"
+    ExpiresByType video/webm "access plus 30 days"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "(?i)\.(?:avif|bmp|css|eot|gif|ico|jpe?g|js|mp3|mp4|ogg|otf|png|svg|ttf|webm|webp|woff2?)$">
+        Header set Cache-Control "public, max-age=2592000, immutable"
+        Header set Cloudflare-CDN-Cache-Control "public, max-age=2592000, stale-while-revalidate=86400"
+    </FilesMatch>
+
+    <FilesMatch "(?i)\.(?:php|html?)$">
+        Header always set Cache-Control "no-store, private"
+        Header always set Cloudflare-CDN-Cache-Control "no-store"
+    </FilesMatch>
+</IfModule>
+
 RewriteEngine On
 RewriteBase /
 

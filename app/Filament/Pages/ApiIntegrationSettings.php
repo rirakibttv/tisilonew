@@ -3,6 +3,8 @@
 namespace App\Filament\Pages;
 
 use App\Models\SiteSetting;
+use App\Services\CloudflareApiService;
+use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -13,6 +15,8 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
+use RuntimeException;
+use Throwable;
 
 class ApiIntegrationSettings extends Page
 {
@@ -38,6 +42,7 @@ class ApiIntegrationSettings extends Page
         'fraud' => 'Manage Fraud API',
         'google_analytics' => 'Google Analytics',
         'google_tag_manager' => 'Google Tag Manager',
+        'cloudflare' => 'Cloudflare API',
     ];
 
     public function mount(): void
@@ -61,6 +66,10 @@ class ApiIntegrationSettings extends Page
 
     public function getSubheading(): ?string
     {
+        if ($this->section === 'cloudflare') {
+            return 'Securely connect the Cloudflare zone, apply a static-asset Cache Rule, and purge CDN cache.';
+        }
+
         return 'Credentials are encrypted. Saving settings never sends a test request, SMS, event, or social post.';
     }
 
@@ -133,6 +142,7 @@ class ApiIntegrationSettings extends Page
             'fraud' => ['fraud_api_key', 'duplicate_order_api_key'],
             'google_analytics' => ['measurement_protocol_secret'],
             'google_tag_manager' => ['environment_auth', 'environment_preview'],
+            'cloudflare' => ['api_token'],
             default => [],
         };
     }
@@ -150,7 +160,109 @@ class ApiIntegrationSettings extends Page
             'fraud' => $this->fraudComponents(),
             'google_analytics' => $this->googleAnalyticsComponents(),
             'google_tag_manager' => $this->googleTagManagerComponents(),
+            'cloudflare' => $this->cloudflareComponents(),
         };
+    }
+
+    /** @return array<Action> */
+    protected function getHeaderActions(): array
+    {
+        if ($this->section !== 'cloudflare') {
+            return [];
+        }
+
+        return [
+            Action::make('testCloudflareConnection')
+                ->label('Verify Connection')
+                ->icon('heroicon-o-signal')
+                ->action('testCloudflareConnection'),
+            Action::make('applyCloudflareCacheRule')
+                ->label('Apply Cache Rule')
+                ->icon('heroicon-o-cloud-arrow-up')
+                ->requiresConfirmation()
+                ->modalDescription('This adds or updates only the Tisilo static-asset Cache Rule. Existing Cloudflare rules are preserved.')
+                ->action('applyCloudflareCacheRule'),
+            Action::make('purgeCloudflareCache')
+                ->label('Purge CDN Cache')
+                ->icon('heroicon-o-arrow-path')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalDescription('This clears all cached files for this Cloudflare zone. The origin may receive extra traffic while the cache warms again.')
+                ->action('purgeCloudflareCache'),
+        ];
+    }
+
+    public function testCloudflareConnection(CloudflareApiService $cloudflare): void
+    {
+        try {
+            [$values, $apiToken] = $this->cloudflareConfiguration();
+            $zone = $cloudflare->zone($apiToken, (string) $values['zone_id']);
+
+            $this->storeCloudflareStatus([
+                'zone_name' => $zone['name'] ?? $values['hostname'] ?? null,
+                'zone_status' => $zone['status'] ?? 'unknown',
+                'development_mode' => (int) ($zone['development_mode'] ?? 0),
+                'last_verified_at' => now()->toIso8601String(),
+            ]);
+
+            Notification::make()
+                ->success()
+                ->title('Cloudflare connection verified')
+                ->body('Zone: '.($zone['name'] ?? $values['hostname']).' · Status: '.($zone['status'] ?? 'unknown'))
+                ->send();
+        } catch (Throwable $exception) {
+            $this->cloudflareFailure('Cloudflare verification failed', $exception);
+        }
+    }
+
+    public function applyCloudflareCacheRule(CloudflareApiService $cloudflare): void
+    {
+        try {
+            [$values, $apiToken] = $this->cloudflareConfiguration();
+            $result = $cloudflare->applyStaticAssetCacheRule(
+                $apiToken,
+                (string) $values['zone_id'],
+                (string) $values['hostname'],
+                (int) ($values['edge_ttl'] ?? 86400),
+                (int) ($values['browser_ttl'] ?? 14400),
+                (bool) ($values['enabled'] ?? true),
+            );
+
+            $this->storeCloudflareStatus([
+                'ruleset_id' => $result['ruleset_id'],
+                'rule_id' => $result['rule_id'],
+                'rule_status' => $result['enabled'] ? 'enabled' : 'disabled',
+                'last_rule_applied_at' => now()->toIso8601String(),
+            ]);
+
+            Notification::make()
+                ->success()
+                ->title('Cloudflare Cache Rule applied')
+                ->body('Static CSS, JavaScript, images, fonts and media are now eligible for edge caching.')
+                ->send();
+        } catch (Throwable $exception) {
+            $this->cloudflareFailure('Cloudflare Cache Rule failed', $exception);
+        }
+    }
+
+    public function purgeCloudflareCache(CloudflareApiService $cloudflare): void
+    {
+        try {
+            [$values, $apiToken] = $this->cloudflareConfiguration();
+            $cloudflare->purgeEverything($apiToken, (string) $values['zone_id']);
+
+            $this->storeCloudflareStatus([
+                'last_purged_at' => now()->toIso8601String(),
+            ]);
+
+            Notification::make()
+                ->success()
+                ->title('Cloudflare cache purged')
+                ->body('The next requests will repopulate the CDN cache with fresh files.')
+                ->send();
+        } catch (Throwable $exception) {
+            $this->cloudflareFailure('Cloudflare cache purge failed', $exception);
+        }
     }
 
     /** @return array<mixed> */
@@ -356,6 +468,108 @@ class ApiIntegrationSettings extends Page
                 $this->secretInput('environment_preview', 'Environment Preview Token'),
             ]),
         ];
+    }
+
+    /** @return array<mixed> */
+    private function cloudflareComponents(): array
+    {
+        $defaultHostname = parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'www.tisilo.com';
+
+        return [
+            Section::make('Cloudflare Zone Connection')
+                ->description('Create a scoped API token with Zone Read, Cache Purge, and Cache Rules Edit permissions. Save before using the header actions.')
+                ->columns(2)
+                ->schema([
+                    Toggle::make('enabled')->label('Enable managed cache rule')->default(true),
+                    TextInput::make('zone_id')
+                        ->label('Zone ID')
+                        ->required()
+                        ->regex('/^[a-f0-9]{32}$/i')
+                        ->maxLength(32),
+                    TextInput::make('hostname')
+                        ->required()
+                        ->default($defaultHostname)
+                        ->regex('/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i')
+                        ->placeholder('www.tisilo.com'),
+                    $this->secretInput('api_token', 'Cloudflare API Token')
+                        ->helperText('Encrypted in the database and excluded from Git/deployment snapshots.'),
+                ]),
+            Section::make('Static Asset Cache Policy')
+                ->description('Caches only CSS, JavaScript, images, fonts, documents and media. Cart, checkout, admin and personalized HTML remain dynamic for session safety.')
+                ->columns(2)
+                ->schema([
+                    Select::make('edge_ttl')
+                        ->label('Cloudflare Edge TTL')
+                        ->options([
+                            3600 => '1 hour',
+                            14400 => '4 hours',
+                            86400 => '1 day',
+                            604800 => '7 days',
+                            2592000 => '30 days',
+                        ])
+                        ->default(86400)
+                        ->required(),
+                    Select::make('browser_ttl')
+                        ->label('Browser TTL')
+                        ->options([
+                            3600 => '1 hour',
+                            14400 => '4 hours',
+                            28800 => '8 hours',
+                            86400 => '1 day',
+                            172800 => '2 days',
+                        ])
+                        ->default(14400)
+                        ->required(),
+                ]),
+            Section::make('Connection & Cache Status')
+                ->columns(3)
+                ->schema([
+                    TextInput::make('zone_name')->disabled(),
+                    TextInput::make('zone_status')->disabled(),
+                    TextInput::make('development_mode')->label('Development Mode (seconds)')->disabled(),
+                    TextInput::make('rule_status')->disabled(),
+                    TextInput::make('last_verified_at')->disabled(),
+                    TextInput::make('last_purged_at')->disabled(),
+                ]),
+        ];
+    }
+
+    /** @return array{0: array<string, mixed>, 1: string} */
+    private function cloudflareConfiguration(): array
+    {
+        $values = SiteSetting::valuesFor('cloudflare');
+        $apiToken = (string) (SiteSetting::secretsFor('cloudflare')['api_token'] ?? '');
+
+        if (blank($values['zone_id'] ?? null) || blank($values['hostname'] ?? null) || blank($apiToken)) {
+            throw new RuntimeException('Save the Cloudflare Zone ID, hostname, and API token first.');
+        }
+
+        return [$values, $apiToken];
+    }
+
+    /** @param array<string, mixed> $status */
+    private function storeCloudflareStatus(array $status): void
+    {
+        SiteSetting::put('cloudflare', [
+            ...SiteSetting::valuesFor('cloudflare'),
+            ...$status,
+        ]);
+
+        $fresh = SiteSetting::valuesFor('cloudflare');
+        $fresh['api_token'] = null;
+        $this->form->fill($fresh);
+    }
+
+    private function cloudflareFailure(string $title, Throwable $exception): void
+    {
+        report($exception);
+
+        Notification::make()
+            ->danger()
+            ->title($title)
+            ->body($exception->getMessage())
+            ->persistent()
+            ->send();
     }
 
     private function secretInput(string $name, string $label): TextInput

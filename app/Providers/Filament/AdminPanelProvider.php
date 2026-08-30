@@ -15,10 +15,10 @@ use App\Filament\Resources\LandingPages\Pages\ListLandingPages;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\ListPendingOrders;
 use App\Filament\Resources\Orders\Pages\ListVendorOrders;
+use App\Filament\Resources\Permissions\Pages\ListPermissions;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\Pages\PendingProducts;
-use App\Filament\Resources\Permissions\Pages\ListPermissions;
 use App\Filament\Resources\Roles\Pages\ListRoles;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use Filament\Http\Middleware\Authenticate;
@@ -255,6 +255,7 @@ class AdminPanelProvider extends PanelProvider
             ['fraud', 'Manage Fraud API', Heroicon::OutlinedShieldCheck],
             ['google_analytics', 'Google Analytics', Heroicon::OutlinedChartBarSquare],
             ['google_tag_manager', 'Google Tag Manager', Heroicon::OutlinedTag],
+            ['cloudflare', 'Cloudflare API', Heroicon::OutlinedGlobeAlt],
         ];
 
         return array_map(
