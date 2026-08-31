@@ -492,7 +492,7 @@ class ApiIntegrationSettings extends Page
                         ->regex('/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i')
                         ->placeholder('www.tisilo.com'),
                     $this->secretInput('api_token', 'Cloudflare API Token')
-                        ->helperText('Encrypted in the database and excluded from Git/deployment snapshots.'),
+                        ->helperText('Paste the token secret only. “Bearer”, Authorization headers and Global API Keys are not required. It is encrypted and excluded from Git/deployment snapshots.'),
                 ]),
             Section::make('Static Asset Cache Policy')
                 ->description('Caches only CSS, JavaScript, images, fonts, documents and media. Cart, checkout, admin and personalized HTML remain dynamic for session safety.')

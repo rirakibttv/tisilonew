@@ -139,6 +139,27 @@ class ApiIntegrationModuleTest extends TestCase
             && ($request->data()['purge_everything'] ?? false) === true);
     }
 
+    public function test_cloudflare_service_normalizes_a_pasted_authorization_header(): void
+    {
+        Http::fake([
+            'https://api.cloudflare.com/client/v4/zones/*' => Http::response([
+                'success' => true,
+                'errors' => [],
+                'result' => ['name' => 'tisilo.com', 'status' => 'active'],
+            ]),
+        ]);
+
+        app(CloudflareApiService::class)->zone(
+            "  Authorization: Bearer cloudflare-token\r\n",
+            str_repeat('c', 32),
+        );
+
+        Http::assertSent(fn (Request $request): bool => $request->hasHeader(
+            'Authorization',
+            'Bearer cloudflare-token',
+        ));
+    }
+
     public function test_origin_cache_headers_cache_static_assets_but_not_dynamic_html(): void
     {
         $htaccess = file_get_contents(public_path('.htaccess'));
