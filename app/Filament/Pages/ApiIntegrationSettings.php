@@ -67,7 +67,7 @@ class ApiIntegrationSettings extends Page
     public function getSubheading(): ?string
     {
         if ($this->section === 'cloudflare') {
-            return 'Securely connect the Cloudflare zone, apply a static-asset Cache Rule, and purge CDN cache.';
+            return 'Securely connect the Cloudflare zone, verify access, and purge CDN cache.';
         }
 
         return 'Credentials are encrypted. Saving settings never sends a test request, SMS, event, or social post.';
@@ -176,12 +176,6 @@ class ApiIntegrationSettings extends Page
                 ->label('Verify Connection')
                 ->icon('heroicon-o-signal')
                 ->action('testCloudflareConnection'),
-            Action::make('applyCloudflareCacheRule')
-                ->label('Apply Cache Rule')
-                ->icon('heroicon-o-cloud-arrow-up')
-                ->requiresConfirmation()
-                ->modalDescription('This adds or updates only the Tisilo static-asset Cache Rule. Existing Cloudflare rules are preserved.')
-                ->action('applyCloudflareCacheRule'),
             Action::make('purgeCloudflareCache')
                 ->label('Purge CDN Cache')
                 ->icon('heroicon-o-arrow-path')
@@ -212,36 +206,6 @@ class ApiIntegrationSettings extends Page
                 ->send();
         } catch (Throwable $exception) {
             $this->cloudflareFailure('Cloudflare verification failed', $exception);
-        }
-    }
-
-    public function applyCloudflareCacheRule(CloudflareApiService $cloudflare): void
-    {
-        try {
-            [$values, $apiToken] = $this->cloudflareConfiguration();
-            $result = $cloudflare->applyStaticAssetCacheRule(
-                $apiToken,
-                (string) $values['zone_id'],
-                (string) $values['hostname'],
-                (int) ($values['edge_ttl'] ?? 86400),
-                (int) ($values['browser_ttl'] ?? 14400),
-                (bool) ($values['enabled'] ?? true),
-            );
-
-            $this->storeCloudflareStatus([
-                'ruleset_id' => $result['ruleset_id'],
-                'rule_id' => $result['rule_id'],
-                'rule_status' => $result['enabled'] ? 'enabled' : 'disabled',
-                'last_rule_applied_at' => now()->toIso8601String(),
-            ]);
-
-            Notification::make()
-                ->success()
-                ->title('Cloudflare Cache Rule applied')
-                ->body('Static CSS, JavaScript, images, fonts and media are now eligible for edge caching.')
-                ->send();
-        } catch (Throwable $exception) {
-            $this->cloudflareFailure('Cloudflare Cache Rule failed', $exception);
         }
     }
 
@@ -477,10 +441,9 @@ class ApiIntegrationSettings extends Page
 
         return [
             Section::make('Cloudflare Zone Connection')
-                ->description('Create a scoped API token with Zone Read, Cache Purge, and Cache Rules Edit permissions. Save before using the header actions.')
+                ->description('Create a scoped API token with Zone Read and Cache Purge permissions. Cache Rules and TTL values remain controlled from the Cloudflare Dashboard.')
                 ->columns(2)
                 ->schema([
-                    Toggle::make('enabled')->label('Enable managed cache rule')->default(true),
                     TextInput::make('zone_id')
                         ->label('Zone ID')
                         ->required()
@@ -494,40 +457,12 @@ class ApiIntegrationSettings extends Page
                     $this->secretInput('api_token', 'Cloudflare API Token')
                         ->helperText('Paste the token secret only. “Bearer”, Authorization headers and Global API Keys are not required. It is encrypted and excluded from Git/deployment snapshots.'),
                 ]),
-            Section::make('Static Asset Cache Policy')
-                ->description('Caches only CSS, JavaScript, images, fonts, documents and media. Cart, checkout, admin and personalized HTML remain dynamic for session safety.')
-                ->columns(2)
-                ->schema([
-                    Select::make('edge_ttl')
-                        ->label('Cloudflare Edge TTL')
-                        ->options([
-                            3600 => '1 hour',
-                            14400 => '4 hours',
-                            86400 => '1 day',
-                            604800 => '7 days',
-                            2592000 => '30 days',
-                        ])
-                        ->default(86400)
-                        ->required(),
-                    Select::make('browser_ttl')
-                        ->label('Browser TTL')
-                        ->options([
-                            3600 => '1 hour',
-                            14400 => '4 hours',
-                            28800 => '8 hours',
-                            86400 => '1 day',
-                            172800 => '2 days',
-                        ])
-                        ->default(14400)
-                        ->required(),
-                ]),
             Section::make('Connection & Cache Status')
-                ->columns(3)
+                ->columns(2)
                 ->schema([
                     TextInput::make('zone_name')->disabled(),
                     TextInput::make('zone_status')->disabled(),
                     TextInput::make('development_mode')->label('Development Mode (seconds)')->disabled(),
-                    TextInput::make('rule_status')->disabled(),
                     TextInput::make('last_verified_at')->disabled(),
                     TextInput::make('last_purged_at')->disabled(),
                 ]),

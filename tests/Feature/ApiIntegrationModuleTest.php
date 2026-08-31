@@ -74,52 +74,21 @@ class ApiIntegrationModuleTest extends TestCase
         $this->assertArrayNotHasKey('api_token', SiteSetting::valuesFor('cloudflare'));
     }
 
-    public function test_cloudflare_service_creates_a_non_html_static_asset_cache_rule_without_replacing_rules(): void
+    public function test_cloudflare_page_does_not_expose_cache_rule_or_ttl_controls(): void
     {
-        Http::fake([
-            'https://api.cloudflare.com/client/v4/zones/*/rulesets/phases/http_request_cache_settings/entrypoint' => Http::response([
-                'success' => false,
-                'errors' => [['message' => 'entry point not found']],
-            ], 404),
-            'https://api.cloudflare.com/client/v4/zones/*/rulesets' => Http::response([
-                'success' => true,
-                'errors' => [],
-                'result' => [
-                    'id' => 'ruleset-123',
-                    'rules' => [[
-                        'id' => 'rule-123',
-                        'description' => 'Tisilo: cache static storefront assets',
-                    ]],
-                ],
-            ]),
+        $admin = User::factory()->create([
+            'role' => UserRole::Admin,
+            'status' => UserStatus::Active,
         ]);
 
-        $result = app(CloudflareApiService::class)->applyStaticAssetCacheRule(
-            'cloudflare-token',
-            str_repeat('a', 32),
-            'www.tisilo.com',
-            86400,
-            14400,
-        );
-
-        $this->assertSame('ruleset-123', $result['ruleset_id']);
-        $this->assertSame('rule-123', $result['rule_id']);
-
-        Http::assertSent(function (Request $request): bool {
-            if ($request->method() !== 'POST' || ! str_ends_with($request->url(), '/rulesets')) {
-                return false;
-            }
-
-            $rule = $request->data()['rules'][0] ?? [];
-
-            return $request->hasHeader('Authorization', 'Bearer cloudflare-token')
-                && ($request->data()['phase'] ?? null) === 'http_request_cache_settings'
-                && ($rule['action'] ?? null) === 'set_cache_settings'
-                && str_contains((string) ($rule['expression'] ?? ''), 'http.request.uri.path.extension')
-                && ! str_contains((string) ($rule['expression'] ?? ''), '"json"')
-                && ! str_contains((string) ($rule['expression'] ?? ''), '/cart')
-                && ($rule['action_parameters']['edge_ttl']['default'] ?? null) === 86400;
-        });
+        $this->actingAs($admin)
+            ->get('/admin/api-integrations?section=cloudflare')
+            ->assertOk()
+            ->assertDontSee('Static Asset Cache Policy')
+            ->assertDontSee('wire:model="data.edge_ttl"', false)
+            ->assertDontSee('wire:model="data.browser_ttl"', false)
+            ->assertDontSee('Apply Cache Rule')
+            ->assertSee('managed only from the Cloudflare Dashboard');
     }
 
     public function test_cloudflare_service_uses_the_official_purge_endpoint(): void
