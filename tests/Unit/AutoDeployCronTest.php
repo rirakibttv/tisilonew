@@ -19,6 +19,6 @@ class AutoDeployCronTest extends TestCase
         $this->assertStringContainsString('flock -n 9', $script);
         $this->assertStringContainsString('ensure_minute_auto_deploy_cron', $script);
         $this->assertStringContainsString('artisan filament:optimize-clear', $script);
-        $this->assertStringContainsString('artisan filament:optimize', $script);
+        $this->assertStringNotContainsString('artisan filament:optimize\n', $script);
     }
 }
