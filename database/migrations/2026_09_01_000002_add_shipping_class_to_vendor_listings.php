@@ -9,13 +9,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('vendor_listings', function (Blueprint $table): void {
-            $table->foreignId('shipping_class_id')
-                ->nullable()
-                ->after('product_id')
-                ->constrained('shipping_classes')
-                ->nullOnDelete();
-        });
+        if (! Schema::hasColumn('vendor_listings', 'shipping_class_id')) {
+            Schema::table('vendor_listings', function (Blueprint $table): void {
+                $table->foreignId('shipping_class_id')
+                    ->nullable()
+                    ->after('product_id')
+                    ->constrained('shipping_classes')
+                    ->nullOnDelete();
+            });
+        }
 
         DB::table('vendor_listings')
             ->select(['id', 'product_id'])
@@ -35,8 +37,10 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('vendor_listings', function (Blueprint $table): void {
-            $table->dropConstrainedForeignId('shipping_class_id');
-        });
+        if (Schema::hasColumn('vendor_listings', 'shipping_class_id')) {
+            Schema::table('vendor_listings', function (Blueprint $table): void {
+                $table->dropConstrainedForeignId('shipping_class_id');
+            });
+        }
     }
 };

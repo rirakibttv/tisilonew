@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\ShippingRateService;
 use App\Services\DeploymentDataSnapshot;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -81,5 +82,19 @@ class ShippingAutomationTest extends TestCase
         $this->assertSame($class->code, $snapshotProduct['shipping_class_code']);
         $this->assertSame($class->code, $snapshotRegion['rates'][0]['shipping_class_code']);
         $this->assertSame($partner->code, $snapshotRegion['rates'][0]['shipping_partner_code']);
+    }
+
+    public function test_shipping_migrations_are_safe_to_resume_after_a_partial_run(): void
+    {
+        $shippingMigration = require database_path('migrations/2026_09_01_000001_create_shipping_automation_tables.php');
+        $vendorMigration = require database_path('migrations/2026_09_01_000002_add_shipping_class_to_vendor_listings.php');
+
+        $shippingMigration->up();
+        $vendorMigration->up();
+
+        $this->assertTrue(Schema::hasTable('shipping_region_rates'));
+        $this->assertTrue(Schema::hasColumn('products', 'shipping_class_id'));
+        $this->assertTrue(Schema::hasColumn('orders', 'shipping_region_id'));
+        $this->assertTrue(Schema::hasColumn('vendor_listings', 'shipping_class_id'));
     }
 }
