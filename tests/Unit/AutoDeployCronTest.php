@@ -21,4 +21,12 @@ class AutoDeployCronTest extends TestCase
         $this->assertStringContainsString('artisan filament:optimize-clear', $script);
         $this->assertStringNotContainsString('artisan filament:optimize\n', $script);
     }
+
+    public function test_filament_component_cache_uses_the_writable_storage_directory(): void
+    {
+        $this->assertSame(
+            storage_path('framework/cache/filament'),
+            config('filament.cache_path'),
+        );
+    }
 }
