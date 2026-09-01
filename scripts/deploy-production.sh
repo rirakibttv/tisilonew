@@ -157,7 +157,9 @@ rollback_code() {
     git reset --hard "${previous_commit}"
     install_dependencies
     sync_public_files
+    "${PHP_BIN}" artisan filament:optimize-clear
     "${PHP_BIN}" artisan optimize
+    "${PHP_BIN}" artisan filament:optimize
     "${PHP_BIN}" artisan up || true
     log "Code rollback completed. Database backup is available for manual recovery."
 }
@@ -210,10 +212,12 @@ main() {
 
     git merge --ff-only "${target_commit}"
     install_dependencies
+    "${PHP_BIN}" artisan filament:optimize-clear
     "${PHP_BIN}" artisan migrate --force
     "${PHP_BIN}" artisan db:seed --class='Database\Seeders\ProductionRequiredDataSeeder' --force
     sync_public_files
     "${PHP_BIN}" artisan optimize
+    "${PHP_BIN}" artisan filament:optimize
     "${PHP_BIN}" artisan up
 
     deployment_started=0
