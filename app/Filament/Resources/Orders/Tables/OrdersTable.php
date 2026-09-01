@@ -52,6 +52,14 @@ class OrdersTable
                         default => ucfirst(str_replace('_', ' ', $state)),
                     })
                     ->toggleable(),
+                TextColumn::make('shippingRegion.upazila')
+                    ->label('Delivery Upazila')
+                    ->placeholder('Legacy zone')
+                    ->toggleable(),
+                TextColumn::make('shippingPartner.name')
+                    ->label('Shipping Partner')
+                    ->placeholder('Not assigned')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('total_amount')
                     ->label('Total')
                     ->money(fn ($record): string => $record->currency ?: 'BDT')

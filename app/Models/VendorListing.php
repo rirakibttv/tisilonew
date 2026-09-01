@@ -18,6 +18,7 @@ class VendorListing extends Model
     protected $fillable = [
         'vendor_id',
         'product_id',
+        'shipping_class_id',
         'approved_by',
         'status',
         'condition',
@@ -90,6 +91,11 @@ class VendorListing extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function shippingClass(): BelongsTo
+    {
+        return $this->belongsTo(ShippingClass::class);
     }
 
     public function approver(): BelongsTo

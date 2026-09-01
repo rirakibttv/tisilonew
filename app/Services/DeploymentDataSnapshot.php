@@ -14,6 +14,10 @@ use App\Models\ProductTag;
 use App\Models\ProductVariation;
 use App\Models\Role;
 use App\Models\SiteSetting;
+use App\Models\ShippingClass;
+use App\Models\ShippingPartner;
+use App\Models\ShippingRegion;
+use App\Models\ShippingRegionRate;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorListing;
@@ -78,6 +82,35 @@ class DeploymentDataSnapshot
                 'key' => $setting->key,
                 'values' => $setting->values ?? [],
             ])->all(),
+            'shipping_classes' => ShippingClass::query()->orderBy('code')->get()->map(
+                fn (ShippingClass $class): array => Arr::only(
+                    $class->toArray(),
+                    ['name', 'code', 'description', 'is_active', 'sort_order'],
+                ),
+            )->all(),
+            'shipping_partners' => ShippingPartner::query()->orderBy('code')->get()->map(
+                fn (ShippingPartner $partner): array => Arr::only(
+                    $partner->toArray(),
+                    ['name', 'code', 'contact_name', 'phone', 'email', 'tracking_url', 'api_provider', 'notes', 'is_active'],
+                ),
+            )->all(),
+            'shipping_regions' => ShippingRegion::query()
+                ->with(['rates.shippingClass:id,code', 'rates.partner:id,code'])
+                ->orderBy('location_key')
+                ->get()
+                ->map(fn (ShippingRegion $region): array => [
+                    ...Arr::only($region->toArray(), [
+                        'division', 'district', 'upazila', 'postal_code', 'location_key', 'is_active', 'sort_order',
+                    ]),
+                    'rates' => $region->rates->map(fn (ShippingRegionRate $rate): array => [
+                        ...Arr::only($rate->toArray(), [
+                            'base_charge', 'additional_item_charge', 'estimated_min_days',
+                            'estimated_max_days', 'is_active',
+                        ]),
+                        'shipping_class_code' => $rate->shippingClass->code,
+                        'shipping_partner_code' => $rate->partner?->code,
+                    ])->all(),
+                ])->all(),
             'vendors' => Vendor::query()
                 ->with([
                     'owner:id,email',
@@ -85,6 +118,7 @@ class DeploymentDataSnapshot
                     'members:id,email',
                     'warehouses',
                     'listings.product:id,slug',
+                    'listings.shippingClass:id,code',
                     'listings.approver:id,email',
                     'listings.items.productVariation:id,sku',
                     'listings.items.stocks.warehouse:id,code',
@@ -121,6 +155,7 @@ class DeploymentDataSnapshot
                             'is_featured', 'rejection_reason', 'approved_at', 'published_at',
                         ]),
                         'product_slug' => $listing->product->slug,
+                        'shipping_class_code' => $listing->shippingClass?->code,
                         'approved_by_email' => $listing->approver?->email,
                         'items' => $listing->items->map(fn (VendorListingItem $item): array => [
                             ...Arr::only($item->toArray(), [
@@ -141,6 +176,7 @@ class DeploymentDataSnapshot
                 ->with([
                     'brand:id,slug',
                     'category:id,slug',
+                    'shippingClass:id,code',
                     'tags:id,slug',
                     'attributes:id,slug',
                     'variations' => fn ($query) => $query->orderByRaw('sku is null')->orderBy('sku')->orderBy('id'),
@@ -158,6 +194,7 @@ class DeploymentDataSnapshot
                     ]),
                     'brand_slug' => $product->brand?->slug,
                     'category_slug' => $product->category?->slug,
+                    'shipping_class_code' => $product->shippingClass?->code,
                     'tag_slugs' => $product->tags->pluck('slug')->sort()->values()->all(),
                     'attribute_slugs' => $product->attributes->pluck('slug')->sort()->values()->all(),
                     'variations' => $product->variations->map(fn (ProductVariation $variation): array => [
@@ -219,7 +256,7 @@ class DeploymentDataSnapshot
         }
 
         return DB::transaction(function () use ($snapshot): array {
-            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'permissions' => 0, 'roles' => 0, 'users' => 0, 'site_settings' => 0, 'products' => 0, 'product_variations' => 0, 'landing_pages' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
+            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'permissions' => 0, 'roles' => 0, 'users' => 0, 'site_settings' => 0, 'shipping_classes' => 0, 'shipping_partners' => 0, 'shipping_regions' => 0, 'shipping_region_rates' => 0, 'products' => 0, 'product_variations' => 0, 'landing_pages' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
 
             foreach ($snapshot['brands'] ?? [] as $data) {
                 Brand::query()->updateOrCreate(['slug' => $data['slug']], $data);
@@ -297,14 +334,52 @@ class DeploymentDataSnapshot
                 $counts['site_settings']++;
             }
 
+            foreach ($snapshot['shipping_classes'] ?? [] as $data) {
+                ShippingClass::query()->updateOrCreate(['code' => $data['code']], $data);
+                $counts['shipping_classes']++;
+            }
+
+            foreach ($snapshot['shipping_partners'] ?? [] as $data) {
+                ShippingPartner::query()->updateOrCreate(['code' => $data['code']], $data);
+                $counts['shipping_partners']++;
+            }
+
+            foreach ($snapshot['shipping_regions'] ?? [] as $data) {
+                $rates = Arr::pull($data, 'rates', []);
+                $region = ShippingRegion::query()->updateOrCreate(['location_key' => $data['location_key']], $data);
+                $counts['shipping_regions']++;
+
+                foreach ($rates as $rateData) {
+                    $classCode = Arr::pull($rateData, 'shipping_class_code');
+                    $partnerCode = Arr::pull($rateData, 'shipping_partner_code');
+                    $classId = ShippingClass::query()->where('code', $classCode)->value('id');
+                    if (! $classId) {
+                        continue;
+                    }
+                    $rateData['shipping_partner_id'] = filled($partnerCode)
+                        ? ShippingPartner::query()->where('code', $partnerCode)->value('id')
+                        : null;
+                    ShippingRegionRate::query()->updateOrCreate(
+                        ['shipping_region_id' => $region->id, 'shipping_class_id' => $classId],
+                        $rateData,
+                    );
+                    $counts['shipping_region_rates']++;
+                }
+            }
+
             foreach ($snapshot['products'] ?? [] as $data) {
-                $productData = Arr::except($data, ['brand_slug', 'category_slug', 'tag_slugs', 'attribute_slugs', 'variations']);
+                $productData = Arr::except($data, ['brand_slug', 'category_slug', 'shipping_class_code', 'tag_slugs', 'attribute_slugs', 'variations']);
                 $productData['brand_id'] = filled($data['brand_slug'] ?? null)
                     ? Brand::query()->where('slug', $data['brand_slug'])->value('id')
                     : null;
                 $productData['category_id'] = filled($data['category_slug'] ?? null)
                     ? Category::query()->where('slug', $data['category_slug'])->value('id')
                     : null;
+                if (array_key_exists('shipping_class_code', $data)) {
+                    $productData['shipping_class_id'] = filled($data['shipping_class_code'])
+                        ? ShippingClass::query()->where('code', $data['shipping_class_code'])->value('id')
+                        : null;
+                }
 
                 $product = filled($data['sku'] ?? null)
                     ? Product::query()->where('sku', $data['sku'])->first()
@@ -434,10 +509,17 @@ class DeploymentDataSnapshot
 
                     $items = Arr::pull($listingData, 'items', []);
                     $approvedByEmail = Arr::pull($listingData, 'approved_by_email');
+                    $shippingClassCodeExists = array_key_exists('shipping_class_code', $listingData);
+                    $shippingClassCode = Arr::pull($listingData, 'shipping_class_code');
                     Arr::forget($listingData, 'product_slug');
                     $listingData['approved_by'] = filled($approvedByEmail)
                         ? User::query()->where('email', $approvedByEmail)->value('id')
                         : null;
+                    if ($shippingClassCodeExists) {
+                        $listingData['shipping_class_id'] = filled($shippingClassCode)
+                            ? ShippingClass::query()->where('code', $shippingClassCode)->value('id')
+                            : null;
+                    }
                     $listing = VendorListing::query()->updateOrCreate(
                         ['vendor_id' => $vendor->id, 'product_id' => $productId],
                         $listingData,

@@ -47,6 +47,10 @@ class OrderForm
                 TextInput::make('discount_amount')->numeric()->minValue(0)->required()->prefix('৳'),
                 TextInput::make('shipping_amount')->numeric()->minValue(0)->required()->prefix('৳'),
                 TextInput::make('shipping_zone')->label('Shipping Zone')->maxLength(255),
+                Select::make('shipping_region_id')->label('Shipping Region')
+                    ->relationship('shippingRegion', 'upazila')->disabled()->dehydrated(false),
+                Select::make('shipping_partner_id')->label('Shipping Partner')
+                    ->relationship('shippingPartner', 'name')->disabled()->dehydrated(false),
                 TextInput::make('tax_amount')->numeric()->minValue(0)->required()->prefix('৳'),
                 TextInput::make('total_amount')->numeric()->minValue(0)->required()->prefix('৳'),
                 TextInput::make('currency')->required()->maxLength(3),

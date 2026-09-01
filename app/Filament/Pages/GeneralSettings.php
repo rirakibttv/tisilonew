@@ -46,7 +46,6 @@ class GeneralSettings extends Page
         'cronjob' => 'Cronjob',
         'sitemap' => 'Sitemap Settings',
         'fraud' => 'Fraud API Settings',
-        'shipping' => 'Shipping Settings',
     ];
 
     public function mount(): void
@@ -199,7 +198,6 @@ class GeneralSettings extends Page
             'cronjob' => $this->cronjobComponents(),
             'sitemap' => $this->sitemapComponents(),
             'fraud' => $this->fraudComponents(),
-            'shipping' => $this->shippingComponents(),
         };
     }
 
@@ -399,18 +397,4 @@ class GeneralSettings extends Page
         ];
     }
 
-    /** @return array<mixed> */
-    private function shippingComponents(): array
-    {
-        return [
-            Section::make('Shipping Zones & Charges')->schema([
-                Repeater::make('zones')->reorderable()->collapsible()->itemLabel(fn (array $state): ?string => $state['name'] ?? null)->schema([
-                    TextInput::make('name')->required(),
-                    TextInput::make('amount')->numeric()->prefix('৳')->required()->minValue(0),
-                    TextInput::make('estimated_days')->numeric()->suffix('days')->required()->minValue(1),
-                    Toggle::make('status')->default(true),
-                ])->columns(4),
-            ]),
-        ];
-    }
 }

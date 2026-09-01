@@ -24,16 +24,16 @@ class CheckoutService
     /**
      * @param  Collection<string, array<string, mixed>>  $cart
      * @param  array<string, mixed>  $customer
-     * @param  array<string, mixed>  $shippingZone
+     * @param  array<string, mixed>  $shippingQuote
      */
-    public function place(Collection $cart, array $customer, array $shippingZone): Order
+    public function place(Collection $cart, array $customer, array $shippingQuote): Order
     {
         if ($cart->isEmpty()) {
             throw ValidationException::withMessages(['cart' => 'আপনার কার্ট খালি।']);
         }
 
-        return DB::transaction(function () use ($cart, $customer, $shippingZone): Order {
-            $shippingAmount = round((float) ($shippingZone['amount'] ?? 0), 2);
+        return DB::transaction(function () use ($cart, $customer, $shippingQuote): Order {
+            $shippingAmount = round((float) ($shippingQuote['amount'] ?? 0), 2);
             $order = Order::query()->create([
                 'user_id' => auth()->id(),
                 'landing_page_id' => $customer['landing_page_id'] ?? null,
@@ -44,14 +44,23 @@ class CheckoutService
                 'payment_status' => PaymentStatus::Unpaid,
                 'payment_method' => $customer['payment_method'],
                 'channel' => 'website',
-                'shipping_zone' => $shippingZone['name'],
+                'shipping_zone' => $shippingQuote['name'],
+                'shipping_region_id' => $shippingQuote['region_id'],
+                'shipping_partner_id' => $shippingQuote['partner_id'],
                 'shipping_amount' => $shippingAmount,
                 'shipping_address' => Arr::only($customer, [
                     'address_line',
+                    'division',
                     'district',
                     'upazila',
                     'postal_code',
                 ]),
+                'shipping_breakdown' => [
+                    'estimated_min_days' => $shippingQuote['estimated_min_days'],
+                    'estimated_max_days' => $shippingQuote['estimated_max_days'],
+                    'partners' => $shippingQuote['partners'],
+                    'classes' => $shippingQuote['breakdown'],
+                ],
                 'marketing_attribution' => $customer['marketing_attribution'] ?? null,
                 'notes' => $customer['notes'] ?? null,
             ]);

@@ -62,12 +62,6 @@ class GeneralSettingsSeeder extends Seeder
                 'provider' => 'BD Courier',
                 'endpoint' => 'https://api.bdcourier.com/courier-check',
             ],
-            'shipping' => [
-                'zones' => [
-                    ['name' => 'Inside Dhaka', 'amount' => 80, 'estimated_days' => 2, 'status' => true],
-                    ['name' => 'Outside Dhaka', 'amount' => 130, 'estimated_days' => 4, 'status' => true],
-                ],
-            ],
             'payment' => ['cod_enabled' => true, 'default_gateway' => 'cod', 'currency' => 'BDT'],
             'sms' => ['enabled' => false, 'provider' => 'bulksmsbd', 'order_confirmation' => true, 'password_reset' => true, 'admin_new_order_alert' => true],
             'courier' => ['steadfast_enabled' => false, 'pathao_enabled' => false, 'redx_enabled' => false],

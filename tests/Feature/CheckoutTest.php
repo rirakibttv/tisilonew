@@ -8,7 +8,10 @@ use App\Enums\VendorStatus;
 use App\Models\InventoryStock;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\SiteSetting;
+use App\Models\ShippingClass;
+use App\Models\ShippingPartner;
+use App\Models\ShippingRegion;
+use App\Models\ShippingRegionRate;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorListing;
@@ -22,11 +25,11 @@ class CheckoutTest extends TestCase
 {
     use DatabaseTransactions;
 
-    protected function tearDown(): void
-    {
-        SiteSetting::forget('shipping');
-        parent::tearDown();
-    }
+    private int $shippingClassId;
+
+    private int $shippingRegionId;
+
+    private int $shippingPartnerId;
 
     public function test_customer_can_checkout_and_create_a_pending_order(): void
     {
@@ -55,6 +58,8 @@ class CheckoutTest extends TestCase
         $this->assertSame('pending', $order->status->value);
         $this->assertSame('cod', $order->payment_method);
         $this->assertSame('2580.00', $order->total_amount);
+        $this->assertSame($this->shippingRegionId, $order->shipping_region_id);
+        $this->assertSame('Standard', $order->shipping_breakdown['classes'][0]['shipping_class']);
         $this->assertDatabaseHas('order_items', [
             'order_id' => $order->id,
             'product_id' => $product->id,
@@ -84,7 +89,22 @@ class CheckoutTest extends TestCase
         $listing = VendorListing::query()->create([
             'vendor_id' => $vendor->id,
             'product_id' => $product->id,
+            'shipping_class_id' => $vendorShippingClass = ShippingClass::query()->create([
+                'name' => 'Vendor Fragile',
+                'code' => 'vendor-fragile-'.Str::lower(Str::random(6)),
+                'is_active' => true,
+            ])->id,
             'status' => VendorListingStatus::Approved,
+        ]);
+        ShippingRegionRate::query()->create([
+            'shipping_region_id' => $this->shippingRegionId,
+            'shipping_class_id' => $vendorShippingClass,
+            'shipping_partner_id' => $this->shippingPartnerId,
+            'base_charge' => 120,
+            'additional_item_charge' => 10,
+            'estimated_min_days' => 1,
+            'estimated_max_days' => 3,
+            'is_active' => true,
         ]);
         $listingItem = VendorListingItem::query()->create([
             'vendor_listing_id' => $listing->id,
@@ -117,6 +137,8 @@ class CheckoutTest extends TestCase
         $this->post(route('store.checkout.store'), $this->checkoutData())->assertRedirect();
 
         $order = Order::query()->sole();
+        $this->assertSame('2930.00', $order->total_amount);
+        $this->assertSame('Vendor Fragile', $order->shipping_breakdown['classes'][0]['shipping_class']);
         $this->assertSame(2, $stock->fresh()->reserved_quantity);
         $this->assertSame(1, Order::query()->vendorOrders()->count());
         $this->assertDatabaseHas('order_items', [
@@ -140,10 +162,7 @@ class CheckoutTest extends TestCase
             'customer_phone' => '01700000000',
             'customer_email' => 'checkout@example.com',
             'address_line' => 'House 10, Road 5',
-            'district' => 'Dhaka',
-            'upazila' => 'Mirpur',
-            'postal_code' => '1216',
-            'shipping_zone' => 'Inside Dhaka',
+            'shipping_region_id' => $this->shippingRegionId,
             'payment_method' => 'cod',
             'terms' => '1',
         ];
@@ -151,14 +170,38 @@ class CheckoutTest extends TestCase
 
     private function shippingSettings(): void
     {
-        SiteSetting::put('shipping', [
-            'zones' => [[
-                'name' => 'Inside Dhaka',
-                'amount' => 80,
-                'estimated_days' => 2,
-                'status' => true,
-            ]],
+        $class = ShippingClass::query()->create([
+            'name' => 'Standard',
+            'code' => 'test-standard-'.Str::lower(Str::random(6)),
+            'is_active' => true,
         ]);
+        $partner = ShippingPartner::query()->create([
+            'name' => 'Test Courier',
+            'code' => 'test-courier-'.Str::lower(Str::random(6)),
+            'is_active' => true,
+        ]);
+        $region = ShippingRegion::query()->create([
+            'division' => 'Dhaka',
+            'district' => 'Dhaka',
+            'upazila' => 'Mirpur',
+            'postal_code' => '1216',
+            'location_key' => 'test-mirpur-'.Str::lower(Str::random(6)),
+            'is_active' => true,
+        ]);
+        ShippingRegionRate::query()->create([
+            'shipping_region_id' => $region->id,
+            'shipping_class_id' => $class->id,
+            'shipping_partner_id' => $partner->id,
+            'base_charge' => 80,
+            'additional_item_charge' => 0,
+            'estimated_min_days' => 1,
+            'estimated_max_days' => 2,
+            'is_active' => true,
+        ]);
+
+        $this->shippingClassId = $class->id;
+        $this->shippingRegionId = $region->id;
+        $this->shippingPartnerId = $partner->id;
     }
 
     private function product(string $name, float $price, int $stock): Product
@@ -171,6 +214,7 @@ class CheckoutTest extends TestCase
             'stock_quantity' => $stock,
             'stock_status' => $stock > 0 ? 'in_stock' : 'out_of_stock',
             'status' => 'published',
+            'shipping_class_id' => $this->shippingClassId,
         ]);
     }
 }

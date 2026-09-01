@@ -30,10 +30,13 @@ class Order extends Model
         'discount_amount',
         'shipping_amount',
         'shipping_zone',
+        'shipping_region_id',
+        'shipping_partner_id',
         'tax_amount',
         'total_amount',
         'currency',
         'shipping_address',
+        'shipping_breakdown',
         'billing_address',
         'marketing_attribution',
         'tracking_number',
@@ -54,6 +57,7 @@ class Order extends Model
             'tax_amount' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'shipping_address' => 'array',
+            'shipping_breakdown' => 'array',
             'billing_address' => 'array',
             'marketing_attribution' => 'array',
             'placed_at' => 'datetime',
@@ -97,6 +101,16 @@ class Order extends Model
     public function landingPage(): BelongsTo
     {
         return $this->belongsTo(LandingPage::class);
+    }
+
+    public function shippingRegion(): BelongsTo
+    {
+        return $this->belongsTo(ShippingRegion::class);
+    }
+
+    public function shippingPartner(): BelongsTo
+    {
+        return $this->belongsTo(ShippingPartner::class);
     }
 
     public function items(): HasMany

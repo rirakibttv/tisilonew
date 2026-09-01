@@ -20,7 +20,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('store.checkout.store') }}" class="grid gap-8 lg:grid-cols-[1fr_380px]">
+        <form method="POST" action="{{ route('store.checkout.store') }}" class="grid gap-8 lg:grid-cols-[1fr_380px]" data-shipping-checkout data-subtotal="{{ $subtotal }}">
             @csrf
             <div class="space-y-6">
                 <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -48,26 +48,17 @@
                             সম্পূর্ণ ঠিকানা <span class="text-rose-500">*</span>
                             <textarea name="address_line" required rows="3" autocomplete="street-address" placeholder="বাসা/রোড/এলাকার বিস্তারিত ঠিকানা" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">{{ old('address_line') }}</textarea>
                         </label>
-                        <label class="text-sm font-bold text-slate-700">
-                            জেলা <span class="text-rose-500">*</span>
-                            <input name="district" value="{{ old('district') }}" required class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
-                        </label>
-                        <label class="text-sm font-bold text-slate-700">
-                            উপজেলা/থানা
-                            <input name="upazila" value="{{ old('upazila') }}" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
-                        </label>
-                        <label class="text-sm font-bold text-slate-700">
-                            পোস্ট কোড
-                            <input name="postal_code" value="{{ old('postal_code') }}" inputmode="numeric" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
-                        </label>
-                        <label class="text-sm font-bold text-slate-700">
-                            ডেলিভারি এলাকা <span class="text-rose-500">*</span>
-                            <select name="shipping_zone" required class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
-                                <option value="">এলাকা নির্বাচন করুন</option>
-                                @foreach ($zones as $key => $zone)
-                                    <option value="{{ $key }}" @selected(old('shipping_zone') === $key)>{{ $zone['name'] }} — ৳{{ number_format($zone['amount'], 0) }} ({{ $zone['estimated_days'] }} দিন)</option>
+                        <label class="text-sm font-bold text-slate-700 sm:col-span-2">
+                            উপজেলা/থানা নির্বাচন করুন <span class="text-rose-500">*</span>
+                            <select name="shipping_region_id" required data-shipping-region class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
+                                <option value="">Division › District › Upazila/থানা</option>
+                                @foreach ($regions as $regionId => $quote)
+                                    <option value="{{ $regionId }}" @selected((string) old('shipping_region_id') === (string) $regionId)>{{ $quote['name'] }} — ৳{{ number_format($quote['amount'], 0) }} ({{ $quote['estimated_min_days'] }}–{{ $quote['estimated_max_days'] }} দিন)</option>
                                 @endforeach
                             </select>
+                            @if ($regions->isEmpty())
+                                <span class="mt-2 block text-xs text-rose-600">এই কার্টের Shipping Class-এর জন্য কোনো সক্রিয় Region rate পাওয়া যায়নি।</span>
+                            @endif
                         </label>
                     </div>
                 </div>
@@ -107,7 +98,8 @@
 
                 <div class="mt-5 space-y-3 border-t border-slate-200 pt-5 text-sm">
                     <div class="flex justify-between"><span class="text-slate-500">সাবটোটাল</span><span class="font-bold">৳{{ number_format($subtotal, 0) }}</span></div>
-                    <div class="flex justify-between"><span class="text-slate-500">ডেলিভারি</span><span class="font-bold text-orange-600">এলাকা অনুযায়ী</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">ডেলিভারি</span><span class="font-bold text-orange-600" data-shipping-amount>এলাকা নির্বাচন করুন</span></div>
+                    <div class="flex justify-between border-t border-slate-100 pt-3 text-base"><span class="font-black text-slate-900">সর্বমোট</span><span class="font-black text-slate-900" data-order-total>৳{{ number_format($subtotal, 0) }}</span></div>
                 </div>
 
                 <label class="mt-6 flex items-start gap-3 text-xs leading-5 text-slate-500">
@@ -125,3 +117,27 @@
         </form>
     </section>
 @endsection
+
+@push('scripts')
+    <script type="application/json" id="shipping-quotes">@json($regions)</script>
+    <script>
+        (() => {
+            const form = document.querySelector('[data-shipping-checkout]');
+            const select = form?.querySelector('[data-shipping-region]');
+            const quotesElement = document.getElementById('shipping-quotes');
+            if (! form || ! select || ! quotesElement) return;
+
+            const quotes = JSON.parse(quotesElement.textContent || '{}');
+            const subtotal = Number(form.dataset.subtotal || 0);
+            const money = value => `৳${new Intl.NumberFormat('bn-BD', { maximumFractionDigits: 0 }).format(value)}`;
+            const update = () => {
+                const quote = quotes[select.value];
+                form.querySelector('[data-shipping-amount]').textContent = quote ? money(Number(quote.amount)) : 'এলাকা নির্বাচন করুন';
+                form.querySelector('[data-order-total]').textContent = money(subtotal + Number(quote?.amount || 0));
+            };
+
+            select.addEventListener('change', update);
+            update();
+        })();
+    </script>
+@endpush

@@ -7,7 +7,9 @@ use App\Enums\UserStatus;
 use App\Models\LandingPage;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\SiteSetting;
+use App\Models\ShippingClass;
+use App\Models\ShippingRegion;
+use App\Models\ShippingRegionRate;
 use App\Models\User;
 use App\Services\DeploymentDataSnapshot;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -20,11 +22,9 @@ class LandingPageTest extends TestCase
 {
     use DatabaseTransactions;
 
-    protected function tearDown(): void
-    {
-        SiteSetting::forget('shipping');
-        parent::tearDown();
-    }
+    private ?int $shippingClassId = null;
+
+    private ?int $shippingRegionId = null;
 
     public function test_published_campaign_is_public_and_draft_requires_signed_preview(): void
     {
@@ -152,17 +152,34 @@ class LandingPageTest extends TestCase
             'stock_quantity' => 20,
             'stock_status' => 'in_stock',
             'status' => 'published',
+            'shipping_class_id' => $this->shippingClassId ?? ShippingClass::query()->where('code', 'standard')->value('id'),
         ]);
     }
 
     private function shippingSettings(): void
     {
-        SiteSetting::put('shipping', ['zones' => [[
-            'name' => 'Inside Dhaka',
-            'amount' => 80,
-            'estimated_days' => 2,
-            'status' => true,
-        ]]]);
+        $class = ShippingClass::query()->create([
+            'name' => 'Landing Class',
+            'code' => 'landing-class-'.Str::lower(Str::random(6)),
+            'is_active' => true,
+        ]);
+        $region = ShippingRegion::query()->create([
+            'division' => 'Dhaka',
+            'district' => 'Dhaka',
+            'upazila' => 'Mirpur',
+            'location_key' => 'landing-mirpur-'.Str::lower(Str::random(6)),
+            'is_active' => true,
+        ]);
+        ShippingRegionRate::query()->create([
+            'shipping_region_id' => $region->id,
+            'shipping_class_id' => $class->id,
+            'base_charge' => 80,
+            'estimated_min_days' => 1,
+            'estimated_max_days' => 2,
+            'is_active' => true,
+        ]);
+        $this->shippingClassId = $class->id;
+        $this->shippingRegionId = $region->id;
     }
 
     /** @return array<string, mixed> */
@@ -173,8 +190,7 @@ class LandingPageTest extends TestCase
             'customer_phone' => '01700000000',
             'customer_email' => 'landing@example.com',
             'address_line' => 'House 10, Road 5',
-            'district' => 'Dhaka',
-            'shipping_zone' => 'Inside Dhaka',
+            'shipping_region_id' => $this->shippingRegionId,
             'payment_method' => 'cod',
             'terms' => '1',
         ];

@@ -91,6 +91,7 @@ class AdminPanelProvider extends PanelProvider
                         AdminNavigationGroup::cases(),
                         fn (AdminNavigationGroup $group): bool => ! in_array($group, [
                             AdminNavigationGroup::OrderPanel,
+                            AdminNavigationGroup::Shipping,
                             AdminNavigationGroup::LandingPage,
                             AdminNavigationGroup::SeoOverview,
                             AdminNavigationGroup::ApiIntegration,
@@ -286,7 +287,6 @@ class AdminPanelProvider extends PanelProvider
             ['cronjob', 'Cronjob', Heroicon::OutlinedClock],
             ['sitemap', 'Sitemap Settings', Heroicon::OutlinedGlobeAlt],
             ['fraud', 'Fraud API Settings', Heroicon::OutlinedShieldExclamation],
-            ['shipping', 'Shipping Settings', Heroicon::OutlinedTruck],
         ];
 
         return array_map(

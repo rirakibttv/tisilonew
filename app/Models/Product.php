@@ -28,6 +28,7 @@ class Product extends Model
         'description',
         'featured_image',
         'gallery_images',
+        'shipping_class_id',
         'weight',
         'length',
         'width',
@@ -71,6 +72,11 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function shippingClass(): BelongsTo
+    {
+        return $this->belongsTo(ShippingClass::class);
     }
 
     public function tags(): BelongsToMany

@@ -47,6 +47,12 @@ class ProductsTable
                     ->searchable()
                     ->sortable(),
 
+                TextColumn::make('shippingClass.name')
+                    ->label('Shipping Class')
+                    ->badge()
+                    ->sortable()
+                    ->toggleable(),
+
                 TextColumn::make('sku')
                     ->label('SKU')
                     ->searchable()
@@ -136,6 +142,10 @@ class ProductsTable
                 SelectFilter::make('category_id')
                     ->label('Category')
                     ->relationship('category', 'name'),
+
+                SelectFilter::make('shipping_class_id')
+                    ->label('Shipping Class')
+                    ->relationship('shippingClass', 'name'),
             ])
             ->recordActions([
                 EditAction::make(),

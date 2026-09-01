@@ -9,6 +9,7 @@ use App\Models\LandingPage;
 use App\Models\Order;
 use App\Models\SiteSetting;
 use App\Services\CheckoutService;
+use App\Services\ShippingRateService;
 use App\Services\VisitorAnalyticsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -20,14 +21,18 @@ use Throwable;
 
 class CheckoutController extends Controller
 {
-    public function index(Request $request, VisitorAnalyticsService $analytics): View|RedirectResponse
+    public function index(
+        Request $request,
+        VisitorAnalyticsService $analytics,
+        ShippingRateService $shippingRates,
+    ): View|RedirectResponse
     {
         $cart = collect($request->session()->get('store_cart', []));
         if ($cart->isEmpty()) {
             return to_route('store.cart.index')->withErrors(['cart' => 'চেকআউট করার আগে কার্টে পণ্য যোগ করুন।']);
         }
 
-        $zones = $this->shippingZones();
+        $regions = $shippingRates->quotesForCart($cart);
         $this->rememberIncompleteOrder($request, $cart);
 
         try {
@@ -43,7 +48,7 @@ class CheckoutController extends Controller
         return view('storefront.checkout.index', [
             'lines' => $cart,
             'subtotal' => $this->subtotal($cart),
-            'zones' => $zones,
+            'regions' => $regions,
             'checkoutNote' => SiteSetting::valuesFor('general')['checkout_note'] ?? null,
         ]);
     }
@@ -52,18 +57,16 @@ class CheckoutController extends Controller
         Request $request,
         CheckoutService $checkout,
         VisitorAnalyticsService $analytics,
+        ShippingRateService $shippingRates,
     ): RedirectResponse {
         $cart = collect($request->session()->get('store_cart', []));
-        $zones = $this->shippingZones();
+        $regions = $shippingRates->quotesForCart($cart);
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:32', 'regex:/^[0-9+\-\s]{8,20}$/'],
             'customer_email' => ['nullable', 'email', 'max:255'],
             'address_line' => ['required', 'string', 'max:500'],
-            'district' => ['required', 'string', 'max:120'],
-            'upazila' => ['nullable', 'string', 'max:120'],
-            'postal_code' => ['nullable', 'string', 'max:20'],
-            'shipping_zone' => ['required', Rule::in(array_keys($zones))],
+            'shipping_region_id' => ['required', 'integer', Rule::in($regions->keys()->all())],
             'payment_method' => ['required', Rule::in(['cod'])],
             'notes' => ['nullable', 'string', 'max:1000'],
             'terms' => ['accepted'],
@@ -72,15 +75,19 @@ class CheckoutController extends Controller
             'customer_phone.required' => 'মোবাইল নম্বর লিখুন।',
             'customer_phone.regex' => 'সঠিক মোবাইল নম্বর লিখুন।',
             'address_line.required' => 'সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন।',
-            'district.required' => 'জেলা লিখুন।',
-            'shipping_zone.required' => 'ডেলিভারি এলাকা নির্বাচন করুন।',
+            'shipping_region_id.required' => 'উপজেলা/থানা নির্বাচন করুন।',
+            'shipping_region_id.in' => 'এই এলাকায় নির্বাচিত পণ্যের shipping rate পাওয়া যায়নি।',
             'terms.accepted' => 'অর্ডার করতে শর্তাবলিতে সম্মতি দিন।',
         ]);
 
-        $zone = $zones[$validated['shipping_zone']];
+        $quote = $regions->get((int) $validated['shipping_region_id']);
+        $validated['division'] = $quote['division'];
+        $validated['district'] = $quote['district'];
+        $validated['upazila'] = $quote['upazila'];
+        $validated['postal_code'] = $quote['postal_code'];
         $validated['landing_page_id'] = $this->activeLandingPage($request)?->getKey();
         $validated['marketing_attribution'] = $this->marketingAttribution($request);
-        $order = $checkout->place($cart, $validated, $zone);
+        $order = $checkout->place($cart, $validated, $quote);
 
         $this->completeIncompleteOrder($request, $order);
         $request->session()->forget(['store_cart', 'tisilo_incomplete_order_id']);
@@ -142,26 +149,6 @@ class CheckoutController extends Controller
         }
 
         return $safe ?: null;
-    }
-
-    /** @return array<string, array<string, mixed>> */
-    private function shippingZones(): array
-    {
-        return collect(SiteSetting::valuesFor('shipping')['zones'] ?? [])
-            ->filter(fn (array $zone): bool => (bool) ($zone['status'] ?? false))
-            ->mapWithKeys(fn (array $zone): array => [
-                (string) $zone['name'] => [
-                    'name' => (string) $zone['name'],
-                    'amount' => (float) ($zone['amount'] ?? 0),
-                    'estimated_days' => (int) ($zone['estimated_days'] ?? 1),
-                ],
-            ])
-            ->whenEmpty(fn (Collection $zones): Collection => $zones->put('Standard Delivery', [
-                'name' => 'Standard Delivery',
-                'amount' => 0,
-                'estimated_days' => 3,
-            ]))
-            ->all();
     }
 
     /** @param Collection<string, array<string, mixed>> $cart */

@@ -33,6 +33,13 @@ class VendorListingForm
                         ->preload()
                         ->required(),
 
+                    Select::make('shipping_class_id')
+                        ->label('Shipping Class')
+                        ->relationship('shippingClass', 'name', fn ($query) => $query->where('is_active', true))
+                        ->searchable()
+                        ->preload()
+                        ->helperText('Checkout charge is calculated from this class. Leave empty to use the product default.'),
+
                     Select::make('status')
                         ->options(VendorListingStatus::options())
                         ->default(VendorListingStatus::Draft->value)

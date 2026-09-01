@@ -521,6 +521,15 @@ class ProductForm
                 Section::make('Shipping')
                     ->columns(4)
                     ->schema([
+                        Select::make('shipping_class_id')
+                            ->label('Shipping Class')
+                            ->relationship('shippingClass', 'name', fn ($query) => $query->where('is_active', true))
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->helperText('Checkout delivery charge is calculated from this class and the customer’s selected region.')
+                            ->columnSpanFull(),
+
                         TextInput::make('weight')
                             ->label('Weight')
                             ->numeric()

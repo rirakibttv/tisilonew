@@ -29,6 +29,11 @@ class GeneralSettingsModuleTest extends TestCase
         }
     }
 
+    public function test_legacy_shipping_zone_settings_are_not_exposed_in_general_settings(): void
+    {
+        $this->assertArrayNotHasKey('shipping', GeneralSettings::SECTIONS);
+    }
+
     public function test_active_content_page_is_available_on_the_storefront(): void
     {
         SiteSetting::put('pages', [
