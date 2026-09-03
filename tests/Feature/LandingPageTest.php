@@ -7,6 +7,7 @@ use App\Enums\UserStatus;
 use App\Models\LandingPage;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductVariation;
 use App\Models\ShippingClass;
 use App\Models\ShippingRegion;
 use App\Models\ShippingRegionRate;
@@ -123,6 +124,145 @@ class LandingPageTest extends TestCase
         } finally {
             File::delete($path);
         }
+    }
+
+    public function test_inline_form_places_one_order_without_changing_the_shopping_cart(): void
+    {
+        $this->shippingSettings();
+        $product = $this->product();
+        $product->update(['manage_stock' => true]);
+        $campaign = $this->landingPage('inline-checkout', 'published');
+        $campaign->products()->attach($product);
+        $cart = ['unrelated' => ['product_id' => 123, 'quantity' => 4]];
+        $this->withSession(['store_cart' => $cart])
+            ->get(route('store.landing.show', $campaign))->assertOk()
+            ->assertSee('এই পেজেই অর্ডার সম্পন্ন করুন')
+            ->assertSee('name="customer_name"', false)
+            ->assertSee('name="shipping_region_id"', false)
+            ->assertSee(route('store.landing.order', $campaign), false)
+            ->assertDontSee('name="redirect_to"', false);
+        $token = session('landing_checkout.'.$campaign->id.'.token');
+        $payload = [...$this->checkoutData(), 'checkout_token' => $token, 'product_id' => $product->id, 'quantity' => 2, 'price' => 1, 'shipping_amount' => 0];
+        $attribution = rawurlencode(json_encode(['source' => 'facebook', 'campaign' => 'inline-ad']));
+        $before = Order::count();
+
+        $response = $this->withCookie('tisilo_attr', $attribution)->post(route('store.landing.order', $campaign), $payload);
+        $response->assertRedirect()->assertSessionHasNoErrors()->assertSessionHas('store_cart', $cart);
+        $order = Order::latest('id')->first();
+        $this->assertSame($before + 1, Order::count());
+        $this->assertSame($campaign->id, $order->landing_page_id);
+        $this->assertSame('1998.00', $order->subtotal_amount);
+        $this->assertSame('2078.00', $order->total_amount);
+        $this->assertSame(18, $product->fresh()->stock_quantity);
+        $this->assertSame('facebook', $order->marketing_attribution['source']);
+        $this->get($response->headers->get('Location'))->assertOk()->assertSee($order->order_number);
+
+        $this->post(route('store.landing.order', $campaign), $payload)->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame($before + 1, Order::count());
+        $this->assertSame(18, $product->fresh()->stock_quantity);
+        // A lost session completion marker must not recreate the already-committed order.
+        $this->withSession(['landing_checkout' => [$campaign->id => ['token' => $token]]])
+            ->post(route('store.landing.order', $campaign), $payload)->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame($before + 1, Order::count());
+        $this->assertSame(18, $product->fresh()->stock_quantity);
+    }
+
+    public function test_inline_quote_uses_variation_price_and_quantity_based_shipping(): void
+    {
+        $this->shippingSettings();
+        ShippingRegionRate::where('shipping_region_id', $this->shippingRegionId)->update(['additional_item_charge' => 20]);
+        $product = $this->product();
+        $product->update(['product_type' => 'variable']);
+        $variation = ProductVariation::create([
+            'product_id' => $product->id, 'sku' => 'INLINE-'.Str::random(8),
+            'regular_price' => 800, 'sale_price' => 700, 'stock_quantity' => 4,
+            'stock_status' => 'in_stock', 'status' => true,
+        ]);
+        $campaign = $this->landingPage('variation-quote', 'published');
+        $campaign->products()->attach($product);
+        $selection = ['product_id' => $product->id, 'product_variation_id' => $variation->id, 'quantity' => 2, 'price' => 1];
+        $this->postJson(route('store.landing.quote', $campaign), $selection)->assertOk()
+            ->assertJsonPath('subtotal', 1400)
+            ->assertJsonPath('regions.0.amount', 100);
+
+        $this->get(route('store.landing.show', $campaign))->assertOk();
+        $this->post(route('store.landing.order', $campaign), [
+            ...$this->checkoutData(), ...$selection, 'checkout_token' => session('landing_checkout.'.$campaign->id.'.token'),
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $order = Order::latest('id')->first();
+        $this->assertSame('1500.00', $order->total_amount);
+        $this->assertSame($variation->id, $order->items()->first()->product_variation_id);
+        $this->assertSame(2, $variation->fresh()->stock_quantity);
+    }
+
+    public function test_inline_checkout_rejects_products_outside_campaign_and_wrong_variations(): void
+    {
+        $this->shippingSettings();
+        $product = $this->product();
+        $outside = $this->product();
+        $campaign = $this->landingPage('scoped-products', 'published');
+        $campaign->products()->attach($product);
+        $this->postJson(route('store.landing.quote', $campaign), ['product_id' => $outside->id, 'quantity' => 1])
+            ->assertUnprocessable()->assertJsonValidationErrors('product_id');
+        $product->update(['product_type' => 'variable']);
+        $wrongVariation = ProductVariation::create([
+            'product_id' => $outside->id, 'regular_price' => 500, 'stock_quantity' => 5, 'status' => true,
+        ]);
+        $this->postJson(route('store.landing.quote', $campaign), [
+            'product_id' => $product->id, 'product_variation_id' => $wrongVariation->id, 'quantity' => 1,
+        ])->assertUnprocessable()->assertJsonValidationErrors('product_variation_id');
+    }
+
+    public function test_invalid_inline_form_stays_on_campaign_and_preserves_customer_input(): void
+    {
+        $this->shippingSettings();
+        $product = $this->product();
+        $campaign = $this->landingPage('inline-errors', 'published');
+        $campaign->products()->attach($product);
+        $this->get(route('store.landing.show', $campaign))->assertOk();
+        $payload = [...$this->checkoutData(), 'product_id' => $product->id, 'quantity' => 1,
+            'checkout_token' => session('landing_checkout.'.$campaign->id.'.token'), 'customer_phone' => 'invalid'];
+        $before = Order::count();
+        $this->post(route('store.landing.order', $campaign), $payload)
+            ->assertRedirect(route('store.landing.show', $campaign).'#order-now')
+            ->assertSessionHasErrors('customer_phone')
+            ->assertSessionHasInput('customer_name', 'Landing Customer');
+        $this->assertSame($before, Order::count());
+        $this->get(route('store.landing.show', $campaign))->assertOk()->assertSee('সঠিক মোবাইল নম্বর লিখুন।');
+    }
+
+    public function test_inline_checkout_blocks_unavailable_stock_missing_shipping_and_invalid_tokens(): void
+    {
+        $this->shippingSettings();
+        $product = $this->product();
+        $product->update(['manage_stock' => true, 'stock_quantity' => 1]);
+        $campaign = $this->landingPage('inline-safety', 'published');
+        $campaign->products()->attach($product);
+        $this->get(route('store.landing.show', $campaign))->assertOk();
+        $payload = [...$this->checkoutData(), 'product_id' => $product->id, 'quantity' => 2,
+            'checkout_token' => session('landing_checkout.'.$campaign->id.'.token')];
+        $before = Order::count();
+        $this->post(route('store.landing.order', $campaign), $payload)->assertSessionHasErrors('quantity');
+        $payload['quantity'] = 1;
+        $this->post(route('store.landing.order', $campaign), [...$payload, 'checkout_token' => 'invalid'])
+            ->assertSessionHasErrors('checkout_token');
+        ShippingRegionRate::where('shipping_region_id', $this->shippingRegionId)->update(['is_active' => false]);
+        $this->post(route('store.landing.order', $campaign), $payload)->assertSessionHasErrors('shipping_region_id');
+        $this->assertSame($before, Order::count());
+        $this->assertSame(1, $product->fresh()->stock_quantity);
+        $product->update(['shipping_class_id' => null]);
+        $this->get(route('store.landing.show', $campaign))->assertOk()->assertSee('Shipping Class');
+    }
+
+    public function test_preview_cannot_place_or_quote_a_draft_order(): void
+    {
+        $product = $this->product();
+        $draft = $this->landingPage('disabled-preview', 'draft');
+        $draft->products()->attach($product);
+        $this->postJson(route('store.landing.quote', $draft), ['product_id' => $product->id, 'quantity' => 1])->assertNotFound();
+        $this->post(route('store.landing.order', $draft), [])->assertNotFound();
+        $this->get(URL::temporarySignedRoute('store.landing.preview', now()->addHour(), ['landingPage' => $draft]))
+            ->assertOk()->assertSee('প্রিভিউতে অর্ডার বন্ধ আছে।');
     }
 
     private function landingPage(string $slug, string $status): LandingPage

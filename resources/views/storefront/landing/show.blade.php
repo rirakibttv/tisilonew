@@ -158,60 +158,7 @@
             </section>
         @endif
 
-        <section id="order-now" class="bg-orange-50 py-16">
-            <div class="mx-auto max-w-6xl px-4 sm:px-6">
-                <div class="mx-auto max-w-2xl text-center"><p class="campaign-text text-xs font-black uppercase tracking-[0.2em]">Limited-time offer</p><h2 class="mt-3 text-3xl font-black sm:text-4xl">আপনার পণ্য নির্বাচন করে অর্ডার করুন</h2><p class="mt-3 text-sm text-slate-500">পরের ধাপে ঠিকানা দিয়ে অর্ডার নিশ্চিত করতে পারবেন।</p></div>
-                <div class="mx-auto mt-10 grid max-w-4xl gap-5 {{ $landingPage->products->count() > 1 ? 'md:grid-cols-2' : '' }}">
-                    @foreach($landingPage->products as $product)
-                        @php
-                            $activeVariations = $product->variations->where('status', true)->sortByDesc('is_default')->sortBy('sort_order');
-                            $defaultVariation = $activeVariations->first();
-                            $price = (float) ($defaultVariation?->sale_price ?? $defaultVariation?->regular_price ?? $product->sale_price ?? $product->regular_price);
-                            $regularPrice = (float) ($defaultVariation?->regular_price ?? $product->regular_price);
-                        @endphp
-                        <article class="rounded-3xl border-2 border-white bg-white p-5 shadow-xl">
-                            <div class="flex gap-5">
-                                <div class="grid size-28 shrink-0 place-items-center overflow-hidden rounded-2xl bg-slate-100 text-4xl font-black text-slate-300">
-                                    @if($product->featured_image)<img src="{{ asset('storage/'.ltrim($product->featured_image, '/')) }}" alt="{{ $product->name }}" loading="lazy" class="size-full object-cover">@else{{ mb_strtoupper(mb_substr($product->name, 0, 1)) }}@endif
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <h3 class="text-lg font-black leading-6">{{ $product->name }}</h3>
-                                    <div class="mt-3 flex items-center gap-2">
-                                        <span data-landing-price class="campaign-text text-2xl font-black">৳{{ number_format($price, 0) }}</span>
-                                        <del data-landing-regular-price class="text-sm text-slate-400 {{ $regularPrice > $price ? '' : 'hidden' }}">৳{{ number_format($regularPrice, 0) }}</del>
-                                    </div>
-                                    <p class="mt-2 text-xs font-bold text-emerald-600">✓ স্টকে আছে</p>
-                                </div>
-                            </div>
-                            <form method="POST" action="{{ route('store.cart.store') }}" class="mt-5 landing-order-form" data-product-id="{{ $product->id }}" data-product-name="{{ $product->name }}" data-value="{{ $price }}">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <input type="hidden" name="landing_page_id" value="{{ $landingPage->id }}">
-                                <input type="hidden" name="redirect_to" value="checkout">
-                                @if($product->product_type === 'variable' && $activeVariations->isNotEmpty())
-                                    <label class="mb-2 block text-xs font-black text-slate-700" for="landing-variation-{{ $product->id }}">অপশন নির্বাচন করুন</label>
-                                    <select id="landing-variation-{{ $product->id }}" name="product_variation_id" class="landing-variation-select mb-3 h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none focus:border-orange-400">
-                                        @foreach($activeVariations as $variation)
-                                            @php
-                                                $variationPrice = (float) ($variation->sale_price ?? $variation->regular_price);
-                                                $variationRegularPrice = (float) $variation->regular_price;
-                                            @endphp
-                                            <option value="{{ $variation->id }}" data-price="{{ $variationPrice }}" data-regular-price="{{ $variationRegularPrice }}">
-                                                {{ $variation->attributeValues->isNotEmpty() ? $variation->attributeValues->map(fn ($value) => $value->attribute->name.': '.$value->value)->join(' · ') : 'Option '.$loop->iteration }} — ৳{{ number_format($variationPrice, 0) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                @endif
-                                <div class="flex gap-3">
-                                    <input type="number" name="quantity" value="1" min="1" max="99" aria-label="পরিমাণ" class="h-14 w-20 rounded-2xl border border-slate-200 px-3 text-center font-black">
-                                    <button class="campaign-bg h-14 flex-1 rounded-2xl px-5 text-sm font-black text-white shadow-lg">{{ $landingPage->cta_text }}</button>
-                                </div>
-                            </form>
-                        </article>
-                    @endforeach
-                </div>
-            </div>
-        </section>
+        @include('storefront.landing.checkout')
 
         @if(count($landingPage->faqs ?? []))
             <section class="mx-auto max-w-4xl px-4 py-16 sm:px-6">
@@ -233,7 +180,7 @@
         <p class="mt-2">নিরাপদ অর্ডার · ক্যাশ অন ডেলিভারি · সারাদেশে ডেলিভারি</p>
     </footer>
 
-    <a href="#order-now" class="campaign-bg fixed inset-x-4 bottom-4 z-40 grid h-14 place-items-center rounded-2xl text-sm font-black text-white shadow-2xl md:hidden">{{ $landingPage->cta_text }}</a>
+    <a href="#order-now" data-campaign-sticky-cta class="campaign-bg fixed inset-x-4 bottom-4 z-40 grid h-14 place-items-center rounded-2xl text-sm font-black text-white shadow-2xl md:hidden">{{ $landingPage->cta_text }}</a>
 
     @include('storefront.partials.visitor-analytics')
     <script>
@@ -253,31 +200,6 @@
                 window.setInterval(render, 1000);
             }
 
-            document.querySelectorAll('.landing-order-form').forEach(function (form) {
-                var variation = form.querySelector('.landing-variation-select');
-                if (variation) {
-                    variation.addEventListener('change', function () {
-                        var option = variation.options[variation.selectedIndex];
-                        var price = Number(option.dataset.price || 0);
-                        var regularPrice = Number(option.dataset.regularPrice || 0);
-                        form.dataset.value = String(price);
-                        form.closest('article').querySelector('[data-landing-price]').textContent = '৳' + price.toLocaleString('en-US', { maximumFractionDigits: 0 });
-                        var regular = form.closest('article').querySelector('[data-landing-regular-price]');
-                        regular.textContent = '৳' + regularPrice.toLocaleString('en-US', { maximumFractionDigits: 0 });
-                        regular.classList.toggle('hidden', regularPrice <= price);
-                    });
-                }
-
-                form.addEventListener('submit', function () {
-                    if (window.TisiloAnalytics) {
-                        window.TisiloAnalytics.track('add_to_cart', {
-                            product_id: Number(form.dataset.productId),
-                            value: Number(form.dataset.value),
-                            metadata: { product_name: form.dataset.productName, quantity: Number(form.querySelector('[name="quantity"]').value), currency: 'BDT' }
-                        });
-                    }
-                });
-            });
         })();
     </script>
 </body>

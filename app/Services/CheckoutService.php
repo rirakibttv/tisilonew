@@ -35,6 +35,7 @@ class CheckoutService
         return DB::transaction(function () use ($cart, $customer, $shippingQuote): Order {
             $shippingAmount = round((float) ($shippingQuote['amount'] ?? 0), 2);
             $order = Order::query()->create([
+                'checkout_reference' => $customer['checkout_reference'] ?? null,
                 'user_id' => auth()->id(),
                 'landing_page_id' => $customer['landing_page_id'] ?? null,
                 'customer_name' => $customer['customer_name'],

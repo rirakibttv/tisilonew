@@ -5,6 +5,7 @@ use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\ContentPageController;
 use App\Http\Controllers\Storefront\HomeController;
+use App\Http\Controllers\Storefront\LandingCheckoutController;
 use App\Http\Controllers\Storefront\LandingPageController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\VisitorAnalyticsController;
@@ -32,6 +33,10 @@ Route::get('/offer/{landingPage:slug}/preview', [LandingPageController::class, '
     ->middleware('signed')
     ->name('store.landing.preview');
 Route::get('/offer/{landingPage:slug}', [LandingPageController::class, 'show'])->name('store.landing.show');
+Route::post('/offer/{landingPage:slug}/quote', [LandingCheckoutController::class, 'quote'])
+    ->middleware('throttle:60,1')->name('store.landing.quote');
+Route::post('/offer/{landingPage:slug}/order', [LandingCheckoutController::class, 'store'])
+    ->middleware('throttle:10,1')->block(30, 30)->name('store.landing.order');
 Route::get('/cart', [CartController::class, 'index'])->name('store.cart.index');
 Route::post('/cart', [CartController::class, 'store'])->name('store.cart.store');
 Route::patch('/cart/{line}', [CartController::class, 'update'])->name('store.cart.update');
