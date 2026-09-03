@@ -176,11 +176,15 @@ class LandingPageTest extends TestCase
         $variation = ProductVariation::create([
             'product_id' => $product->id, 'sku' => 'INLINE-'.Str::random(8),
             'regular_price' => 800, 'sale_price' => 700, 'stock_quantity' => 4,
-            'stock_status' => 'in_stock', 'status' => true,
+            'stock_status' => 'in_stock', 'status' => true, 'image' => 'products/variations/blue.jpg',
         ]);
         $campaign = $this->landingPage('variation-quote', 'published');
         $campaign->products()->attach($product);
         $selection = ['product_id' => $product->id, 'product_variation_id' => $variation->id, 'quantity' => 2, 'price' => 1];
+        $this->get(route('store.landing.show', $campaign))->assertOk()
+            ->assertSee('data-variation-options', false)
+            ->assertSee('data-variation-option="'.$variation->id.'"', false)
+            ->assertSee(asset('storage/products/variations/blue.jpg'), false);
         $this->postJson(route('store.landing.quote', $campaign), $selection)->assertOk()
             ->assertJsonPath('subtotal', 1400)
             ->assertJsonPath('regions.0.amount', 100);

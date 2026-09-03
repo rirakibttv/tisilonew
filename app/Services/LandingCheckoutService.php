@@ -28,6 +28,9 @@ class LandingCheckoutService
                     'label' => $variation->attributeValues->isNotEmpty()
                         ? $variation->attributeValues->map(fn ($value) => $value->attribute->name.': '.$value->value)->join(' · ')
                         : ($variation->sku ?: 'Option '.$variation->id),
+                    'image' => $variation->image
+                        ? asset('storage/'.ltrim($variation->image, '/'))
+                        : ($product->featured_image ? asset('storage/'.ltrim($product->featured_image, '/')) : null),
                     'price' => (float) ($variation->sale_price ?? $variation->regular_price),
                     'available' => $variation->stock_status === 'out_of_stock' ? 0 : min(99, $variation->stock_quantity),
                 ])->values()->all(),

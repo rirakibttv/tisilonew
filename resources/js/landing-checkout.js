@@ -7,6 +7,8 @@ if (campaignForm && campaignData) {
     const variation = campaignForm.elements.product_variation_id;
     const quantity = campaignForm.elements.quantity;
     const region = campaignForm.elements.shipping_region_id;
+    const variationOptions = campaignForm.querySelector('[data-variation-options]');
+    const selectedVariationLabel = campaignForm.querySelector('[data-selected-variation-label]');
     const submit = campaignForm.querySelector('[data-campaign-submit]');
     const status = campaignForm.querySelector('[data-quote-status]');
     const retry = campaignForm.querySelector('[data-quote-retry]');
@@ -23,6 +25,74 @@ if (campaignForm && campaignData) {
 
     const selectedProduct = () => data.products.find(item => String(item.id) === product.value);
     const selectedOption = () => selectedProduct()?.variations.find(item => String(item.id) === variation.value);
+    const syncVariationOptions = () => {
+        const option = selectedOption();
+        variationOptions?.querySelectorAll('[data-variation-option]').forEach(button => {
+            button.setAttribute('aria-pressed', String(button.dataset.variationOption === variation.value));
+        });
+        if (selectedVariationLabel) selectedVariationLabel.textContent = option?.label || '';
+    };
+    const variationButton = item => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.variationOption = item.id;
+        button.disabled = item.available < 1;
+        button.setAttribute('aria-pressed', 'false');
+        button.className = 'campaign-variation-option relative w-28 shrink-0 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-2 text-left transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-45';
+
+        const check = document.createElement('span');
+        check.className = 'campaign-variation-check absolute right-1.5 top-1.5 hidden size-6 place-items-center rounded-full text-xs font-black text-white';
+        check.textContent = '✓';
+        button.append(check);
+
+        if (item.image) {
+            const image = document.createElement('img');
+            image.src = item.image;
+            image.alt = item.label;
+            image.loading = 'lazy';
+            image.className = 'aspect-square w-full rounded-xl bg-slate-50 object-cover';
+            button.append(image);
+        } else {
+            const placeholder = document.createElement('span');
+            placeholder.className = 'grid aspect-square w-full place-items-center rounded-xl bg-slate-100 text-2xl font-black text-slate-400';
+            placeholder.textContent = item.label.charAt(0).toLocaleUpperCase('bn-BD');
+            button.append(placeholder);
+        }
+
+        const label = document.createElement('span');
+        label.className = 'mt-2 block min-h-10 break-words text-xs font-bold leading-5';
+        label.textContent = item.label;
+        button.append(label);
+
+        const price = document.createElement('span');
+        price.className = 'campaign-text mt-1 block text-sm font-black';
+        price.textContent = money(item.price);
+        button.append(price);
+
+        if (item.available < 1) {
+            const stock = document.createElement('span');
+            stock.className = 'mt-1 block text-[10px] font-bold text-rose-600';
+            stock.textContent = 'স্টক নেই';
+            button.append(stock);
+        }
+
+        return button;
+    };
+    const renderVariationOptions = selected => {
+        const previousValue = variation.value;
+        variation.replaceChildren();
+        variationOptions?.replaceChildren();
+        selected.variations.forEach(item => {
+            const option = new Option(`${item.label} — ${money(item.price)}${item.available < 1 ? ' (স্টক নেই)' : ''}`, item.id);
+            option.disabled = item.available < 1;
+            variation.add(option);
+            variationOptions?.append(variationButton(item));
+        });
+        const preferred = selected.variations.find(item => String(item.id) === previousValue && item.available > 0);
+        const firstAvailable = selected.variations.find(item => item.available > 0);
+        variation.value = preferred ? String(preferred.id) : (firstAvailable ? String(firstAvailable.id) : '');
+        syncVariationOptions();
+    };
     const updateTotals = () => {
         const quote = regions.find(item => String(item.region_id) === region.value);
         campaignForm.querySelector('[data-campaign-subtotal]').textContent = money(subtotal);
@@ -33,25 +103,18 @@ if (campaignForm && campaignData) {
     const updateProduct = (resetVariation = false) => {
         const selected = selectedProduct();
         if (!selected) return;
-        if (resetVariation) {
-            variation.replaceChildren();
-            selected.variations.forEach(item => {
-                const option = new Option(`${item.label} — ${money(item.price)}${item.available < 1 ? ' (স্টক নেই)' : ''}`, item.id);
-                option.disabled = item.available < 1;
-                variation.add(option);
-            });
-            const firstAvailable = selected.variations.find(item => item.available > 0);
-            if (firstAvailable) variation.value = String(firstAvailable.id);
-        }
+        if (resetVariation) renderVariationOptions(selected);
         variation.disabled = !selected.variable;
         variation.required = selected.variable;
         campaignForm.querySelector('[data-variation-field]').classList.toggle('hidden', !selected.variable);
         const option = selected.variable ? selectedOption() : selected;
+        syncVariationOptions();
         campaignForm.querySelector('[data-campaign-name]').textContent = selected.name;
         const image = campaignForm.querySelector('[data-campaign-image]');
-        image.classList.toggle('hidden', !selected.image);
-        if (selected.image) image.src = selected.image;
-        image.alt = selected.name;
+        const selectedImage = option?.image || selected.image;
+        image.classList.toggle('hidden', !selectedImage);
+        if (selectedImage) image.src = selectedImage;
+        image.alt = option?.label ? `${selected.name} — ${option.label}` : selected.name;
         campaignForm.querySelector('[data-unit-price]').textContent = money(option?.price || 0);
         quantity.max = String(Math.max(1, option?.available || 1));
         subtotal = Number(option?.price || 0) * Number(quantity.value || 0);
@@ -79,6 +142,8 @@ if (campaignForm && campaignData) {
             const option = selectedProduct().variable ? selectedOption() : selectedProduct();
             option.price = Number(payload.unit_price);
             campaignForm.querySelector('[data-unit-price]').textContent = money(option.price);
+            const optionPrice = variationOptions?.querySelector(`[data-variation-option="${variation.value}"] .campaign-text`);
+            if (optionPrice) optionPrice.textContent = money(option.price);
             regions = payload.regions;
             const previousRegion = region.value;
             region.replaceChildren(new Option('বিভাগ › জেলা › উপজেলা/থানা নির্বাচন করুন', ''));
@@ -109,6 +174,13 @@ if (campaignForm && campaignData) {
     };
     product.addEventListener('change', () => { updateProduct(true); queueQuote(); });
     variation.addEventListener('change', queueQuote);
+    variationOptions?.addEventListener('click', event => {
+        const button = event.target.closest('[data-variation-option]');
+        if (!button || button.disabled || button.dataset.variationOption === variation.value) return;
+        variation.value = button.dataset.variationOption;
+        syncVariationOptions();
+        queueQuote();
+    });
     quantity.addEventListener('input', queueQuote);
     region.addEventListener('change', updateTotals);
     retry.addEventListener('click', queueQuote);

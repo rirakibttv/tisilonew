@@ -30,6 +30,8 @@
         .campaign-bg { background-color: var(--campaign-color); }
         .campaign-text { color: var(--campaign-color); }
         .campaign-border { border-color: var(--campaign-color); }
+        .campaign-variation-option[aria-pressed="true"] { border-color: var(--campaign-color); box-shadow: 0 0 0 3px color-mix(in srgb, var(--campaign-color) 18%, transparent); }
+        .campaign-variation-option[aria-pressed="true"] .campaign-variation-check { display: grid; background-color: var(--campaign-color); }
         html { scroll-behavior: smooth; }
     </style>
 </head>

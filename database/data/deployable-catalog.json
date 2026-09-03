@@ -566,6 +566,16 @@
     ],
     "site_settings": [
         {
+            "key": "cloudflare",
+            "values": {
+                "enabled": true,
+                "zone_id": "117a6efb708b06e0c60b6adfc9eaa13c",
+                "hostname": "www.tisilo.com",
+                "edge_ttl": 3600,
+                "browser_ttl": 3600
+            }
+        },
+        {
             "key": "contact",
             "values": {
                 "hotline": null,
@@ -773,6 +783,114 @@
             }
         }
     ],
+    "shipping_classes": [
+        {
+            "name": "Dhaka Seller Small Product Under 1Kg",
+            "code": "dhaka-seller-small-product-under-1kg",
+            "description": "Default shipping class for existing products.",
+            "is_active": true,
+            "sort_order": 1
+        }
+    ],
+    "shipping_partners": [
+        {
+            "name": "Carrybee",
+            "code": "carrybee",
+            "contact_name": null,
+            "phone": null,
+            "email": null,
+            "tracking_url": null,
+            "api_provider": null,
+            "notes": null,
+            "is_active": true
+        },
+        {
+            "name": "PaperFly",
+            "code": "paperfly",
+            "contact_name": null,
+            "phone": null,
+            "email": null,
+            "tracking_url": null,
+            "api_provider": null,
+            "notes": null,
+            "is_active": true
+        },
+        {
+            "name": "Pathao",
+            "code": "pathao",
+            "contact_name": null,
+            "phone": null,
+            "email": null,
+            "tracking_url": null,
+            "api_provider": null,
+            "notes": null,
+            "is_active": true
+        },
+        {
+            "name": "REDX",
+            "code": "redx",
+            "contact_name": null,
+            "phone": null,
+            "email": null,
+            "tracking_url": null,
+            "api_provider": null,
+            "notes": null,
+            "is_active": true
+        },
+        {
+            "name": "Steadfast",
+            "code": "steadfast",
+            "contact_name": null,
+            "phone": null,
+            "email": null,
+            "tracking_url": null,
+            "api_provider": null,
+            "notes": null,
+            "is_active": true
+        }
+    ],
+    "shipping_regions": [
+        {
+            "division": "Bangladesh",
+            "district": "Outside Dhaka",
+            "upazila": "Other Upazila",
+            "postal_code": null,
+            "location_key": "bangladesh-outside-dhaka-other-upazila",
+            "is_active": true,
+            "sort_order": 0,
+            "rates": [
+                {
+                    "base_charge": "130.00",
+                    "additional_item_charge": "0.00",
+                    "estimated_min_days": 3,
+                    "estimated_max_days": 5,
+                    "is_active": true,
+                    "shipping_class_code": "dhaka-seller-small-product-under-1kg",
+                    "shipping_partner_code": "steadfast"
+                }
+            ]
+        },
+        {
+            "division": "Dhaka",
+            "district": "Dhaka",
+            "upazila": "Dhaka Metropolitan",
+            "postal_code": null,
+            "location_key": "dhaka-dhaka-dhaka-metropolitan",
+            "is_active": true,
+            "sort_order": 0,
+            "rates": [
+                {
+                    "base_charge": "80.00",
+                    "additional_item_charge": "0.00",
+                    "estimated_min_days": 1,
+                    "estimated_max_days": 2,
+                    "is_active": true,
+                    "shipping_class_code": "dhaka-seller-small-product-under-1kg",
+                    "shipping_partner_code": "steadfast"
+                }
+            ]
+        }
+    ],
     "vendors": [],
     "products": [
         {
@@ -804,6 +922,7 @@
             "meta_keywords": null,
             "brand_slug": "home-tex",
             "category_slug": "home-kitchen",
+            "shipping_class_code": "dhaka-seller-small-product-under-1kg",
             "tag_slugs": [],
             "attribute_slugs": [
                 "kol-baliser-kavar"
@@ -846,140 +965,9 @@
                     ]
                 }
             ]
-        },
-        {
-            "name": "Test Product",
-            "slug": "test-product",
-            "product_type": "variable",
-            "sku": "Test-oo1",
-            "barcode": null,
-            "purchase_price": null,
-            "regular_price": "1000.00",
-            "sale_price": "900.00",
-            "manage_stock": true,
-            "stock_quantity": 10,
-            "low_stock_threshold": 5,
-            "stock_status": "in_stock",
-            "short_description": null,
-            "description": "<p></p>",
-            "featured_image": null,
-            "gallery_images": [],
-            "weight": null,
-            "length": null,
-            "width": null,
-            "height": null,
-            "status": "published",
-            "featured": false,
-            "sort_order": 0,
-            "seo_title": null,
-            "meta_description": null,
-            "meta_keywords": null,
-            "brand_slug": "samsung",
-            "category_slug": "mens-fashion",
-            "tag_slugs": [
-                "best-seller"
-            ],
-            "attribute_slugs": [
-                "color",
-                "size"
-            ],
-            "variations": [
-                {
-                    "sku": "TEST-BLUE-XXL",
-                    "barcode": null,
-                    "purchase_price": null,
-                    "regular_price": "1000.00",
-                    "sale_price": "900.00",
-                    "stock_quantity": 10,
-                    "low_stock_threshold": 5,
-                    "stock_status": "in_stock",
-                    "image": null,
-                    "weight": null,
-                    "status": true,
-                    "is_default": true,
-                    "sort_order": 0,
-                    "attribute_values": [
-                        "color:blue",
-                        "size:xxl"
-                    ]
-                },
-                {
-                    "sku": "TEST-RED-XXL",
-                    "barcode": null,
-                    "purchase_price": null,
-                    "regular_price": "1000.00",
-                    "sale_price": "900.00",
-                    "stock_quantity": 10,
-                    "low_stock_threshold": 5,
-                    "stock_status": "in_stock",
-                    "image": null,
-                    "weight": null,
-                    "status": true,
-                    "is_default": false,
-                    "sort_order": 0,
-                    "attribute_values": [
-                        "color:red",
-                        "size:xxl"
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "Test Variable Product",
-            "slug": "test-variable-product",
-            "product_type": "variable",
-            "sku": null,
-            "barcode": null,
-            "purchase_price": null,
-            "regular_price": "0.00",
-            "sale_price": null,
-            "manage_stock": true,
-            "stock_quantity": 0,
-            "low_stock_threshold": 5,
-            "stock_status": "in_stock",
-            "short_description": null,
-            "description": "<p></p>",
-            "featured_image": null,
-            "gallery_images": [],
-            "weight": null,
-            "length": null,
-            "width": null,
-            "height": null,
-            "status": "published",
-            "featured": false,
-            "sort_order": 0,
-            "seo_title": null,
-            "meta_description": null,
-            "meta_keywords": null,
-            "brand_slug": null,
-            "category_slug": null,
-            "tag_slugs": [],
-            "attribute_slugs": [
-                "color"
-            ],
-            "variations": [
-                {
-                    "sku": "TEST-XXL-RED",
-                    "barcode": null,
-                    "purchase_price": null,
-                    "regular_price": "1000.00",
-                    "sale_price": null,
-                    "stock_quantity": 10,
-                    "low_stock_threshold": 5,
-                    "stock_status": "in_stock",
-                    "image": null,
-                    "weight": null,
-                    "status": true,
-                    "is_default": true,
-                    "sort_order": 0,
-                    "attribute_values": [
-                        "color:red",
-                        "size:xxl"
-                    ]
-                }
-            ]
         }
     ],
+    "wishlists": [],
     "landing_pages": [
         {
             "name": "Premium Quality Panel Cotton Bed Sheets",

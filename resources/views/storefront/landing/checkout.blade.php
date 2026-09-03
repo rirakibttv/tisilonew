@@ -25,6 +25,7 @@
                     @endforeach
                 </select>
                 @php($selectedProduct = collect($checkoutProducts)->firstWhere('id', $initialSelection['product_id']))
+                @php($selectedVariation = collect($selectedProduct['variations'])->firstWhere('id', $initialSelection['product_variation_id']))
                 <div class="mt-5 flex items-center gap-4">
                     <img data-campaign-image src="{{ $selectedProduct['image'] ?: '' }}" alt="{{ $selectedProduct['name'] }}" @class(['size-24 rounded-2xl bg-slate-50 object-cover', 'hidden' => ! $selectedProduct['image']])>
                     <div class="min-w-0">
@@ -34,12 +35,36 @@
                     </div>
                 </div>
                 <div data-variation-field @class(['mt-5', 'hidden' => ! $selectedProduct['variable']])>
-                    <label for="campaign-variation" class="block text-sm font-bold">সাইজ/ডিজাইন/অপশন</label>
-                    <select id="campaign-variation" name="product_variation_id" @disabled(! $selectedProduct['variable']) @required($selectedProduct['variable']) class="mt-2 min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <label for="campaign-variation" class="block text-sm font-bold">সাইজ/ডিজাইন/অপশন</label>
+                        <span data-selected-variation-label class="text-xs font-bold text-slate-500">{{ $selectedVariation['label'] ?? '' }}</span>
+                    </div>
+                    <select id="campaign-variation" name="product_variation_id" @disabled(! $selectedProduct['variable']) @required($selectedProduct['variable']) class="sr-only">
                         @foreach($selectedProduct['variations'] as $variation)
                             <option value="{{ $variation['id'] }}" @selected($initialSelection['product_variation_id'] === $variation['id']) @disabled($variation['available'] < 1)>{{ $variation['label'] }} — ৳{{ number_format($variation['price'], 2) }}{{ $variation['available'] < 1 ? ' (স্টক নেই)' : '' }}</option>
                         @endforeach
                     </select>
+                    <div data-variation-options class="mt-3 flex gap-3 overflow-x-auto px-1 pb-3 pt-1" role="group" aria-label="পণ্যের ভ্যারিয়েশন নির্বাচন করুন">
+                        @foreach($selectedProduct['variations'] as $variation)
+                            <button
+                                type="button"
+                                data-variation-option="{{ $variation['id'] }}"
+                                aria-pressed="{{ $initialSelection['product_variation_id'] === $variation['id'] ? 'true' : 'false' }}"
+                                @disabled($variation['available'] < 1)
+                                class="campaign-variation-option relative w-28 shrink-0 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-2 text-left transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-45"
+                            >
+                                <span class="campaign-variation-check absolute right-1.5 top-1.5 hidden size-6 place-items-center rounded-full text-xs font-black text-white">✓</span>
+                                @if($variation['image'])
+                                    <img src="{{ $variation['image'] }}" alt="{{ $variation['label'] }}" loading="lazy" class="aspect-square w-full rounded-xl bg-slate-50 object-cover">
+                                @else
+                                    <span class="grid aspect-square w-full place-items-center rounded-xl bg-slate-100 text-2xl font-black text-slate-400">{{ mb_strtoupper(mb_substr($variation['label'], 0, 1)) }}</span>
+                                @endif
+                                <span class="mt-2 block min-h-10 break-words text-xs font-bold leading-5">{{ $variation['label'] }}</span>
+                                <span class="campaign-text mt-1 block text-sm font-black">৳{{ number_format($variation['price'], 2) }}</span>
+                                @if($variation['available'] < 1)<span class="mt-1 block text-[10px] font-bold text-rose-600">স্টক নেই</span>@endif
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
                 <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
                     <label for="campaign-quantity" class="text-sm font-bold">পরিমাণ</label>
