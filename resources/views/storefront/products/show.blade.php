@@ -19,7 +19,22 @@
         $offers = $product->vendorListings->flatMap(fn ($listing) => $listing->items->map(fn ($item) => ['listing' => $listing, 'item' => $item]))
             ->filter(fn ($offer) => $offer['item']->available_quantity > 0 || $offer['item']->backorders_allowed)
             ->sortBy(fn ($offer) => (float) ($offer['item']->sale_price ?? $offer['item']->regular_price));
-        $activeVariations = $product->variations->where('status', true)->sortByDesc('is_default')->sortBy('sort_order');
+        $activeVariations = $product->variations->where('status', true)->sortBy([['is_default', 'desc'], ['sort_order', 'asc']])->values();
+        $selectedVariation = $activeVariations->first(fn ($variation) => $variation->stock_status !== 'out_of_stock' && $variation->stock_quantity > 0) ?? $activeVariations->first();
+        $displayPrice = (float) ($selectedVariation?->sale_price ?? $selectedVariation?->regular_price ?? $summary['price']);
+        $displayRegularPrice = (float) ($selectedVariation?->regular_price ?? $summary['regular_price']);
+        $displayDiscount = $displayRegularPrice > $displayPrice && $displayRegularPrice > 0 ? (int) round((($displayRegularPrice - $displayPrice) / $displayRegularPrice) * 100) : 0;
+        $variationOptions = $activeVariations->map(function ($variation): array {
+            return [
+                'id' => $variation->id,
+                'label' => $variation->attributeValues->isNotEmpty() ? $variation->attributeValues->map(fn ($value) => $value->attribute->name.': '.$value->value)->join(' · ') : ($variation->sku ?: 'Option '.$variation->id),
+                'price' => (float) ($variation->sale_price ?? $variation->regular_price),
+                'regular_price' => (float) $variation->regular_price,
+                'available' => $variation->stock_status === 'out_of_stock' ? 0 : (int) $variation->stock_quantity,
+                'image' => $variation->image ? asset('storage/'.ltrim($variation->image, '/')) : null,
+                'sku' => $variation->sku,
+            ];
+        })->values();
     @endphp
 
     <div class="mx-auto max-w-7xl px-4 py-5 text-xs text-slate-500 sm:px-6 lg:px-8">
@@ -32,17 +47,14 @@
 
     <section class="mx-auto grid max-w-7xl gap-8 px-4 pb-14 sm:px-6 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] lg:px-8">
         <div>
-            <div class="aspect-square overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-100 via-white to-orange-50">
-                @if ($summary['image'])
-                    <img src="{{ $summary['image'] }}" alt="{{ $product->name }}" class="size-full object-cover">
-                @else
-                    <div class="grid size-full place-items-center p-8 text-center">
+            <div class="aspect-square overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-100 via-white to-orange-50" data-product-image-frame>
+                <img data-product-main-image src="{{ $summary['image'] ?: '' }}" alt="{{ $product->name }}" @class(['size-full object-cover', 'hidden' => ! $summary['image']])>
+                <div data-product-image-placeholder @class(['size-full place-items-center p-8 text-center', 'grid' => ! $summary['image'], 'hidden' => $summary['image']])>
                         <div>
                             <span class="mx-auto grid size-32 place-items-center rounded-[2rem] bg-white text-6xl font-black text-orange-500 shadow-lg">{{ mb_strtoupper(mb_substr($product->name, 0, 1)) }}</span>
                             <p class="mt-6 font-bold text-slate-500">{{ $product->brand?->name ?? 'Tisilo Choice' }}</p>
                         </div>
-                    </div>
-                @endif
+                </div>
             </div>
             <div class="mt-4 grid grid-cols-3 gap-3 text-center text-xs font-bold text-slate-600">
                 <span class="rounded-xl border border-slate-200 bg-white p-3">✓ আসল পণ্য</span>
@@ -57,17 +69,15 @@
             <div class="mt-4 flex flex-wrap items-center gap-4 text-sm">
                 <span class="font-bold text-amber-500">★ 4.8 <span class="font-medium text-slate-400">(0 রিভিউ)</span></span>
                 <span class="text-slate-300">|</span>
-                <span class="text-slate-500">SKU: {{ $product->sku ?: 'N/A' }}</span>
-                <span class="{{ $summary['available'] > 0 ? 'text-emerald-600' : 'text-amber-600' }} font-bold">{{ $summary['available'] > 0 ? 'স্টকে আছে' : 'অর্ডারযোগ্য' }}</span>
+                <span class="text-slate-500">SKU: <span data-product-sku>{{ $selectedVariation?->sku ?: ($product->sku ?: 'N/A') }}</span></span>
+                <span data-product-stock class="{{ ($selectedVariation ? $selectedVariation->stock_quantity > 0 : $summary['available'] > 0) ? 'text-emerald-600' : 'text-amber-600' }} font-bold">{{ ($selectedVariation ? $selectedVariation->stock_quantity > 0 : $summary['available'] > 0) ? 'স্টকে আছে' : 'স্টক নেই' }}</span>
             </div>
 
             <div class="mt-6 rounded-2xl bg-orange-50 p-5">
                 <div class="flex items-end gap-3">
-                    <span class="text-4xl font-black text-orange-600">৳{{ number_format($summary['price'], 0) }}</span>
-                    @if ($summary['regular_price'] > $summary['price'])
-                        <span class="pb-1 text-lg text-slate-400 line-through">৳{{ number_format($summary['regular_price'], 0) }}</span>
-                        <span class="mb-1 rounded-full bg-rose-500 px-2.5 py-1 text-xs font-bold text-white">{{ $summary['discount'] }}% ছাড়</span>
-                    @endif
+                    <span data-product-price class="text-4xl font-black text-orange-600">৳{{ number_format($displayPrice, 0) }}</span>
+                    <span data-product-regular-price @class(['pb-1 text-lg text-slate-400 line-through', 'hidden' => $displayRegularPrice <= $displayPrice])>৳{{ number_format($displayRegularPrice, 0) }}</span>
+                    <span data-product-discount @class(['mb-1 rounded-full bg-rose-500 px-2.5 py-1 text-xs font-bold text-white', 'hidden' => $displayDiscount < 1])>{{ $displayDiscount }}% ছাড়</span>
                 </div>
                 <p class="mt-2 text-xs text-slate-500">মূল্য ভেন্ডর ও নির্বাচিত ভ্যারিয়েশন অনুযায়ী পরিবর্তিত হতে পারে।</p>
             </div>
@@ -98,28 +108,43 @@
                     </div>
                 </div>
             @else
-                <form method="POST" action="{{ route('store.cart.store') }}" class="mt-7 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <form method="POST" action="{{ route('store.cart.store') }}" class="mt-7 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" data-product-variation-form>
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
 
                     @if ($product->product_type === 'variable' && $activeVariations->isNotEmpty())
-                        <label for="product-variation" class="text-sm font-black text-slate-900">ভ্যারিয়েশন নির্বাচন করুন</label>
-                        <select id="product-variation" name="product_variation_id" class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-orange-400">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <label for="product-variation" class="text-sm font-black text-slate-900">ভ্যারিয়েশন নির্বাচন করুন</label>
+                            <span data-product-variation-label class="text-xs font-bold text-slate-500">{{ $variationOptions->firstWhere('id', $selectedVariation?->id)['label'] ?? '' }}</span>
+                        </div>
+                        <select id="product-variation" name="product_variation_id" required class="sr-only">
                             @foreach ($activeVariations as $variation)
-                                <option value="{{ $variation->id }}">
+                                <option value="{{ $variation->id }}" @selected($selectedVariation?->id === $variation->id) @disabled($variation->stock_status === 'out_of_stock' || $variation->stock_quantity < 1)>
                                     {{ $variation->attributeValues->isNotEmpty() ? $variation->attributeValues->map(fn ($value) => $value->attribute->name.': '.$value->value)->join(' · ') : 'Option '.$loop->iteration }}
                                     — ৳{{ number_format((float) ($variation->sale_price ?? $variation->regular_price), 0) }}
                                 </option>
                             @endforeach
                         </select>
+                        <div data-product-variation-options class="mt-3 flex flex-wrap gap-3" role="group" aria-label="পণ্যের ভ্যারিয়েশন নির্বাচন করুন">
+                            @foreach($variationOptions as $option)
+                                <button type="button" data-product-variation-option="{{ $option['id'] }}" aria-pressed="{{ $selectedVariation?->id === $option['id'] ? 'true' : 'false' }}" @disabled($option['available'] < 1) class="product-variation-option relative flex min-h-20 min-w-44 max-w-full items-center gap-3 rounded-2xl border-2 border-slate-200 bg-white p-3 text-left transition hover:border-orange-300 disabled:cursor-not-allowed disabled:opacity-45">
+                                    @if($option['image'])<img src="{{ $option['image'] }}" alt="{{ $option['label'] }}" loading="lazy" class="size-16 shrink-0 rounded-xl bg-slate-50 object-cover">@endif
+                                    <span class="min-w-0"><span class="block break-words text-xs font-bold leading-5">{{ $option['label'] }}</span><span class="mt-1 block text-sm font-black text-orange-600">৳{{ number_format($option['price'], 0) }}</span>@if($option['available'] < 1)<span class="mt-1 block text-[10px] font-bold text-rose-600">স্টক নেই</span>@endif</span>
+                                    <span class="product-variation-check absolute right-1.5 top-1.5 hidden size-5 place-items-center rounded-full bg-orange-500 text-[10px] font-black text-white">✓</span>
+                                </button>
+                            @endforeach
+                        </div>
                     @endif
 
                     <div class="mt-5 flex flex-wrap gap-3">
-                        <input type="number" name="quantity" value="1" min="1" max="99" class="h-12 w-24 rounded-xl border border-slate-200 px-3 text-center font-bold">
-                        <button class="h-12 flex-1 rounded-xl bg-orange-500 px-6 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600">@svg('heroicon-o-shopping-cart', 'mr-2 inline size-5') কার্টে যোগ করুন</button>
+                        <input data-product-quantity type="number" name="quantity" value="1" min="1" max="{{ max(1, (int) ($selectedVariation?->stock_quantity ?? 99)) }}" class="h-12 w-24 rounded-xl border border-slate-200 px-3 text-center font-bold">
+                        <button data-product-cart-button @disabled($selectedVariation && $selectedVariation->stock_quantity < 1) class="h-12 flex-1 rounded-xl bg-orange-500 px-6 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50">@svg('heroicon-o-shopping-cart', 'mr-2 inline size-5') কার্টে যোগ করুন</button>
                     </div>
                     @error('quantity')<p class="mt-3 text-sm font-bold text-rose-600">{{ $message }}</p>@enderror
                 </form>
+                @if($variationOptions->isNotEmpty())
+                    <script type="application/json" id="product-variation-data">@json(['masterImage' => $summary['image'], 'productName' => $product->name, 'variations' => $variationOptions])</script>
+                @endif
             @endif
 
             <div class="mt-6 grid gap-3 sm:grid-cols-2">
@@ -134,7 +159,7 @@
             <h2 class="text-2xl font-black text-slate-950">পণ্যের বিস্তারিত</h2>
             <div class="prose prose-slate mt-5 max-w-none text-sm leading-7 text-slate-600">
                 @if ($product->description)
-                    {!! nl2br(e($product->description)) !!}
+                    {!! $product->description !!}
                 @else
                     <p>এই পণ্যের বিস্তারিত তথ্য শিগগিরই যোগ করা হবে।</p>
                 @endif

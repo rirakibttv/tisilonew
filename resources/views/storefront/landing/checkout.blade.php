@@ -51,15 +51,13 @@
                                 data-variation-option="{{ $variation['id'] }}"
                                 aria-pressed="{{ $initialSelection['product_variation_id'] === $variation['id'] ? 'true' : 'false' }}"
                                 @disabled($variation['available'] < 1)
-                                class="campaign-variation-option relative w-28 shrink-0 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-2 text-left transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-45"
+                                class="campaign-variation-option relative min-w-44 max-w-56 shrink-0 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-3 text-left transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-45"
                             >
                                 <span class="campaign-variation-check absolute right-1.5 top-1.5 hidden size-6 place-items-center rounded-full text-xs font-black text-white">✓</span>
                                 @if($variation['image'])
-                                    <img src="{{ $variation['image'] }}" alt="{{ $variation['label'] }}" loading="lazy" class="aspect-square w-full rounded-xl bg-slate-50 object-cover">
-                                @else
-                                    <span class="grid aspect-square w-full place-items-center rounded-xl bg-slate-100 text-2xl font-black text-slate-400">{{ mb_strtoupper(mb_substr($variation['label'], 0, 1)) }}</span>
+                                    <img src="{{ $variation['image'] }}" alt="{{ $variation['label'] }}" loading="lazy" class="mb-2 aspect-square w-20 rounded-xl bg-slate-50 object-cover">
                                 @endif
-                                <span class="mt-2 block min-h-10 break-words text-xs font-bold leading-5">{{ $variation['label'] }}</span>
+                                <span class="block break-words text-xs font-bold leading-5">{{ $variation['label'] }}</span>
                                 <span class="campaign-text mt-1 block text-sm font-black">৳{{ number_format($variation['price'], 2) }}</span>
                                 @if($variation['available'] < 1)<span class="mt-1 block text-[10px] font-bold text-rose-600">স্টক নেই</span>@endif
                             </button>

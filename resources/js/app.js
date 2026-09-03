@@ -1,5 +1,6 @@
 import './bootstrap';
 import './landing-checkout';
+import './product-variations';
 
 const mobileMenuButton = document.querySelector('[data-mobile-menu-button]');
 const mobileMenu = document.querySelector('[data-mobile-menu]');

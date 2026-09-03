@@ -526,7 +526,8 @@ class VariationsRelationManager extends RelationManager
 
             ->columns([
                 ImageColumn::make('image')
-                    ->label('Image')
+                    ->label('Preview')
+                    ->getStateUsing(fn (ProductVariation $record): ?string => $record->image ?: $this->getOwnerRecord()->featured_image)
                     ->disk('public')
                     ->square(),
 

@@ -87,7 +87,7 @@ class ProductController extends Controller
         return [
             'brand:id,name,slug',
             'category:id,name,slug',
-            'variations:id,product_id,regular_price,sale_price,stock_quantity,status,is_default,sort_order',
+            'variations:id,product_id,sku,regular_price,sale_price,stock_quantity,stock_status,image,status,is_default,sort_order',
             'vendorListings' => fn ($query) => $query->where('status', VendorListingStatus::Approved->value),
             'vendorListings.items' => fn ($query) => $query->where('status', VendorListingItemStatus::Active->value),
             'vendorListings.items.stocks',

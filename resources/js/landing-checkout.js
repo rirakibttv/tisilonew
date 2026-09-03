@@ -38,7 +38,7 @@ if (campaignForm && campaignData) {
         button.dataset.variationOption = item.id;
         button.disabled = item.available < 1;
         button.setAttribute('aria-pressed', 'false');
-        button.className = 'campaign-variation-option relative w-28 shrink-0 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-2 text-left transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-45';
+        button.className = 'campaign-variation-option relative min-w-44 max-w-56 shrink-0 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-3 text-left transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-45';
 
         const check = document.createElement('span');
         check.className = 'campaign-variation-check absolute right-1.5 top-1.5 hidden size-6 place-items-center rounded-full text-xs font-black text-white';
@@ -50,17 +50,12 @@ if (campaignForm && campaignData) {
             image.src = item.image;
             image.alt = item.label;
             image.loading = 'lazy';
-            image.className = 'aspect-square w-full rounded-xl bg-slate-50 object-cover';
+            image.className = 'mb-2 aspect-square w-20 rounded-xl bg-slate-50 object-cover';
             button.append(image);
-        } else {
-            const placeholder = document.createElement('span');
-            placeholder.className = 'grid aspect-square w-full place-items-center rounded-xl bg-slate-100 text-2xl font-black text-slate-400';
-            placeholder.textContent = item.label.charAt(0).toLocaleUpperCase('bn-BD');
-            button.append(placeholder);
         }
 
         const label = document.createElement('span');
-        label.className = 'mt-2 block min-h-10 break-words text-xs font-bold leading-5';
+        label.className = 'block break-words text-xs font-bold leading-5';
         label.textContent = item.label;
         button.append(label);
 
