@@ -210,6 +210,14 @@ class DeploymentDataSnapshot
                             ->all(),
                     ])->all(),
                 ])->all(),
+            'wishlists' => DB::table('wishlists')
+                ->join('users', 'users.id', '=', 'wishlists.user_id')
+                ->join('products', 'products.id', '=', 'wishlists.product_id')
+                ->orderBy('users.email')
+                ->orderBy('products.slug')
+                ->get(['users.email as user_email', 'products.slug as product_slug'])
+                ->map(fn ($item): array => (array) $item)
+                ->all(),
             'landing_pages' => LandingPage::query()
                 ->with('products:id,slug')
                 ->orderBy('slug')
@@ -256,7 +264,7 @@ class DeploymentDataSnapshot
         }
 
         return DB::transaction(function () use ($snapshot): array {
-            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'permissions' => 0, 'roles' => 0, 'users' => 0, 'site_settings' => 0, 'shipping_classes' => 0, 'shipping_partners' => 0, 'shipping_regions' => 0, 'shipping_region_rates' => 0, 'products' => 0, 'product_variations' => 0, 'landing_pages' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
+            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'permissions' => 0, 'roles' => 0, 'users' => 0, 'site_settings' => 0, 'shipping_classes' => 0, 'shipping_partners' => 0, 'shipping_regions' => 0, 'shipping_region_rates' => 0, 'products' => 0, 'product_variations' => 0, 'wishlists' => 0, 'landing_pages' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
 
             foreach ($snapshot['brands'] ?? [] as $data) {
                 Brand::query()->updateOrCreate(['slug' => $data['slug']], $data);
@@ -453,6 +461,20 @@ class DeploymentDataSnapshot
                     $variation->attributeValues()->sync($valueIds);
                     $counts['product_variations']++;
                 }
+            }
+
+            foreach ($snapshot['wishlists'] ?? [] as $data) {
+                $userId = User::query()->where('email', $data['user_email'])->value('id');
+                $productId = Product::query()->where('slug', $data['product_slug'])->value('id');
+                if (! $userId || ! $productId) {
+                    continue;
+                }
+
+                DB::table('wishlists')->updateOrInsert(
+                    ['user_id' => $userId, 'product_id' => $productId],
+                    ['updated_at' => now(), 'created_at' => now()],
+                );
+                $counts['wishlists']++;
             }
 
             foreach ($snapshot['landing_pages'] ?? [] as $data) {

@@ -16,9 +16,9 @@
         <div>
             <h2 class="font-bold text-white">কাস্টমার সেবা</h2>
             <ul class="mt-4 space-y-3 text-sm text-slate-400">
-                <li><a href="#" class="hover:text-orange-400">হেল্প সেন্টার</a></li>
-                <li><a href="#" class="hover:text-orange-400">রিটার্ন ও রিফান্ড</a></li>
-                <li><a href="#" class="hover:text-orange-400">অর্ডার ট্র্যাকিং</a></li>
+                <li><a href="{{ route('store.products.index') }}" class="hover:text-orange-400">পণ্য খুঁজুন</a></li>
+                <li><a href="{{ route('store.account.dashboard') }}" class="hover:text-orange-400">আমার অর্ডার</a></li>
+                <li><a href="{{ route('store.wishlist.index') }}" class="hover:text-orange-400">আমার উইশলিস্ট</a></li>
                 <li><span>{{ $contactSettings['phone'] ?? $contactSettings['hotline'] ?? 'যোগাযোগ' }}</span></li>
             </ul>
         </div>
@@ -28,11 +28,9 @@
                 @forelse($contentPages ?? [] as $contentPage)
                     <li><a href="{{ route('store.pages.show', ['slug' => $contentPage['slug']]) }}" class="hover:text-orange-400">{{ $contentPage['name'] }}</a></li>
                 @empty
-                    <li><a href="#" class="hover:text-orange-400">আমাদের সম্পর্কে</a></li>
+                    <li><a href="{{ route('store.home') }}" class="hover:text-orange-400">হোম পেজ</a></li>
                 @endforelse
-                <li><a href="#" class="hover:text-orange-400">বিক্রেতা হোন</a></li>
-                <li><a href="#" class="hover:text-orange-400">প্রাইভেসি পলিসি</a></li>
-                <li><a href="#" class="hover:text-orange-400">শর্তাবলি</a></li>
+                <li><a href="/admin" class="hover:text-orange-400">Seller Center</a></li>
             </ul>
         </div>
         <div>

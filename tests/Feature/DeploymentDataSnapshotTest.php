@@ -129,6 +129,7 @@ class DeploymentDataSnapshotTest extends TestCase
             'incoming_quantity' => 5,
             'reorder_point' => 6,
         ]);
+        $user->wishlistProducts()->attach($product->id);
         $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tisilo-deployment-'.$token.'.json';
 
         try {
@@ -160,6 +161,10 @@ class DeploymentDataSnapshotTest extends TestCase
             $productData = collect($snapshot['products'])->firstWhere('slug', $product->slug);
             $this->assertCount(3, $productData['variations']);
             $this->assertSame('999.00', collect($productData['variations'])->firstWhere('sku', null)['sale_price']);
+            $this->assertTrue(collect($snapshot['wishlists'])->contains(
+                fn (array $item): bool => $item['user_email'] === $user->email
+                    && $item['product_slug'] === $product->slug,
+            ));
 
             $product->update([
                 'regular_price' => 1000,
@@ -202,6 +207,7 @@ class DeploymentDataSnapshotTest extends TestCase
             $warehouse->update(['address_line_1' => 'Changed Address']);
             $listingItem->update(['regular_price' => 1200]);
             $stock->update(['quantity' => 2]);
+            $user->wishlistProducts()->detach($product->id);
             $service->import($path);
             $product->refresh();
             $variation->refresh();
@@ -232,6 +238,10 @@ class DeploymentDataSnapshotTest extends TestCase
             $this->assertSame('Deployment Address', $warehouse->fresh()->address_line_1);
             $this->assertSame('990.00', $listingItem->fresh()->regular_price);
             $this->assertSame(31, $stock->fresh()->quantity);
+            $this->assertDatabaseHas('wishlists', [
+                'user_id' => $user->id,
+                'product_id' => $product->id,
+            ]);
         } finally {
             File::delete($path);
         }

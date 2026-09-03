@@ -1,0 +1,34 @@
+@extends('layouts.storefront')
+
+@section('title', 'অ্যাকাউন্টে লগইন — Tisilo')
+
+@section('content')
+    <section class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 sm:p-8">
+            <span class="grid size-12 place-items-center rounded-2xl bg-orange-50 text-orange-600">@svg('heroicon-o-user', 'size-6')</span>
+            <h1 class="mt-5 text-3xl font-black text-slate-950">আপনার অ্যাকাউন্টে লগইন</h1>
+            <p class="mt-2 text-sm leading-6 text-slate-500">আপনার সাম্প্রতিক অর্ডার দেখুন ও পছন্দের পণ্য উইশলিস্টে রাখুন।</p>
+
+            <form method="POST" action="{{ route('store.account.authenticate') }}" class="mt-7 space-y-5">
+                @csrf
+                <div>
+                    <label for="email" class="text-sm font-bold text-slate-700">ইমেইল</label>
+                    <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email" required class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">
+                    @error('email')<p class="mt-2 text-xs font-semibold text-rose-600">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="password" class="text-sm font-bold text-slate-700">পাসওয়ার্ড</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100">
+                    @error('password')<p class="mt-2 text-xs font-semibold text-rose-600">{{ $message }}</p>@enderror
+                </div>
+                <label class="flex items-center gap-3 text-sm text-slate-600">
+                    <input type="checkbox" name="remember" value="1" class="size-4 rounded border-slate-300 text-orange-500 focus:ring-orange-400">
+                    আমাকে মনে রাখুন
+                </label>
+                <button class="h-12 w-full rounded-xl bg-orange-500 text-sm font-black text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-600">লগইন করুন</button>
+            </form>
+
+            <p class="mt-6 text-center text-sm text-slate-500">নতুন গ্রাহক? <a href="{{ route('store.account.register') }}" class="font-black text-orange-600 hover:text-orange-700">অ্যাকাউন্ট খুলুন</a></p>
+        </div>
+    </section>
+@endsection
