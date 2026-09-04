@@ -2,58 +2,28 @@
     $cartItems = session('store_cart', []);
     $cartCount = collect($cartItems)->sum('quantity');
     $cartSubtotal = collect($cartItems)->sum(fn ($line) => ($line['price'] ?? 0) * ($line['quantity'] ?? 1));
-    $hotline = $contactSettings['phone'] ?? $contactSettings['hotline'] ?? '01794313455';
-    $primaryColor = $generalSettings['primary_color'] ?? '#7b12af';
 @endphp
-
-<!-- Top notification & contact bar -->
-<div class="border-b border-slate-800 bg-slate-950 text-slate-300 text-xs">
-    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 sm:px-6 lg:px-8">
-        <div class="flex items-center gap-4">
-            <a href="tel:{{ $hotline }}" class="flex items-center gap-1.5 font-medium text-slate-300 hover:text-white transition">
-                @svg('heroicon-o-phone', 'size-3.5 text-orange-400')
-                <span>{{ $hotline }}</span>
-            </a>
-            <span class="hidden sm:inline text-slate-600">|</span>
-            <p class="hidden sm:inline text-slate-400">{{ $generalSettings['top_headline'] ?? 'Biggest Online Shopping Zone with Million Of Products at Special Discounts' }}</p>
-        </div>
-        <div class="flex items-center gap-4 text-slate-400 font-medium">
-            <a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="flex items-center gap-1 hover:text-white transition">
-                @svg('heroicon-o-truck', 'size-3.5')
-                <span>Track Order</span>
-            </a>
-            <span class="text-slate-700">|</span>
-            <a href="/admin" class="hover:text-white transition">Seller Center</a>
-        </div>
-    </div>
-</div>
 
 <!-- Main Header -->
 <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/98 shadow-xs backdrop-blur-md">
-    <div class="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3.5 sm:gap-6 sm:px-6 lg:px-8">
+    <div class="mx-auto flex min-h-[74px] max-w-[1440px] items-center gap-3 px-3 sm:px-4 lg:grid lg:grid-cols-[250px_minmax(320px,1fr)_auto] lg:gap-3">
         <!-- Mobile Menu Trigger -->
         <button type="button" class="grid size-10 place-items-center rounded-lg border border-slate-200 text-slate-700 md:hidden hover:bg-slate-50 transition" data-mobile-menu-button aria-label="Open Navigation Menu">
             @svg('heroicon-o-bars-3', 'size-6')
         </button>
 
         <!-- Brand Logo -->
-        <a href="{{ route('store.home') }}" class="shrink-0 flex items-center gap-2" aria-label="{{ $generalSettings['site_name'] ?? 'Tisilo' }}">
+        <a href="{{ route('store.home') }}" class="flex min-w-0 shrink-0 items-center lg:w-[250px]" aria-label="{{ $generalSettings['site_name'] ?? 'Tisilo' }}">
             @if(filled($generalSettings['dark_logo'] ?? null))
                 @php($headerLogo = $generalSettings['dark_logo'])
-                <img src="{{ asset('storage/'.ltrim($headerLogo, '/')) }}?v={{ substr(sha1($headerLogo), 0, 12) }}" alt="{{ $generalSettings['site_name'] ?? 'Tisilo' }}" class="h-9 sm:h-11 w-auto object-contain">
+                <img src="{{ asset('storage/'.ltrim($headerLogo, '/')) }}?v={{ substr(sha1($headerLogo), 0, 12) }}" alt="{{ $generalSettings['site_name'] ?? 'Tisilo' }}" class="h-11 w-[190px] object-fill sm:h-[58px] sm:w-[245px]">
             @else
-                <div class="flex items-center gap-2">
-                    <span class="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-purple-700 to-indigo-800 text-xl font-black text-white shadow-sm">T</span>
-                    <div class="leading-none">
-                        <span class="text-xl sm:text-2xl font-black tracking-tight text-slate-900">{{ strtoupper($generalSettings['site_name'] ?? 'Tisilo') }}</span>
-                        <span class="block text-[9px] font-bold uppercase tracking-[0.25em] text-purple-700">Supermarket</span>
-                    </div>
-                </div>
+                <span class="font-serif text-4xl font-bold italic leading-none tracking-tight text-red-700 sm:text-6xl">{{ $generalSettings['site_name'] ?? 'Tisilo' }}</span>
             @endif
         </a>
 
         <!-- Desktop Search Bar -->
-        <form action="{{ route('store.products.index') }}" method="GET" class="relative hidden flex-1 max-w-2xl mx-auto md:block">
+        <form action="{{ route('store.products.index') }}" method="GET" class="relative hidden min-w-0 flex-1 md:block">
             <label for="desktop-search" class="sr-only">Search Product</label>
             <div class="relative flex items-center">
                 <input
@@ -62,33 +32,27 @@
                     value="{{ $search ?? request('q') }}"
                     type="search"
                     placeholder="Search Product..."
-                    class="h-11 w-full rounded-full border-2 border-purple-600/80 bg-slate-50/70 pl-5 pr-14 text-sm font-medium outline-none transition focus:border-purple-700 focus:bg-white focus:ring-4 focus:ring-purple-100"
+                    class="h-11 w-full rounded-full border-2 border-purple-600 bg-white pl-5 pr-16 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-purple-700 focus:ring-4 focus:ring-purple-100"
                 >
-                <button type="submit" class="absolute right-1 top-1 bottom-1 px-5 rounded-full bg-purple-700 text-white font-semibold transition hover:bg-purple-800 flex items-center justify-center" aria-label="Search">
-                    @svg('heroicon-o-magnifying-glass', 'size-4')
+                <button type="submit" class="absolute bottom-1 right-1 top-1 grid w-14 place-items-center rounded-full bg-purple-700 text-white transition hover:bg-purple-800" aria-label="Search">
+                    @svg('heroicon-o-magnifying-glass', 'size-5')
                 </button>
             </div>
         </form>
 
         <!-- Right Header Items -->
-        <div class="ml-auto flex items-center gap-2 sm:gap-4">
-            <!-- Track Order Button (Desktop) -->
-            <a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="hidden lg:flex items-center gap-2 rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 hover:border-purple-300 hover:bg-purple-50/50 hover:text-purple-700 transition">
-                @svg('heroicon-o-truck', 'size-4 text-purple-700')
-                <span>Track Order</span>
-            </a>
-
+        <div class="ml-auto flex items-center gap-2 sm:gap-3">
             <!-- Cart Dialog with Live Preview -->
             <div class="relative group" id="cart-qty">
-                <a href="{{ route('store.cart.index') }}" class="relative flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-slate-700 transition hover:border-purple-300 hover:bg-purple-50/50 hover:text-purple-700" aria-label="কার্ট">
+                <a href="{{ route('store.cart.index') }}" class="relative flex min-h-11 items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3 text-slate-700 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700" aria-label="কার্ট">
                     <span class="relative">
-                        @svg('heroicon-o-shopping-bag', 'size-5 sm:size-6 text-purple-700')
+                        @svg('heroicon-o-shopping-bag', 'size-6 text-purple-700')
                         @if($cartCount > 0)
                             <span class="absolute -right-2 -top-2 grid size-5 place-items-center rounded-full bg-purple-700 text-[10px] font-black text-white shadow-xs">{{ $cartCount }}</span>
                         @endif
                     </span>
-                    <div class="hidden xl:block text-left text-xs leading-tight">
-                        <span class="block text-[10px] uppercase font-semibold text-slate-400">আপনার কার্ট</span>
+                    <div class="hidden text-left text-xs leading-tight xl:block">
+                        <span class="block text-[10px] font-semibold text-slate-400">আপনার কার্ট</span>
                         <span class="font-black text-slate-900">৳{{ number_format($cartSubtotal, 2) }}</span>
                     </div>
                 </a>
@@ -110,9 +74,9 @@
             </div>
 
             <!-- Login / Account Button -->
-            <a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="hidden sm:flex items-center gap-1.5 rounded-xl border border-transparent px-3 py-2 text-xs font-bold text-slate-700 hover:border-slate-200 hover:bg-slate-50 hover:text-purple-700 transition" aria-label="Account">
+            <a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="hidden items-center gap-2 rounded-xl px-2 py-2 text-sm font-bold text-slate-700 transition hover:bg-purple-50 hover:text-purple-700 sm:flex" aria-label="Account">
                 @svg('heroicon-o-user', 'size-5 text-slate-600')
-                <span class="hidden lg:inline">{{ auth()->check() ? 'আমার অ্যাকাউন্ট' : 'Login / Sign Up' }}</span>
+                <span class="hidden whitespace-nowrap xl:inline">আমার অ্যাকাউন্ট</span>
             </a>
         </div>
     </div>
@@ -135,31 +99,24 @@
 </header>
 
 <!-- Supermarket Navigation Menu Bar -->
-<nav class="hidden border-b border-slate-200 bg-white md:block shadow-xs" aria-label="Store navigation">
-    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center gap-6">
-            <!-- ALL CATEGORIES Dropdown Trigger -->
-            <div class="relative group">
-                <button type="button" class="flex items-center gap-2.5 bg-purple-700 px-5 py-3.5 text-xs font-black uppercase tracking-wider text-white transition hover:bg-purple-800 rounded-t-xl" id="all-categories-button">
-                    @svg('heroicon-o-bars-3', 'size-4')
-                    <span>ALL CATEGORIES</span>
-                    @svg('heroicon-o-chevron-down', 'size-3.5 ml-1')
-                </button>
+<nav class="hidden border-b border-slate-200 bg-white md:block" aria-label="Store navigation">
+    <div class="mx-auto grid max-w-[1440px] grid-cols-[270px_minmax(0,1fr)] gap-4 px-3 sm:px-5">
+        <a href="{{ route('store.home') }}#categories" class="flex h-12 items-center gap-3 rounded-t-xl bg-gradient-to-r from-purple-800 to-fuchsia-600 px-5 text-xs font-black uppercase tracking-wide text-white transition hover:from-purple-900 hover:to-fuchsia-700" id="all-categories-button">
+            @svg('heroicon-o-bars-3', 'size-4')
+            <span>Categories</span>
+        </a>
+
+        <div class="flex h-12 items-center justify-between">
+            <div class="flex h-full items-center gap-7 text-sm font-bold text-slate-800">
+                <a href="{{ route('store.home') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.home') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">Home</a>
+                <a href="{{ route('store.products.index') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.products.index') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">Shop</a>
+                <a href="/admin" class="flex h-full items-center border-b-2 border-transparent transition hover:border-purple-700 hover:text-purple-700">Sellers</a>
+                <a href="{{ route('store.pages.show', ['slug' => 'contact-us']) }}" class="flex h-full items-center border-b-2 border-transparent transition hover:border-purple-700 hover:text-purple-700">Contact</a>
             </div>
 
-            <!-- Horizontal Navigation Links -->
-            <div class="flex items-center gap-6 text-sm font-bold text-slate-700">
-                <a href="{{ route('store.home') }}" class="py-3.5 transition hover:text-purple-700 {{ request()->routeIs('store.home') ? 'text-purple-700 border-b-2 border-purple-700 font-extrabold' : '' }}">Home</a>
-                <a href="{{ route('store.products.index') }}" class="py-3.5 transition hover:text-purple-700 {{ request()->routeIs('store.products.index') ? 'text-purple-700 border-b-2 border-purple-700 font-extrabold' : '' }}">Shop</a>
-                <a href="/admin" class="py-3.5 transition hover:text-purple-700">Sellers</a>
-                <a href="{{ route('store.pages.show', ['slug' => 'contact-us']) }}" class="py-3.5 transition hover:text-purple-700">Contact</a>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-4 text-xs font-bold text-slate-600">
-            <a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="flex items-center gap-1.5 py-3.5 hover:text-purple-700 transition">
+            <a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="flex items-center gap-2 text-sm font-bold text-slate-700 transition hover:text-purple-700">
                 @svg('heroicon-o-user', 'size-4 text-purple-700')
-                <span>{{ auth()->check() ? 'আমার অ্যাকাউন্ট' : 'Login / Sign Up' }}</span>
+                <span>আমার অ্যাকাউন্ট</span>
             </a>
         </div>
     </div>

@@ -6,25 +6,20 @@
 @section('content')
 <div class="bg-slate-50 pb-12">
     <!-- 1. Hero Slider & Vertical Category Menu Section -->
-    <section class="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-[270px_1fr] items-start">
+    <section class="mx-auto max-w-[1440px] px-3 sm:px-5">
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-[270px_minmax(0,1fr)] lg:items-start">
             <!-- Desktop Vertical Category Sidebar -->
-            <div class="hidden lg:block relative z-30">
-                <div class="rounded-2xl border border-slate-200/90 bg-white shadow-xs overflow-hidden">
-                    <div class="flex items-center gap-2.5 bg-purple-700 px-4 py-3.5 text-xs font-black uppercase tracking-wider text-white">
-                        @svg('heroicon-o-bars-3', 'size-4')
-                        <span>Categories</span>
-                    </div>
-
-                    <ul class="divide-y divide-slate-100 py-1 text-xs font-semibold text-slate-700 relative">
+            <div id="categories" class="relative z-30 hidden lg:block">
+                <div class="overflow-visible rounded-b-2xl border-x border-b border-slate-200 bg-white shadow-sm">
+                    <ul class="relative divide-y divide-slate-100 text-xs font-semibold text-slate-700">
                         @forelse($categories->take(11) as $category)
                             <li class="group/cat relative">
-                                <a href="{{ route('store.products.index', ['category' => $category->slug]) }}" class="flex items-center justify-between px-3.5 py-2.5 transition hover:bg-purple-50 hover:text-purple-700">
+                                <a href="{{ route('store.products.index', ['category' => $category->slug]) }}" class="flex min-h-[45px] items-center justify-between px-4 py-2 transition hover:bg-purple-50 hover:text-purple-700">
                                     <div class="flex items-center gap-3 min-w-0">
                                         @if($category->image)
                                             <img src="{{ asset('storage/'.ltrim($category->image, '/')) }}" alt="{{ $category->name }}" class="size-6 shrink-0 rounded-md object-cover" loading="lazy">
                                         @else
-                                            <span class="grid size-6 shrink-0 place-items-center rounded-md bg-purple-100 text-[11px] font-black text-purple-700">{{ mb_substr($category->name, 0, 1) }}</span>
+                                            <span class="grid size-6 shrink-0 place-items-center rounded-md bg-purple-100 text-[11px] font-black uppercase text-purple-700">{{ mb_substr($category->name, 0, 1) }}</span>
                                         @endif
                                         <span class="truncate">{{ $category->name }}</span>
                                     </div>
@@ -66,24 +61,24 @@
             </div>
 
             <!-- Main Hero Banner Carousel Slider -->
-            <div class="relative overflow-hidden rounded-2xl shadow-sm min-h-[300px] sm:min-h-[380px] bg-slate-900 group" id="hero-slider">
+            <div class="group relative mt-4 min-h-[330px] overflow-hidden rounded-2xl bg-slate-900 shadow-sm sm:min-h-[400px] lg:min-h-[482px]" id="hero-slider">
                 <!-- Slide 1 -->
-                <div class="hero-slide active absolute inset-0 transition-opacity duration-700 ease-in-out bg-gradient-to-r from-purple-950 via-purple-900 to-indigo-900 flex items-center p-6 sm:p-12 text-white">
-                    <div class="max-w-xl z-10">
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-purple-500/30 px-3 py-1 text-xs font-black uppercase tracking-wider text-purple-200 border border-purple-400/30">
+                <div class="hero-slide active absolute inset-0 flex items-center bg-gradient-to-br from-purple-950 via-purple-800 to-indigo-800 p-7 text-white transition-opacity duration-700 ease-in-out sm:p-12">
+                    <div class="z-10 max-w-2xl">
+                        <span class="inline-flex items-center gap-1.5 rounded-full border border-purple-300/30 bg-fuchsia-500/25 px-3 py-1 text-xs font-black uppercase tracking-wider text-purple-100">
                             ⭐ Biggest Online Supermarket
                         </span>
-                        <h1 class="mt-4 text-3xl font-black leading-tight sm:text-5xl">
+                        <h1 class="mt-5 max-w-[720px] text-4xl font-black leading-[1.15] sm:text-5xl lg:text-6xl">
                             আপনার প্রয়োজনের সবকিছু, এক সুপারমার্কেটে
                         </h1>
-                        <p class="mt-3 text-sm sm:text-base text-purple-100/90 leading-relaxed">
+                        <p class="mt-4 max-w-xl text-sm leading-relaxed text-purple-100/90 sm:text-base">
                             বিশেষ ছাড়, ক্যাশ অন ডেলিভারি এবং সারাদেশে দ্রুত ডেলিভারি সুবিধা উপভোগ করুন।
                         </p>
-                        <div class="mt-6 flex flex-wrap gap-3">
-                            <a href="{{ route('store.products.index') }}" class="rounded-xl bg-purple-600 px-6 py-3 text-xs sm:text-sm font-black text-white shadow-lg shadow-purple-600/30 transition hover:bg-purple-700">
+                        <div class="mt-8 flex flex-wrap gap-3">
+                            <a href="{{ route('store.products.index') }}" class="rounded-xl bg-fuchsia-600 px-7 py-3.5 text-xs font-black text-white shadow-lg shadow-fuchsia-800/30 transition hover:bg-fuchsia-500 sm:text-sm">
                                 এখনই কিনুন
                             </a>
-                            <a href="#hot-deal" class="rounded-xl border border-white/25 bg-white/10 px-5 py-3 text-xs sm:text-sm font-bold text-white transition hover:bg-white/20">
+                            <a href="#hot-deal" class="rounded-xl border border-white/25 bg-white/10 px-6 py-3.5 text-xs font-bold text-white transition hover:bg-white/20 sm:text-sm">
                                 আজকের ডিল
                             </a>
                         </div>
@@ -113,10 +108,10 @@
                 </div>
 
                 <!-- Slider Arrows -->
-                <button type="button" class="absolute left-3 top-1/2 -translate-y-1/2 grid size-10 place-items-center rounded-full bg-black/40 text-white hover:bg-black/70 transition" id="hero-prev" aria-label="Previous Slide">
+                <button type="button" class="absolute left-3 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-purple-950/65 text-white transition hover:bg-purple-950" id="hero-prev" aria-label="Previous Slide">
                     @svg('heroicon-o-chevron-left', 'size-5')
                 </button>
-                <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 grid size-10 place-items-center rounded-full bg-black/40 text-white hover:bg-black/70 transition" id="hero-next" aria-label="Next Slide">
+                <button type="button" class="absolute right-3 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-purple-950/65 text-white transition hover:bg-purple-950" id="hero-next" aria-label="Next Slide">
                     @svg('heroicon-o-chevron-right', 'size-5')
                 </button>
 
