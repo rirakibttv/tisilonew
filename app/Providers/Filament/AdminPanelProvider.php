@@ -57,6 +57,10 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::TOPBAR_START,
                 fn () => view('filament.partials.visit-site'),
             )
+            ->renderHook(
+                PanelsRenderHook::SCRIPTS_AFTER,
+                fn () => view('filament.partials.sidebar-accordion'),
+            )
             ->colors([
                 'primary' => Color::Indigo,
             ])
