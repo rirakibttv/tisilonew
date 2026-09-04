@@ -6,7 +6,7 @@
 @section('content')
 <div class="bg-slate-50 pb-12">
     <!-- 1. Hero Slider & Vertical Category Menu Section -->
-    <section class="mx-auto max-w-[1440px] px-3 sm:px-5">
+    <section class="storefront-shell">
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-[270px_minmax(0,1fr)] lg:items-start">
             <!-- Desktop Vertical Category Sidebar -->
             <div id="categories" class="relative z-30 hidden lg:block">
@@ -125,7 +125,7 @@
     </section>
 
     <!-- 2. Bottom Ads Banner Area (Side-by-Side Promotional Banners) -->
-    <section class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+    <section class="storefront-shell pt-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <a href="{{ route('store.products.index') }}" class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-purple-800 to-indigo-900 p-6 sm:p-8 text-white shadow-xs transition hover:shadow-md">
                 <span class="rounded-full bg-white/20 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-purple-100">Special Promo</span>
@@ -144,7 +144,7 @@
     </section>
 
     <!-- 3. Categories Circular/Rounded Grid Section -->
-    <section class="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+    <section class="storefront-shell pt-10">
         <div class="border-b-2 border-purple-700 pb-3 flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <span class="grid size-6 place-items-center rounded-md bg-purple-700 text-white text-xs">@svg('heroicon-o-squares-2x2', 'size-3.5')</span>
@@ -172,7 +172,7 @@
     </section>
 
     <!-- 4. Full Width Mid Promo Banner -->
-    <section class="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+    <section class="storefront-shell pt-10">
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-900 p-6 sm:p-10 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
             <div class="max-w-xl">
                 <span class="rounded-full bg-amber-400 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-slate-950">Special Deals</span>
@@ -186,7 +186,7 @@
     </section>
 
     <!-- 5. Hot Deal Section with Live Countdown Timer -->
-    <section id="hot-deal" class="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
+    <section id="hot-deal" class="storefront-shell pt-12">
         <div class="rounded-2xl border border-purple-200/80 bg-white p-4 sm:p-6 shadow-xs">
             <div class="border-b border-slate-100 pb-4 flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-2">
@@ -230,7 +230,7 @@
             $cat = $section['category'];
             $prods = $section['products'];
         @endphp
-        <section class="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
+        <section class="storefront-shell pt-12">
             <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-xs">
                 <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
                     <div class="flex items-center gap-2">
@@ -252,7 +252,7 @@
     @endforeach
 
     <!-- 7. All Products / General Showcase -->
-    <section class="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
+    <section class="storefront-shell pt-12">
         <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-xs">
             <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -276,7 +276,7 @@
 
     <!-- 8. Brands Showcase -->
     @if($brands->isNotEmpty())
-        <section class="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
+        <section class="storefront-shell pt-12">
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div class="border-b border-slate-100 pb-4">
                     <h2 class="text-lg font-black text-slate-900">Top Brands</h2>
@@ -297,7 +297,7 @@
     @endif
 
     <!-- 9. Service Trust Highlights -->
-    <section class="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
+    <section class="storefront-shell pt-12">
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
             @foreach ([
                 ['heroicon-o-truck', 'দ্রুত ডেলিভারি', 'সারাদেশে বিশ্বস্ত কুরিয়ারে ডেলিভারি'],

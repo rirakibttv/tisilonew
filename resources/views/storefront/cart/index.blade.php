@@ -4,13 +4,13 @@
 
 @section('content')
     <section class="border-b border-slate-200 bg-white">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div class="storefront-shell py-10">
             <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">Your basket</p>
             <h1 class="mt-2 text-3xl font-black text-slate-950 sm:text-4xl">শপিং কার্ট</h1>
         </div>
     </section>
 
-    <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <section class="storefront-shell py-10">
         @if (session('success'))
             <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700">{{ session('success') }}</div>
         @endif

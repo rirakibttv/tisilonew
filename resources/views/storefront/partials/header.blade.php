@@ -6,7 +6,7 @@
 
 <!-- Main Header -->
 <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/98 shadow-xs backdrop-blur-md">
-    <div class="mx-auto flex min-h-[74px] max-w-[1440px] items-center gap-3 px-3 sm:px-4 lg:grid lg:grid-cols-[250px_minmax(320px,1fr)_auto] lg:gap-3">
+    <div class="storefront-shell flex min-h-[74px] items-center gap-3 lg:grid lg:grid-cols-[250px_minmax(320px,1fr)_auto] lg:gap-3">
         <!-- Mobile Menu Trigger -->
         <button type="button" class="grid size-10 place-items-center rounded-lg border border-slate-200 text-slate-700 md:hidden hover:bg-slate-50 transition" data-mobile-menu-button aria-label="Open Navigation Menu">
             @svg('heroicon-o-bars-3', 'size-6')
@@ -100,7 +100,7 @@
 
 <!-- Supermarket Navigation Menu Bar -->
 <nav class="hidden border-b border-slate-200 bg-white md:block" aria-label="Store navigation">
-    <div class="mx-auto grid max-w-[1440px] grid-cols-[270px_minmax(0,1fr)] gap-4 px-3 sm:px-5">
+    <div class="storefront-shell grid grid-cols-[270px_minmax(0,1fr)] gap-4">
         <a href="{{ route('store.home') }}#categories" class="flex h-12 items-center gap-3 rounded-t-xl bg-gradient-to-r from-purple-800 to-fuchsia-600 px-5 text-xs font-black uppercase tracking-wide text-white transition hover:from-purple-900 hover:to-fuchsia-700" id="all-categories-button">
             @svg('heroicon-o-bars-3', 'size-4')
             <span>Categories</span>

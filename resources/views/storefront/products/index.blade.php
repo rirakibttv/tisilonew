@@ -5,7 +5,7 @@
 
 @section('content')
     <section class="border-b border-purple-100 bg-gradient-to-r from-purple-950 via-purple-800 to-indigo-800 text-white">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div class="storefront-shell py-10">
             <nav class="text-xs font-semibold text-purple-200" aria-label="Breadcrumb">
                 <a href="{{ route('store.home') }}" class="hover:text-white">Home</a>
                 <span class="mx-2">/</span>
@@ -21,7 +21,7 @@
         </div>
     </section>
 
-    <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <section class="storefront-shell py-10">
         <form method="GET" action="{{ route('store.shop.index') }}" class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_220px_190px_auto]">
             <label class="sr-only" for="catalog-search">পণ্য খুঁজুন</label>
             <input id="catalog-search" type="search" name="q" value="{{ request('q') }}" placeholder="পণ্য, ব্র্যান্ড বা SKU খুঁজুন" class="h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100">

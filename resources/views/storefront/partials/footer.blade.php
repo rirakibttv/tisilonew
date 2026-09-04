@@ -7,7 +7,7 @@
 
 <!-- Supermarket Footer -->
 <footer class="bg-slate-950 text-slate-300 pb-20 md:pb-0">
-    <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div class="storefront-shell py-12">
         <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <!-- Brand Block -->
             <div class="space-y-4">
@@ -95,7 +95,7 @@
 
     <!-- Copyright Bar -->
     <div class="border-t border-slate-900 bg-black px-4 py-5 text-center text-xs text-slate-500">
-        <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 sm:flex-row">
+        <div class="storefront-shell flex flex-col items-center justify-between gap-3 sm:flex-row">
             <p>© {{ date('Y') }} {{ $generalSettings['site_name'] ?? 'Tisilo Supermarket' }}. সর্বস্বত্ব সংরক্ষিত।</p>
             <p class="text-slate-600 text-[11px]">Made with passion for online shopping in Bangladesh</p>
         </div>

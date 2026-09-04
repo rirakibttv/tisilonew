@@ -37,7 +37,7 @@
         })->values();
     @endphp
 
-    <section class="mx-auto grid max-w-7xl items-start gap-7 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,.86fr)_minmax(0,1.04fr)] lg:gap-8 lg:px-8">
+    <section class="storefront-shell grid items-start gap-7 py-6 lg:grid-cols-[minmax(0,.86fr)_minmax(0,1.04fr)] lg:gap-8">
         <div>
             <nav aria-label="Breadcrumb" class="mb-4 text-xs text-slate-500">
                 <a href="{{ route('store.home') }}" class="hover:text-orange-600">হোম</a>
@@ -173,7 +173,7 @@
     </section>
 
     <section class="border-y border-slate-200 bg-white py-12">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="storefront-shell">
             <h2 class="text-2xl font-black text-slate-950">পণ্যের বিস্তারিত</h2>
             <div class="prose prose-slate mt-5 max-w-none text-sm leading-7 text-slate-600">
                 @if ($product->description)
@@ -186,7 +186,7 @@
     </section>
 
     @if ($related->isNotEmpty())
-        <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <section class="storefront-shell py-14">
             <h2 class="text-2xl font-black text-slate-950">সম্পর্কিত পণ্য</h2>
             <div class="mt-7 grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-5">
                 @foreach ($related as $card)

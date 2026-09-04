@@ -4,14 +4,14 @@
 
 @section('content')
     <section class="border-b border-slate-200 bg-white">
-        <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div class="storefront-shell py-10">
             <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">Secure checkout</p>
             <h1 class="mt-2 text-3xl font-black text-slate-950 sm:text-4xl">অর্ডার সম্পন্ন করুন</h1>
             <p class="mt-2 text-sm text-slate-500">ডেলিভারি তথ্য যাচাই করে অর্ডার নিশ্চিত করুন।</p>
         </div>
     </section>
 
-    <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <section class="storefront-shell py-10">
         @if ($errors->any())
             <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-700">
                 <ul class="space-y-1">

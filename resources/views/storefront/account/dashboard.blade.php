@@ -3,7 +3,7 @@
 @section('title', 'আমার অ্যাকাউন্ট — Tisilo')
 
 @section('content')
-    <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <section class="storefront-shell py-10">
         @if(session('status'))
             <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700">{{ session('status') }}</div>
         @endif
