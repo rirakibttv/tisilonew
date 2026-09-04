@@ -709,8 +709,21 @@
             "key": "payment",
             "values": {
                 "cod_enabled": true,
-                "default_gateway": "cod",
-                "currency": "BDT"
+                "default_gateway": "bkash",
+                "currency": "BDT",
+                "bkash_enabled": true,
+                "bkash_environment": "production",
+                "bkash_username": "01711427699",
+                "sslcommerz_enabled": false,
+                "sslcommerz_environment": null,
+                "sslcommerz_store_id": null,
+                "shurjopay_enabled": false,
+                "shurjopay_username": null,
+                "shurjopay_prefix": null,
+                "aamarpay_enabled": false,
+                "aamarpay_store_id": null,
+                "uddoktapay_enabled": false,
+                "uddoktapay_base_url": null
             }
         },
         {
@@ -934,7 +947,7 @@
                     "purchase_price": "720.00",
                     "regular_price": "1400.00",
                     "sale_price": "1050.00",
-                    "stock_quantity": 4,
+                    "stock_quantity": 3,
                     "low_stock_threshold": 5,
                     "stock_status": "in_stock",
                     "image": "products/variations/01M1MTAEWD37AXXMBQRH2QHX8X.jpg",
