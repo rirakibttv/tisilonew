@@ -37,53 +37,53 @@
         })->values();
     @endphp
 
-    <div class="mx-auto max-w-7xl px-4 py-5 text-xs text-slate-500 sm:px-6 lg:px-8">
-        <a href="{{ route('store.home') }}" class="hover:text-orange-600">হোম</a>
-        <span class="mx-2">/</span>
-        <a href="{{ route('store.products.index', ['category' => $product->category?->slug]) }}" class="hover:text-orange-600">{{ $product->category?->name ?? 'পণ্য' }}</a>
-        <span class="mx-2">/</span>
-        <span class="text-slate-800">{{ $product->name }}</span>
-    </div>
-
-    <section class="mx-auto grid max-w-7xl gap-8 px-4 pb-14 sm:px-6 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] lg:px-8">
+    <section class="mx-auto grid max-w-7xl items-start gap-7 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,.86fr)_minmax(0,1.04fr)] lg:gap-8 lg:px-8">
         <div>
+            <nav aria-label="Breadcrumb" class="mb-4 text-xs text-slate-500">
+                <a href="{{ route('store.home') }}" class="hover:text-orange-600">হোম</a>
+                <span class="mx-2">/</span>
+                <a href="{{ route('store.products.index', ['category' => $product->category?->slug]) }}" class="hover:text-orange-600">{{ $product->category?->name ?? 'পণ্য' }}</a>
+                <span class="mx-2">/</span>
+                <span class="text-slate-800">{{ $product->name }}</span>
+            </nav>
             <div class="aspect-square overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-100 via-white to-orange-50" data-product-image-frame>
-                <img data-product-main-image src="{{ $summary['image'] ?: '' }}" alt="{{ $product->name }}" @class(['size-full object-cover', 'hidden' => ! $summary['image']])>
+                <img data-product-main-image src="{{ $summary['image'] ?: '' }}" alt="{{ $product->name }}" @class(['size-full object-cover transition-opacity duration-200', 'hidden' => ! $summary['image']])>
                 <div data-product-image-placeholder @class(['size-full place-items-center p-8 text-center', 'grid' => ! $summary['image'], 'hidden' => $summary['image']])>
-                        <div>
-                            <span class="mx-auto grid size-32 place-items-center rounded-[2rem] bg-white text-6xl font-black text-orange-500 shadow-lg">{{ mb_strtoupper(mb_substr($product->name, 0, 1)) }}</span>
-                            <p class="mt-6 font-bold text-slate-500">{{ $product->brand?->name ?? 'Tisilo Choice' }}</p>
-                        </div>
+                    <div>
+                        <span class="mx-auto grid size-32 place-items-center rounded-[2rem] bg-white text-6xl font-black text-orange-500 shadow-lg">{{ mb_strtoupper(mb_substr($product->name, 0, 1)) }}</span>
+                        <p class="mt-6 font-bold text-slate-500">{{ $product->brand?->name ?? 'Tisilo Choice' }}</p>
+                    </div>
                 </div>
             </div>
-            <div class="mt-4 grid grid-cols-3 gap-3 text-center text-xs font-bold text-slate-600">
-                <span class="rounded-xl border border-slate-200 bg-white p-3">✓ আসল পণ্য</span>
-                <span class="rounded-xl border border-slate-200 bg-white p-3">↻ সহজ রিটার্ন</span>
-                <span class="rounded-xl border border-slate-200 bg-white p-3">🔒 নিরাপদ পেমেন্ট</span>
+            <div class="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-bold text-slate-600 sm:gap-3">
+                <span class="rounded-xl border border-slate-200 bg-white px-2 py-3">✓ আসল পণ্য</span>
+                <span class="rounded-xl border border-slate-200 bg-white px-2 py-3">↻ সহজ রিটার্ন</span>
+                <span class="rounded-xl border border-slate-200 bg-white px-2 py-3">🔒 নিরাপদ পেমেন্ট</span>
             </div>
         </div>
 
-        <div>
-            <p class="text-sm font-bold text-orange-600">{{ $product->brand?->name ?? 'Tisilo' }} · {{ $product->category?->name }}</p>
-            <h1 class="mt-3 text-3xl font-black leading-tight text-slate-950 sm:text-4xl">{{ $product->name }}</h1>
-            <div class="mt-4 flex flex-wrap items-center gap-4 text-sm">
+        <div class="lg:pt-1">
+            <h1 class="text-3xl font-black leading-tight text-slate-950 sm:text-4xl">{{ $product->name }}</h1>
+            <div class="mt-4 flex flex-wrap items-center gap-3 text-sm">
                 <span class="font-bold text-amber-500">★ 4.8 <span class="font-medium text-slate-400">(0 রিভিউ)</span></span>
                 <span class="text-slate-300">|</span>
                 <span class="text-slate-500">SKU: <span data-product-sku>{{ $selectedVariation?->sku ?: ($product->sku ?: 'N/A') }}</span></span>
                 <span data-product-stock class="{{ ($selectedVariation ? $selectedVariation->stock_quantity > 0 : $summary['available'] > 0) ? 'text-emerald-600' : 'text-amber-600' }} font-bold">{{ ($selectedVariation ? $selectedVariation->stock_quantity > 0 : $summary['available'] > 0) ? 'স্টকে আছে' : 'স্টক নেই' }}</span>
             </div>
 
-            <div class="mt-6 rounded-2xl bg-orange-50 p-5">
+            <div class="mt-6 rounded-2xl bg-orange-50 px-5 py-4">
                 <div class="flex items-end gap-3">
                     <span data-product-price class="text-4xl font-black text-orange-600">৳{{ number_format($displayPrice, 0) }}</span>
                     <span data-product-regular-price @class(['pb-1 text-lg text-slate-400 line-through', 'hidden' => $displayRegularPrice <= $displayPrice])>৳{{ number_format($displayRegularPrice, 0) }}</span>
                     <span data-product-discount @class(['mb-1 rounded-full bg-rose-500 px-2.5 py-1 text-xs font-bold text-white', 'hidden' => $displayDiscount < 1])>{{ $displayDiscount }}% ছাড়</span>
                 </div>
-                <p class="mt-2 text-xs text-slate-500">মূল্য ভেন্ডর ও নির্বাচিত ভ্যারিয়েশন অনুযায়ী পরিবর্তিত হতে পারে।</p>
             </div>
 
             @if ($product->short_description)
-                <p class="mt-6 text-sm leading-7 text-slate-600">{{ $product->short_description }}</p>
+                <div class="mt-4">
+                    <h2 class="text-sm font-medium text-slate-950">Quick Overview</h2>
+                    <p class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">{{ $product->short_description }}</p>
+                </div>
             @endif
 
             @if ($offers->isNotEmpty())
@@ -108,15 +108,12 @@
                     </div>
                 </div>
             @else
-                <form method="POST" action="{{ route('store.cart.store') }}" class="mt-7 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" data-product-variation-form>
+                <form method="POST" action="{{ route('store.cart.store') }}" class="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" data-product-variation-form>
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
 
                     @if ($product->product_type === 'variable' && $activeVariations->isNotEmpty())
-                        <div class="flex flex-wrap items-center justify-between gap-2">
-                            <label for="product-variation" class="text-sm font-black text-slate-900">ভ্যারিয়েশন নির্বাচন করুন</label>
-                            <span data-product-variation-label class="text-xs font-bold text-slate-500">{{ $variationOptions->firstWhere('id', $selectedVariation?->id)['label'] ?? '' }}</span>
-                        </div>
+                        <label for="product-variation" data-product-variation-label class="block text-xs font-medium text-slate-600">{{ $variationOptions->firstWhere('id', $selectedVariation?->id)['label'] ?? 'ভ্যারিয়েশন নির্বাচন করুন' }}</label>
                         <select id="product-variation" name="product_variation_id" required class="sr-only">
                             @foreach ($activeVariations as $variation)
                                 <option value="{{ $variation->id }}" @selected($selectedVariation?->id === $variation->id) @disabled($variation->stock_status === 'out_of_stock' || $variation->stock_quantity < 1)>
@@ -125,20 +122,23 @@
                                 </option>
                             @endforeach
                         </select>
-                        <div data-product-variation-options class="mt-3 flex flex-wrap gap-3" role="group" aria-label="পণ্যের ভ্যারিয়েশন নির্বাচন করুন">
+                        <div data-product-variation-options class="mt-3 flex flex-wrap gap-2" role="group" aria-label="পণ্যের ভ্যারিয়েশন নির্বাচন করুন">
                             @foreach($variationOptions as $option)
-                                <button type="button" data-product-variation-option="{{ $option['id'] }}" aria-pressed="{{ $selectedVariation?->id === $option['id'] ? 'true' : 'false' }}" @disabled($option['available'] < 1) class="product-variation-option relative flex min-h-20 min-w-44 max-w-full items-center gap-3 rounded-2xl border-2 border-slate-200 bg-white p-3 text-left transition hover:border-orange-300 disabled:cursor-not-allowed disabled:opacity-45">
-                                    @if($option['image'])<img src="{{ $option['image'] }}" alt="{{ $option['label'] }}" loading="lazy" class="size-16 shrink-0 rounded-xl bg-slate-50 object-cover">@endif
-                                    <span class="min-w-0"><span class="block break-words text-xs font-bold leading-5">{{ $option['label'] }}</span><span class="mt-1 block text-sm font-black text-orange-600">৳{{ number_format($option['price'], 0) }}</span>@if($option['available'] < 1)<span class="mt-1 block text-[10px] font-bold text-rose-600">স্টক নেই</span>@endif</span>
+                                <button type="button" data-product-variation-option="{{ $option['id'] }}" aria-label="{{ $option['label'] }} — ৳{{ number_format($option['price'], 0) }}" aria-pressed="{{ $selectedVariation?->id === $option['id'] ? 'true' : 'false' }}" @disabled($option['available'] < 1) @class(['product-variation-option relative flex max-w-full items-center rounded-xl border-2 border-slate-200 bg-white text-left transition hover:border-orange-300 disabled:cursor-not-allowed disabled:opacity-45', 'size-20 p-1.5' => $option['image'], 'min-h-16 min-w-36 px-3 py-2' => ! $option['image']])>
+                                    @if($option['image'])
+                                        <img src="{{ $option['image'] }}" alt="" loading="lazy" class="size-full rounded-lg bg-slate-50 object-cover"><span class="sr-only">{{ $option['label'] }}</span>
+                                    @else
+                                        <span class="min-w-0"><span class="block break-words text-xs font-bold leading-5">{{ $option['label'] }}</span><span class="mt-1 block text-sm font-black text-orange-600">৳{{ number_format($option['price'], 0) }}</span></span>
+                                    @endif
                                     <span class="product-variation-check absolute right-1.5 top-1.5 hidden size-5 place-items-center rounded-full bg-orange-500 text-[10px] font-black text-white">✓</span>
                                 </button>
                             @endforeach
                         </div>
                     @endif
 
-                    <div class="mt-5 flex flex-wrap gap-3">
-                        <input data-product-quantity type="number" name="quantity" value="1" min="1" max="{{ max(1, (int) ($selectedVariation?->stock_quantity ?? 99)) }}" class="h-12 w-24 rounded-xl border border-slate-200 px-3 text-center font-bold">
-                        <button data-product-cart-button @disabled($selectedVariation && $selectedVariation->stock_quantity < 1) class="h-12 flex-1 rounded-xl bg-orange-500 px-6 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50">@svg('heroicon-o-shopping-cart', 'mr-2 inline size-5') কার্টে যোগ করুন</button>
+                    <div class="mt-4 flex gap-3">
+                        <input data-product-quantity type="number" name="quantity" value="1" min="1" max="{{ max(1, (int) ($selectedVariation?->stock_quantity ?? 99)) }}" aria-label="পরিমাণ" class="h-12 w-24 shrink-0 rounded-xl border border-slate-200 px-3 text-center font-bold sm:w-28">
+                        <button data-product-cart-button @disabled($selectedVariation && $selectedVariation->stock_quantity < 1) class="h-12 flex-1 rounded-xl bg-orange-500 px-4 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50">@svg('heroicon-o-shopping-cart', 'mr-2 inline size-5') কার্টে যোগ করুন</button>
                     </div>
                     @error('quantity')<p class="mt-3 text-sm font-bold text-rose-600">{{ $message }}</p>@enderror
                 </form>
@@ -147,7 +147,7 @@
                 @endif
             @endif
 
-            <div class="mt-6 grid gap-3 sm:grid-cols-2">
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
                 <div class="rounded-2xl border border-slate-200 bg-white p-4"><p class="text-xs text-slate-500">ডেলিভারি</p><p class="mt-1 text-sm font-black">সারাদেশে ২–৫ কার্যদিবস</p></div>
                 <div class="rounded-2xl border border-slate-200 bg-white p-4"><p class="text-xs text-slate-500">পেমেন্ট</p><p class="mt-1 text-sm font-black">COD, bKash, Nagad ও Card</p></div>
             </div>
