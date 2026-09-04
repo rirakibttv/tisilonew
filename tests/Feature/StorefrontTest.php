@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariation;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\Request;
 use Tests\TestCase;
 
 class StorefrontTest extends TestCase
@@ -55,6 +58,45 @@ class StorefrontTest extends TestCase
             ->assertOk()
             ->assertSee('Storefront Test Product')
             ->assertSee('2,500');
+    }
+
+    public function test_category_uses_the_canonical_product_category_permalink(): void
+    {
+        $category = Category::query()->updateOrCreate(
+            ['slug' => 'electronics-electrical'],
+            ['name' => 'Electronics & Electrical', 'status' => true],
+        );
+        Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Category Permalink Product',
+            'slug' => 'category-permalink-product',
+            'product_type' => 'simple',
+            'regular_price' => 500,
+            'stock_quantity' => 1,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+
+        $canonicalUrl = rtrim(url('/product-category/electronics-electrical'), '/').'/';
+
+        $this->assertSame($canonicalUrl, $category->permalink);
+        $kernel = $this->app->make(Kernel::class);
+        $request = Request::create($canonicalUrl, 'GET');
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('Electronics &amp; Electrical', (string) $response->getContent());
+        $this->assertStringContainsString('Category Permalink Product', (string) $response->getContent());
+        $this->assertStringContainsString('<link rel="canonical" href="'.$canonicalUrl.'">', (string) $response->getContent());
+
+        $this->get('/product-category/electronics-electrical')
+            ->assertRedirect($canonicalUrl)
+            ->assertStatus(301);
+
+        $this->get('/shop?category=electronics-electrical&sort=name')
+            ->assertRedirect($canonicalUrl.'?sort=name')
+            ->assertStatus(301);
     }
 
     public function test_variable_product_uses_visual_options_and_only_switches_to_a_variation_image_when_present(): void

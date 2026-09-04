@@ -10,11 +10,47 @@ use App\Models\Product;
 use App\Support\Storefront\MarketplaceProductPresenter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
+    {
+        if ($request->filled('category')) {
+            $category = Category::query()
+                ->where('status', true)
+                ->where('slug', $request->string('category')->toString())
+                ->first();
+
+            if ($category) {
+                $query = $request->except(['category', 'page']);
+                $url = $category->permalink.($query === [] ? '' : '?'.http_build_query($query));
+
+                return redirect()->to($url, 301);
+            }
+        }
+
+        return $this->catalog($request);
+    }
+
+    public function category(Request $request, Category $category, ?string $categoryPath = null): View|RedirectResponse
+    {
+        abort_unless($category->status, 404);
+        abort_if(filled($categoryPath), 404);
+
+        $requestedPath = (string) (parse_url($request->getRequestUri(), PHP_URL_PATH) ?: '');
+
+        if (! str_ends_with($requestedPath, '/')) {
+            $query = $request->getQueryString();
+
+            return redirect()->to($category->permalink.($query ? '?'.$query : ''), 301);
+        }
+
+        return $this->catalog($request, $category);
+    }
+
+    private function catalog(Request $request, ?Category $selectedCategory = null): View
     {
         $sort = in_array($request->string('sort')->toString(), ['latest', 'price_low', 'price_high', 'name'], true)
             ? $request->string('sort')->toString()
@@ -32,13 +68,9 @@ class ProductController extends Controller
                         ->orWhereHas('category', fn (Builder $query) => $query->where('name', 'like', "%{$search}%"));
                 });
             })
-            ->when(
-                $request->filled('category'),
-                fn (Builder $query) => $query->whereHas(
-                    'category',
-                    fn (Builder $query) => $query->where('slug', $request->string('category')->toString()),
-                ),
-            )
+            ->when($selectedCategory, function (Builder $query) use ($selectedCategory): void {
+                $query->whereIn('category_id', $this->categoryAndDescendantIds($selectedCategory));
+            })
             ->with($this->storefrontRelations());
 
         match ($sort) {
@@ -55,7 +87,29 @@ class ProductController extends Controller
             'products' => $products,
             'categories' => Category::query()->where('status', true)->orderBy('name')->get(['id', 'name', 'slug']),
             'sort' => $sort,
+            'selectedCategory' => $selectedCategory,
         ]);
+    }
+
+    /** @return array<int, int> */
+    private function categoryAndDescendantIds(Category $category): array
+    {
+        $ids = [(int) $category->getKey()];
+        $pending = $ids;
+
+        while ($pending !== []) {
+            $children = Category::query()
+                ->where('status', true)
+                ->whereIn('parent_id', $pending)
+                ->pluck('id')
+                ->map(static fn ($id): int => (int) $id)
+                ->all();
+
+            $pending = array_values(array_diff($children, $ids));
+            $ids = array_values(array_unique([...$ids, ...$pending]));
+        }
+
+        return $ids;
     }
 
     public function show(Product $product): View

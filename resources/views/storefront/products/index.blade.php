@@ -1,7 +1,8 @@
 @extends('layouts.storefront')
 
-@section('title', 'Shop — Tisilo Supermarket')
-@section('meta_description', 'Tisilo Shop থেকে ক্যাটাগরি, ব্র্যান্ড ও মূল্য অনুযায়ী পণ্য খুঁজুন এবং নিরাপদে অর্ডার করুন।')
+@section('title', $selectedCategory ? (($selectedCategory->seo_title ?: $selectedCategory->name).' — Tisilo Supermarket') : 'Shop — Tisilo Supermarket')
+@section('meta_description', $selectedCategory?->meta_description ?: 'Tisilo Shop থেকে ক্যাটাগরি, ব্র্যান্ড ও মূল্য অনুযায়ী পণ্য খুঁজুন এবং নিরাপদে অর্ডার করুন।')
+@section('canonical', $selectedCategory?->permalink ?? url()->current())
 
 @section('content')
     <section class="border-b border-purple-100 bg-gradient-to-r from-purple-950 via-purple-800 to-indigo-800 text-white">
@@ -9,11 +10,15 @@
             <nav class="text-xs font-semibold text-purple-200" aria-label="Breadcrumb">
                 <a href="{{ route('store.home') }}" class="hover:text-white">Home</a>
                 <span class="mx-2">/</span>
-                <span class="text-white">Shop</span>
+                <a href="{{ route('store.shop.index') }}" class="hover:text-white">Shop</a>
+                @if ($selectedCategory)
+                    <span class="mx-2">/</span>
+                    <span class="text-white">{{ $selectedCategory->name }}</span>
+                @endif
             </nav>
             <div class="mt-2 flex flex-wrap items-end justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-black sm:text-4xl">Tisilo Shop</h1>
+                    <h1 class="text-3xl font-black sm:text-4xl">{{ $selectedCategory?->name ?? 'Tisilo Shop' }}</h1>
                     <p class="mt-2 text-sm text-purple-100">{{ number_format($products->total()) }}টি পণ্য থেকে আপনার পছন্দের পণ্যটি খুঁজুন</p>
                 </div>
                 <span class="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold">নিরাপদ কেনাকাটা · সারাদেশে ডেলিভারি</span>
@@ -30,7 +35,7 @@
             <select id="category-filter" name="category" class="h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-orange-400">
                 <option value="">সব ক্যাটাগরি</option>
                 @foreach ($categories as $category)
-                    <option value="{{ $category->slug }}" @selected(request('category') === $category->slug)>{{ $category->name }}</option>
+                    <option value="{{ $category->slug }}" @selected(($selectedCategory?->slug ?? request('category')) === $category->slug)>{{ $category->name }}</option>
                 @endforeach
             </select>
 
@@ -45,11 +50,11 @@
             <button class="h-12 rounded-xl bg-purple-700 px-6 text-sm font-black text-white transition hover:bg-purple-800">খুঁজুন</button>
         </form>
 
-        @if (request()->hasAny(['q', 'category']))
+        @if ($selectedCategory || request()->hasAny(['q', 'category']))
             <div class="mt-4 flex flex-wrap items-center gap-2 text-sm">
                 <span class="text-slate-500">সক্রিয় ফিল্টার:</span>
                 @if (request('q'))<span class="rounded-full bg-orange-50 px-3 py-1 font-semibold text-orange-700">“{{ request('q') }}”</span>@endif
-                @if (request('category'))<span class="rounded-full bg-orange-50 px-3 py-1 font-semibold text-orange-700">{{ $categories->firstWhere('slug', request('category'))?->name }}</span>@endif
+                @if ($selectedCategory)<span class="rounded-full bg-orange-50 px-3 py-1 font-semibold text-orange-700">{{ $selectedCategory->name }}</span>@endif
                 <a href="{{ route('store.shop.index') }}" class="font-bold text-rose-600">মুছুন</a>
             </div>
         @endif

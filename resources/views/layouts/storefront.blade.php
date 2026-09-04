@@ -2,8 +2,9 @@
 <html lang="bn">
 <head>
     @php
-        $pageTitle = trim($__env->yieldContent('title', $seoSettings['meta_title'] ?? 'Tisilo — আপনার বিশ্বস্ত অনলাইন মার্কেটপ্লেস'));
-        $pageDescription = trim($__env->yieldContent('meta_description', $seoSettings['meta_description'] ?? 'Tisilo—বিশ্বস্ত মাল্টি-ভেন্ডর অনলাইন মার্কেটপ্লেস।'));
+        $pageTitle = html_entity_decode(trim($__env->yieldContent('title', $seoSettings['meta_title'] ?? 'Tisilo — আপনার বিশ্বস্ত অনলাইন মার্কেটপ্লেস')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $pageDescription = html_entity_decode(trim($__env->yieldContent('meta_description', $seoSettings['meta_description'] ?? 'Tisilo—বিশ্বস্ত মাল্টি-ভেন্ডর অনলাইন মার্কেটপ্লেস।')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $canonicalUrl = trim($__env->yieldContent('canonical', url()->current()));
         $faviconPath = $generalSettings['favicon'] ?? null;
         $faviconUrl = filled($faviconPath)
             ? asset('storage/'.ltrim($faviconPath, '/')).'?v='.substr(sha1($faviconPath), 0, 12)
@@ -32,11 +33,11 @@
         <link rel="shortcut icon" type="image/png" href="{{ $faviconUrl }}">
         <link rel="apple-touch-icon" href="{{ $faviconUrl }}">
     @endif
-    <link rel="canonical" href="{{ url()->current() }}">
+    <link rel="canonical" href="{{ $canonicalUrl }}">
     <meta property="og:site_name" content="{{ $generalSettings['site_name'] ?? 'Tisilo' }}">
     <meta property="og:title" content="{{ $pageTitle }}">
     <meta property="og:description" content="{{ $pageDescription }}">
-    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
     <meta property="og:type" content="website">
     @if($ogBannerUrl)
         <meta property="og:image" content="{{ $ogBannerUrl }}">

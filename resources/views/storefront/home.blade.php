@@ -14,7 +14,7 @@
                     <ul class="relative divide-y divide-slate-100 text-xs font-semibold text-slate-700">
                         @forelse($categories->take(11) as $category)
                             <li class="group/cat relative">
-                                <a href="{{ route('store.products.index', ['category' => $category->slug]) }}" class="flex min-h-[45px] items-center justify-between px-4 py-2 transition hover:bg-purple-50 hover:text-purple-700">
+                                <a href="{{ $category->permalink }}" class="flex min-h-[45px] items-center justify-between px-4 py-2 transition hover:bg-purple-50 hover:text-purple-700">
                                     <div class="flex items-center gap-3 min-w-0">
                                         @if($category->image)
                                             <img src="{{ asset('storage/'.ltrim($category->image, '/')) }}" alt="{{ $category->name }}" class="size-6 shrink-0 rounded-md object-cover" loading="lazy">
@@ -35,13 +35,13 @@
                                         <div class="mt-2 space-y-2 max-h-[360px] overflow-y-auto pr-1">
                                             @foreach($category->children as $subcat)
                                                 <div class="rounded-lg p-2 hover:bg-purple-50/50 transition">
-                                                    <a href="{{ route('store.products.index', ['category' => $subcat->slug]) }}" class="block text-xs font-bold text-slate-800 hover:text-purple-700">
+                                                    <a href="{{ $subcat->permalink }}" class="block text-xs font-bold text-slate-800 hover:text-purple-700">
                                                         {{ $subcat->name }}
                                                     </a>
                                                     @if($subcat->children && $subcat->children->count() > 0)
                                                         <div class="mt-1 flex flex-wrap gap-1.5 pl-2 border-l border-purple-200">
                                                             @foreach($subcat->children as $child)
-                                                                <a href="{{ route('store.products.index', ['category' => $child->slug]) }}" class="text-[11px] text-slate-500 hover:text-purple-700 hover:underline">
+                                                                <a href="{{ $child->permalink }}" class="text-[11px] text-slate-500 hover:text-purple-700 hover:underline">
                                                                     {{ $child->name }}
                                                                 </a>
                                                             @endforeach
@@ -155,7 +155,7 @@
 
         <div class="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-11">
             @foreach($categories as $cat)
-                <a href="{{ route('store.products.index', ['category' => $cat->slug]) }}" class="group flex flex-col items-center text-center p-2 rounded-2xl hover:bg-white transition hover:shadow-sm">
+                <a href="{{ $cat->permalink }}" class="group flex flex-col items-center text-center p-2 rounded-2xl hover:bg-white transition hover:shadow-sm">
                     <div class="relative grid size-16 sm:size-20 place-items-center rounded-2xl border border-slate-200 bg-white p-2 shadow-2xs group-hover:border-purple-300 group-hover:shadow-md transition">
                         @if($cat->image)
                             <img src="{{ asset('storage/'.ltrim($cat->image, '/')) }}" alt="{{ $cat->name }}" class="size-full object-contain rounded-xl transition duration-300 group-hover:scale-105" loading="lazy">
@@ -237,7 +237,7 @@
                         <span class="grid size-6 place-items-center rounded-md bg-purple-700 text-white text-xs">@svg('heroicon-o-shopping-bag', 'size-3.5')</span>
                         <h2 class="text-lg sm:text-xl font-black text-slate-900">{{ $cat->name }}</h2>
                     </div>
-                    <a href="{{ route('store.products.index', ['category' => $cat->slug]) }}" class="inline-flex items-center gap-1 rounded-lg bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 transition">
+                    <a href="{{ $cat->permalink }}" class="inline-flex items-center gap-1 rounded-lg bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 transition">
                         View More →
                     </a>
                 </div>

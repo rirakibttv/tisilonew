@@ -42,7 +42,11 @@
             <nav aria-label="Breadcrumb" class="mb-4 text-xs text-slate-500">
                 <a href="{{ route('store.home') }}" class="hover:text-orange-600">হোম</a>
                 <span class="mx-2">/</span>
-                <a href="{{ route('store.products.index', ['category' => $product->category?->slug]) }}" class="hover:text-orange-600">{{ $product->category?->name ?? 'পণ্য' }}</a>
+                @if ($product->category)
+                    <a href="{{ $product->category->permalink }}" class="hover:text-orange-600">{{ $product->category->name }}</a>
+                @else
+                    <span>পণ্য</span>
+                @endif
                 <span class="mx-2">/</span>
                 <span class="text-slate-800">{{ $product->name }}</span>
             </nav>

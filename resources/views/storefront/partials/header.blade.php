@@ -150,7 +150,7 @@
         @foreach($categories ?? [] as $category)
             <div class="rounded-xl border border-slate-100 overflow-hidden bg-white" data-drawer-parent>
                 <div class="flex items-center justify-between p-3 hover:bg-purple-50/50 transition">
-                    <a href="{{ route('store.products.index', ['category' => $category->slug]) }}" class="flex items-center gap-2.5 text-xs font-bold text-slate-800 hover:text-purple-700">
+                    <a href="{{ $category->permalink }}" class="flex items-center gap-2.5 text-xs font-bold text-slate-800 hover:text-purple-700">
                         @if($category->image)
                             <img src="{{ asset('storage/'.ltrim($category->image, '/')) }}" alt="{{ $category->name }}" class="size-6 rounded-md object-cover">
                         @else
@@ -169,13 +169,13 @@
                     <div class="hidden border-t border-slate-100 bg-slate-50/70 px-4 py-2 space-y-1.5 text-xs font-medium text-slate-600" data-drawer-children>
                         @foreach($category->children as $subcat)
                             <div>
-                                <a href="{{ route('store.products.index', ['category' => $subcat->slug]) }}" class="block py-1 text-slate-700 hover:text-purple-700 font-semibold">
+                                <a href="{{ $subcat->permalink }}" class="block py-1 text-slate-700 hover:text-purple-700 font-semibold">
                                     • {{ $subcat->name }}
                                 </a>
                                 @if($subcat->children && $subcat->children->count() > 0)
                                     <div class="pl-4 py-1 space-y-1 border-l border-purple-200">
                                         @foreach($subcat->children as $child)
-                                            <a href="{{ route('store.products.index', ['category' => $child->slug]) }}" class="block text-[11px] text-slate-500 hover:text-purple-700">
+                                            <a href="{{ $child->permalink }}" class="block text-[11px] text-slate-500 hover:text-purple-700">
                                                 - {{ $child->name }}
                                             </a>
                                         @endforeach
