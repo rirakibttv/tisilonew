@@ -139,7 +139,7 @@ class GeneralSettings extends Page
         $settings = SiteSetting::valuesFor('sitemap');
         $urls = collect([
             ['loc' => route('store.home'), 'priority' => '1.0'],
-            ['loc' => route('store.products.index'), 'priority' => '0.9'],
+            ['loc' => route('store.shop.index'), 'priority' => '0.9'],
         ]);
 
         if ($settings['include_products'] ?? true) {

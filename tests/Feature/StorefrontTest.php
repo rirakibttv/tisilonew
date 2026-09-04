@@ -20,7 +20,11 @@ class StorefrontTest extends TestCase
 
         $this->get('/products')
             ->assertOk()
-            ->assertSee('সব পণ্য');
+            ->assertSee('Tisilo Shop');
+
+        $this->get('/shop')
+            ->assertOk()
+            ->assertSee('Tisilo Shop');
     }
 
     public function test_customer_can_view_a_product_and_add_it_to_cart(): void

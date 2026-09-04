@@ -13,6 +13,7 @@ use App\Http\Controllers\Storefront\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('store.home');
+Route::get('/shop', [ProductController::class, 'index'])->name('store.shop.index');
 Route::get('/products', [ProductController::class, 'index'])->name('store.products.index');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('store.products.show');
 Route::middleware('guest')->group(function (): void {

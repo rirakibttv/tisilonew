@@ -23,7 +23,7 @@
         </a>
 
         <!-- Desktop Search Bar -->
-        <form action="{{ route('store.products.index') }}" method="GET" class="relative hidden min-w-0 flex-1 md:block">
+        <form action="{{ route('store.shop.index') }}" method="GET" class="relative hidden min-w-0 flex-1 md:block">
             <label for="desktop-search" class="sr-only">Search Product</label>
             <div class="relative flex items-center">
                 <input
@@ -83,7 +83,7 @@
 
     <!-- Mobile Search Bar -->
     <div class="border-t border-slate-100 px-4 py-2.5 md:hidden bg-slate-50/50">
-        <form action="{{ route('store.products.index') }}" method="GET" class="relative">
+        <form action="{{ route('store.shop.index') }}" method="GET" class="relative">
             <input
                 name="q"
                 value="{{ $search ?? request('q') }}"
@@ -109,7 +109,7 @@
         <div class="flex h-12 items-center justify-between">
             <div class="flex h-full items-center gap-7 text-sm font-bold text-slate-800">
                 <a href="{{ route('store.home') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.home') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">Home</a>
-                <a href="{{ route('store.products.index') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.products.index') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">Shop</a>
+                <a href="{{ route('store.shop.index') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.shop.index', 'store.products.index') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">Shop</a>
                 <a href="/admin" class="flex h-full items-center border-b-2 border-transparent transition hover:border-purple-700 hover:text-purple-700">Sellers</a>
                 <a href="{{ route('store.pages.show', ['slug' => 'contact-us']) }}" class="flex h-full items-center border-b-2 border-transparent transition hover:border-purple-700 hover:text-purple-700">Contact</a>
             </div>
@@ -140,7 +140,7 @@
     <!-- Quick Tabs / Links -->
     <div class="flex border-b border-slate-100 bg-slate-50 text-xs font-bold text-slate-600">
         <a href="{{ route('store.home') }}" class="flex-1 py-3 text-center border-r border-slate-200 hover:text-purple-700">Home</a>
-        <a href="{{ route('store.products.index') }}" class="flex-1 py-3 text-center border-r border-slate-200 hover:text-purple-700">Shop</a>
+        <a href="{{ route('store.shop.index') }}" class="flex-1 py-3 text-center border-r border-slate-200 hover:text-purple-700">Shop</a>
         <a href="/admin" class="flex-1 py-3 text-center hover:text-purple-700">Sellers</a>
     </div>
 

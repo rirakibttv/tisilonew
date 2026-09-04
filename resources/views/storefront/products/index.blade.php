@@ -1,25 +1,30 @@
 @extends('layouts.storefront')
 
-@section('title', 'পণ্যসমূহ — Tisilo')
+@section('title', 'Shop — Tisilo Supermarket')
+@section('meta_description', 'Tisilo Shop থেকে ক্যাটাগরি, ব্র্যান্ড ও মূল্য অনুযায়ী পণ্য খুঁজুন এবং নিরাপদে অর্ডার করুন।')
 
 @section('content')
-    <section class="border-b border-slate-200 bg-white">
+    <section class="border-b border-purple-100 bg-gradient-to-r from-purple-950 via-purple-800 to-indigo-800 text-white">
         <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-            <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">Tisilo Marketplace</p>
+            <nav class="text-xs font-semibold text-purple-200" aria-label="Breadcrumb">
+                <a href="{{ route('store.home') }}" class="hover:text-white">Home</a>
+                <span class="mx-2">/</span>
+                <span class="text-white">Shop</span>
+            </nav>
             <div class="mt-2 flex flex-wrap items-end justify-between gap-4">
                 <div>
-                    <h1 class="text-3xl font-black text-slate-950 sm:text-4xl">সব পণ্য</h1>
-                    <p class="mt-2 text-sm text-slate-500">{{ number_format($products->total()) }}টি পণ্য পাওয়া গেছে</p>
+                    <h1 class="text-3xl font-black sm:text-4xl">Tisilo Shop</h1>
+                    <p class="mt-2 text-sm text-purple-100">{{ number_format($products->total()) }}টি পণ্য থেকে আপনার পছন্দের পণ্যটি খুঁজুন</p>
                 </div>
-                <a href="{{ route('store.home') }}" class="text-sm font-bold text-orange-600">← হোমপেজ</a>
+                <span class="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold">নিরাপদ কেনাকাটা · সারাদেশে ডেলিভারি</span>
             </div>
         </div>
     </section>
 
     <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <form method="GET" action="{{ route('store.products.index') }}" class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_220px_190px_auto]">
+        <form method="GET" action="{{ route('store.shop.index') }}" class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_220px_190px_auto]">
             <label class="sr-only" for="catalog-search">পণ্য খুঁজুন</label>
-            <input id="catalog-search" type="search" name="q" value="{{ request('q') }}" placeholder="পণ্য, ব্র্যান্ড বা SKU খুঁজুন" class="h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100">
+            <input id="catalog-search" type="search" name="q" value="{{ request('q') }}" placeholder="পণ্য, ব্র্যান্ড বা SKU খুঁজুন" class="h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100">
 
             <label class="sr-only" for="category-filter">ক্যাটাগরি</label>
             <select id="category-filter" name="category" class="h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-orange-400">
@@ -37,7 +42,7 @@
                 <option value="name" @selected($sort === 'name')>নাম অনুযায়ী</option>
             </select>
 
-            <button class="h-12 rounded-xl bg-orange-500 px-6 text-sm font-black text-white transition hover:bg-orange-600">খুঁজুন</button>
+            <button class="h-12 rounded-xl bg-purple-700 px-6 text-sm font-black text-white transition hover:bg-purple-800">খুঁজুন</button>
         </form>
 
         @if (request()->hasAny(['q', 'category']))
@@ -45,7 +50,7 @@
                 <span class="text-slate-500">সক্রিয় ফিল্টার:</span>
                 @if (request('q'))<span class="rounded-full bg-orange-50 px-3 py-1 font-semibold text-orange-700">“{{ request('q') }}”</span>@endif
                 @if (request('category'))<span class="rounded-full bg-orange-50 px-3 py-1 font-semibold text-orange-700">{{ $categories->firstWhere('slug', request('category'))?->name }}</span>@endif
-                <a href="{{ route('store.products.index') }}" class="font-bold text-rose-600">মুছুন</a>
+                <a href="{{ route('store.shop.index') }}" class="font-bold text-rose-600">মুছুন</a>
             </div>
         @endif
 
@@ -57,7 +62,7 @@
                     @svg('heroicon-o-magnifying-glass', 'mx-auto size-12 text-slate-300')
                     <h2 class="mt-4 text-lg font-black text-slate-800">কোনো পণ্য পাওয়া যায়নি</h2>
                     <p class="mt-2 text-sm text-slate-500">অন্য শব্দ বা ক্যাটাগরি দিয়ে চেষ্টা করুন।</p>
-                    <a href="{{ route('store.products.index') }}" class="mt-5 inline-flex rounded-xl bg-orange-500 px-5 py-3 text-sm font-bold text-white">সব পণ্য দেখুন</a>
+                    <a href="{{ route('store.shop.index') }}" class="mt-5 inline-flex rounded-xl bg-purple-700 px-5 py-3 text-sm font-bold text-white">সব পণ্য দেখুন</a>
                 </div>
             @endforelse
         </div>
