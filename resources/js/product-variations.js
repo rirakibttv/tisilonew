@@ -5,9 +5,11 @@ if (variationForm && variationData) {
     const data = JSON.parse(variationData.textContent);
     const select = variationForm.elements.product_variation_id;
     const cards = variationForm.querySelector('[data-product-variation-options]');
+    const gallery = document.querySelector('[data-product-gallery-options]');
     const label = variationForm.querySelector('[data-product-variation-label]');
     const quantity = variationForm.querySelector('[data-product-quantity]');
-    const cartButton = variationForm.querySelector('[data-product-cart-button]');
+    const cartButtons = variationForm.querySelectorAll('[data-product-cart-button]');
+    const stockLeft = variationForm.querySelector('[data-product-stock-left]');
     const mainImage = document.querySelector('[data-product-main-image]');
     const imagePlaceholder = document.querySelector('[data-product-image-placeholder]');
     const price = document.querySelector('[data-product-price]');
@@ -37,6 +39,9 @@ if (variationForm && variationData) {
         cards?.querySelectorAll('[data-product-variation-option]').forEach(card => {
             card.setAttribute('aria-pressed', String(card.dataset.productVariationOption === String(option.id)));
         });
+        gallery?.querySelectorAll('[data-product-gallery-variation]').forEach(card => {
+            card.setAttribute('aria-pressed', String(card.dataset.productGalleryVariation === String(option.id)));
+        });
         if (label) label.textContent = option.label;
         if (price) price.textContent = money(option.price);
         const hasDiscount = Number(option.regular_price) > Number(option.price);
@@ -58,17 +63,28 @@ if (variationForm && variationData) {
         }
         quantity.max = String(Math.max(1, Number(option.available)));
         quantity.value = String(Math.min(Number(quantity.value || 1), Number(quantity.max)));
-        cartButton.disabled = Number(option.available) < 1;
+        if (stockLeft) stockLeft.textContent = `Only ${Number(option.available)} left`;
+        cartButtons.forEach(button => { button.disabled = Number(option.available) < 1; });
         if (changeImage) showImage(option.image || data.masterImage);
     };
 
-    cards?.addEventListener('click', event => {
-        const card = event.target.closest('[data-product-variation-option]');
+    const chooseVariation = card => {
         if (!card || card.disabled) return;
-        select.value = card.dataset.productVariationOption;
+        select.value = card.dataset.productVariationOption || card.dataset.productGalleryVariation;
         apply(selected(), true);
+    };
+    cards?.addEventListener('click', event => {
+        chooseVariation(event.target.closest('[data-product-variation-option]'));
+    });
+    gallery?.addEventListener('click', event => {
+        chooseVariation(event.target.closest('[data-product-gallery-variation]'));
     });
     select.addEventListener('change', () => apply(selected(), true));
+    variationForm.querySelectorAll('[data-product-quantity-step]').forEach(button => {
+        button.addEventListener('click', () => {
+            quantity.value = String(Math.max(1, Math.min(Number(quantity.max), Number(quantity.value || 1) + Number(button.dataset.productQuantityStep))));
+        });
+    });
     mainImage?.addEventListener('error', () => {
         if (mainImage.src !== data.masterImage && data.masterImage) showImage(data.masterImage);
     });

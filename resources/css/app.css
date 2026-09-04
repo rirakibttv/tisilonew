@@ -32,6 +32,10 @@
     .product-variation-option[aria-pressed='true'] .product-variation-check {
         @apply grid;
     }
+
+    .product-gallery-option[aria-pressed='true'] {
+        @apply border-orange-500 ring-2 ring-orange-100;
+    }
 }
 
 /* Tisilo admin shell */

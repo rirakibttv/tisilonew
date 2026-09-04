@@ -55,6 +55,15 @@
                     </div>
                 </div>
             </div>
+            @if($variationOptions->whereNotNull('image')->isNotEmpty())
+                <div data-product-gallery-options class="mt-3 flex flex-wrap gap-2" role="group" aria-label="পণ্যের ছবিগুলো">
+                    @foreach($variationOptions->whereNotNull('image') as $option)
+                        <button type="button" data-product-gallery-variation="{{ $option['id'] }}" aria-label="{{ $option['label'] }}" aria-pressed="{{ $selectedVariation?->id === $option['id'] ? 'true' : 'false' }}" class="product-gallery-option size-16 overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-1 transition hover:border-orange-300">
+                            <img src="{{ $option['image'] }}" alt="" loading="lazy" class="size-full rounded-lg object-cover">
+                        </button>
+                    @endforeach
+                </div>
+            @endif
             <div class="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-bold text-slate-600 sm:gap-3">
                 <span class="rounded-xl border border-slate-200 bg-white px-2 py-3">✓ আসল পণ্য</span>
                 <span class="rounded-xl border border-slate-200 bg-white px-2 py-3">↻ সহজ রিটার্ন</span>
@@ -136,9 +145,18 @@
                         </div>
                     @endif
 
-                    <div class="mt-4 flex gap-3">
-                        <input data-product-quantity type="number" name="quantity" value="1" min="1" max="{{ max(1, (int) ($selectedVariation?->stock_quantity ?? 99)) }}" aria-label="পরিমাণ" class="h-12 w-24 shrink-0 rounded-xl border border-slate-200 px-3 text-center font-bold sm:w-28">
-                        <button data-product-cart-button @disabled($selectedVariation && $selectedVariation->stock_quantity < 1) class="h-12 flex-1 rounded-xl bg-orange-500 px-4 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50">@svg('heroicon-o-shopping-cart', 'mr-2 inline size-5') কার্টে যোগ করুন</button>
+                    <div class="mt-4">
+                        <p class="text-xs font-black text-slate-900">Quantity</p>
+                        <div class="mt-1 inline-flex h-9 items-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+                            <button type="button" data-product-quantity-step="-1" aria-label="পরিমাণ কমান" class="grid h-full w-9 place-items-center text-base font-bold text-slate-500 hover:bg-slate-50">−</button>
+                            <input data-product-quantity type="number" name="quantity" value="1" min="1" max="{{ max(1, (int) ($selectedVariation?->stock_quantity ?? 99)) }}" aria-label="পরিমাণ" class="h-full w-10 border-x border-slate-200 text-center text-xs font-black [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none">
+                            <button type="button" data-product-quantity-step="1" aria-label="পরিমাণ বাড়ান" class="grid h-full w-9 place-items-center text-base font-bold text-slate-500 hover:bg-slate-50">+</button>
+                        </div>
+                        <p data-product-stock-left class="mt-1 text-[11px] font-medium text-slate-600">Only {{ (int) ($selectedVariation?->stock_quantity ?? $summary['available']) }} left</p>
+                    </div>
+                    <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                        <button type="submit" name="redirect_to" value="cart" data-product-cart-button @disabled($selectedVariation && $selectedVariation->stock_quantity < 1) class="h-12 rounded-xl bg-orange-500 px-4 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50">@svg('heroicon-o-shopping-cart', 'mr-2 inline size-5') কার্টে যোগ করুন</button>
+                        <button type="submit" name="redirect_to" value="checkout" data-product-cart-button @disabled($selectedVariation && $selectedVariation->stock_quantity < 1) class="h-12 rounded-xl bg-orange-500 px-4 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50">@svg('heroicon-o-shopping-cart', 'mr-2 inline size-5') অর্ডার করুন</button>
                     </div>
                     @error('quantity')<p class="mt-3 text-sm font-bold text-rose-600">{{ $message }}</p>@enderror
                 </form>

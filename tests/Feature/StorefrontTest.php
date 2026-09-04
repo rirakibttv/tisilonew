@@ -75,11 +75,22 @@ class StorefrontTest extends TestCase
 
         $this->get(route('store.products.show', $product))->assertOk()
             ->assertSee('data-product-variation-options', false)
+            ->assertSee('data-product-gallery-variation="'.$ownImage->id.'"', false)
+            ->assertSee('data-product-quantity-step="-1"', false)
             ->assertSee('data-product-variation-option="'.$masterOnly->id.'"', false)
             ->assertSee('data-product-variation-option="'.$ownImage->id.'"', false)
+            ->assertSee('name="redirect_to" value="checkout"', false)
             ->assertSee(asset('storage/products/master.jpg'), false)
             ->assertSee(asset('storage/products/variations/own.jpg'), false)
             ->assertSee('<p><strong>Rich product details</strong></p>', false)
             ->assertDontSee('&lt;p&gt;&lt;strong&gt;Rich product details', false);
+
+        $this->post(route('store.cart.store'), [
+            'product_id' => $product->id,
+            'product_variation_id' => $ownImage->id,
+            'quantity' => 1,
+            'redirect_to' => 'checkout',
+        ])->assertRedirect(route('store.checkout.index'))
+            ->assertSessionHas('store_cart.catalog-'.$product->id.'-'.$ownImage->id.'.product_variation_id', $ownImage->id);
     }
 }
