@@ -798,17 +798,31 @@
     ],
     "shipping_classes": [
         {
-            "name": "Dhaka Seller Small Product Under 1Kg",
-            "code": "dhaka-seller-small-product-under-1kg",
-            "description": "Default shipping class for existing products.",
+            "name": "Dhaka Seller 1Kg",
+            "code": "dhaka-seller-1kg",
+            "description": "Dhaka Seller 1Kg",
+            "is_active": true,
+            "sort_order": 2
+        },
+        {
+            "name": "Dhaka Seller 2Kg",
+            "code": "dhaka-seller-2kg",
+            "description": "Dhaka Seller 2Kg",
+            "is_active": true,
+            "sort_order": 3
+        },
+        {
+            "name": "Dhaka Seller Under 1Kg",
+            "code": "dhaka-seller-under-1kg",
+            "description": null,
             "is_active": true,
             "sort_order": 1
         }
     ],
     "shipping_partners": [
         {
-            "name": "Carrybee",
-            "code": "carrybee",
+            "name": "Carrybee Currier",
+            "code": "carrybee-currier",
             "contact_name": null,
             "phone": null,
             "email": null,
@@ -818,8 +832,8 @@
             "is_active": true
         },
         {
-            "name": "PaperFly",
-            "code": "paperfly",
+            "name": "PaperFly Currier",
+            "code": "paperfly-currier",
             "contact_name": null,
             "phone": null,
             "email": null,
@@ -829,8 +843,8 @@
             "is_active": true
         },
         {
-            "name": "Pathao",
-            "code": "pathao",
+            "name": "Pathao Currier",
+            "code": "pathao-currier",
             "contact_name": null,
             "phone": null,
             "email": null,
@@ -840,8 +854,8 @@
             "is_active": true
         },
         {
-            "name": "REDX",
-            "code": "redx",
+            "name": "REDX Currier",
+            "code": "redx-currier",
             "contact_name": null,
             "phone": null,
             "email": null,
@@ -851,8 +865,8 @@
             "is_active": true
         },
         {
-            "name": "Steadfast",
-            "code": "steadfast",
+            "name": "Steadfast Currier",
+            "code": "steadfast-currier",
             "contact_name": null,
             "phone": null,
             "email": null,
@@ -864,33 +878,13 @@
     ],
     "shipping_regions": [
         {
-            "division": "Bangladesh",
-            "district": "Outside Dhaka",
-            "upazila": "Other Upazila",
+            "division": "Bagerhat",
+            "district": "Bagerhat",
+            "upazila": "Bagerhat",
             "postal_code": null,
-            "location_key": "bangladesh-outside-dhaka-other-upazila",
+            "location_key": "bagerhat-bagerhat-bagerhat",
             "is_active": true,
-            "sort_order": 0,
-            "rates": [
-                {
-                    "base_charge": "130.00",
-                    "additional_item_charge": "0.00",
-                    "estimated_min_days": 3,
-                    "estimated_max_days": 5,
-                    "is_active": true,
-                    "shipping_class_code": "dhaka-seller-small-product-under-1kg",
-                    "shipping_partner_code": "steadfast"
-                }
-            ]
-        },
-        {
-            "division": "Dhaka",
-            "district": "Dhaka",
-            "upazila": "Dhaka Metropolitan",
-            "postal_code": null,
-            "location_key": "dhaka-dhaka-dhaka-metropolitan",
-            "is_active": true,
-            "sort_order": 0,
+            "sort_order": 1,
             "rates": [
                 {
                     "base_charge": "80.00",
@@ -898,10 +892,150 @@
                     "estimated_min_days": 1,
                     "estimated_max_days": 2,
                     "is_active": true,
-                    "shipping_class_code": "dhaka-seller-small-product-under-1kg",
-                    "shipping_partner_code": "steadfast"
+                    "shipping_class_code": "dhaka-seller-under-1kg",
+                    "shipping_partner_code": "steadfast-currier"
                 }
             ]
+        },
+        {
+            "division": "Bandarban",
+            "district": "Bandarban",
+            "upazila": "Bandarban",
+            "postal_code": "Bandarban",
+            "location_key": "bandarban-bandarban-bandarban",
+            "is_active": true,
+            "sort_order": 2,
+            "rates": []
+        },
+        {
+            "division": "Barguna",
+            "district": "Barguna",
+            "upazila": "Barguna",
+            "postal_code": "Barguna",
+            "location_key": "barguna-barguna-barguna",
+            "is_active": true,
+            "sort_order": 3,
+            "rates": []
+        },
+        {
+            "division": "Barisal",
+            "district": "Barisal",
+            "upazila": "Barisal",
+            "postal_code": "Barisal",
+            "location_key": "barisal-barisal-barisal",
+            "is_active": true,
+            "sort_order": 4,
+            "rates": []
+        },
+        {
+            "division": "Bhola",
+            "district": "Bhola",
+            "upazila": "Bhola",
+            "postal_code": "Bhola",
+            "location_key": "bhola-bhola-bhola",
+            "is_active": true,
+            "sort_order": 5,
+            "rates": []
+        },
+        {
+            "division": "Bogra",
+            "district": "Bogra",
+            "upazila": "Bogra",
+            "postal_code": "Bogra",
+            "location_key": "bogra-bogra-bogra",
+            "is_active": true,
+            "sort_order": 6,
+            "rates": []
+        },
+        {
+            "division": "Brahmanbaria",
+            "district": "Brahmanbaria",
+            "upazila": "Brahmanbaria",
+            "postal_code": "Brahmanbaria",
+            "location_key": "brahmanbaria-brahmanbaria-brahmanbaria",
+            "is_active": true,
+            "sort_order": 7,
+            "rates": []
+        },
+        {
+            "division": "Chandpur",
+            "district": "Chandpur",
+            "upazila": "Chandpur",
+            "postal_code": "Chandpur",
+            "location_key": "chandpur-chandpur-chandpur",
+            "is_active": true,
+            "sort_order": 8,
+            "rates": []
+        },
+        {
+            "division": "Chapai Nawabganj",
+            "district": "Chapai Nawabganj",
+            "upazila": "Chapai Nawabganj",
+            "postal_code": "Chapai Nawabganj",
+            "location_key": "chapai-nawabganj-chapai-nawabganj-chapai-nawabganj",
+            "is_active": true,
+            "sort_order": 9,
+            "rates": []
+        },
+        {
+            "division": "Chittagong",
+            "district": "Chittagong",
+            "upazila": "Chittagong",
+            "postal_code": "Chittagong",
+            "location_key": "chittagong-chittagong-chittagong",
+            "is_active": true,
+            "sort_order": 10,
+            "rates": []
+        },
+        {
+            "division": "Chuadanga",
+            "district": "Chuadanga",
+            "upazila": "Chuadanga",
+            "postal_code": "Chuadanga",
+            "location_key": "chuadanga-chuadanga-chuadanga",
+            "is_active": true,
+            "sort_order": 11,
+            "rates": []
+        },
+        {
+            "division": "Comilla",
+            "district": "Comilla",
+            "upazila": "Comilla",
+            "postal_code": "Comilla",
+            "location_key": "comilla-comilla-comilla",
+            "is_active": true,
+            "sort_order": 13,
+            "rates": []
+        },
+        {
+            "division": "Cox's Bazar",
+            "district": "Cox's Bazar",
+            "upazila": "Cox's Bazar",
+            "postal_code": "Cox's Bazar",
+            "location_key": "coxs-bazar-coxs-bazar-coxs-bazar",
+            "is_active": true,
+            "sort_order": 12,
+            "rates": []
+        },
+        {
+            "division": "Dhaka City",
+            "district": "Dhaka City",
+            "upazila": "Dhaka City",
+            "postal_code": "Dhaka City",
+            "location_key": "dhaka-city-dhaka-city-dhaka-city",
+            "is_active": true,
+            "sort_order": 13,
+            "rates": []
+        },
+        {
+            "division": "Dhaka Sub-Urban",
+            "district": "Dhaka Sub-Urban",
+            "upazila": "Dhaka Sub-Urban",
+            "postal_code": "Dhaka Sub-Urban",
+            "location_key": "dhaka-sub-urban-dhaka-sub-urban-dhaka-sub-urban",
+            "is_active": true,
+            "sort_order": 14,
+            "rates": []
         }
     ],
     "vendors": [],
@@ -935,7 +1069,7 @@
             "meta_keywords": null,
             "brand_slug": "home-tex",
             "category_slug": "home-kitchen",
-            "shipping_class_code": "dhaka-seller-small-product-under-1kg",
+            "shipping_class_code": "dhaka-seller-under-1kg",
             "tag_slugs": [],
             "attribute_slugs": [
                 "kol-baliser-kavar"
