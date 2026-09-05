@@ -193,12 +193,16 @@ main() {
 
     git fetch --quiet origin main
 
-    local previous_commit target_commit deployment_started=0
+    local previous_commit target_commit deployment_started=0 dependencies_changed=0
     previous_commit="$(git rev-parse HEAD)"
     target_commit="$(git rev-parse origin/main)"
 
     if [[ "${previous_commit}" == "${target_commit}" ]]; then
         exit 0
+    fi
+
+    if ! git diff --quiet "${previous_commit}" "${target_commit}" -- composer.json composer.lock; then
+        dependencies_changed=1
     fi
 
     trap 'handle_failure $?' ERR INT TERM
@@ -210,7 +214,11 @@ main() {
     "${PHP_BIN}" artisan down --retry=60
 
     git merge --ff-only "${target_commit}"
-    install_dependencies
+    if [[ ${dependencies_changed} -eq 1 ]]; then
+        install_dependencies
+    else
+        log "Composer files are unchanged; dependency installation skipped."
+    fi
     "${PHP_BIN}" artisan filament:optimize-clear
     "${PHP_BIN}" artisan migrate --force
     "${PHP_BIN}" artisan db:seed --class='Database\Seeders\ProductionRequiredDataSeeder' --force
