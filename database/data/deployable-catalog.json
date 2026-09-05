@@ -1036,6 +1036,506 @@
             "is_active": true,
             "sort_order": 14,
             "rates": []
+        },
+        {
+            "division": "Dinajpur",
+            "district": "Dinajpur",
+            "upazila": "Dinajpur",
+            "postal_code": "Dinajpur",
+            "location_key": "dinajpur-dinajpur-dinajpur",
+            "is_active": true,
+            "sort_order": 16,
+            "rates": []
+        },
+        {
+            "division": "Faridpur",
+            "district": "Faridpur",
+            "upazila": "Faridpur",
+            "postal_code": "Faridpur",
+            "location_key": "faridpur-faridpur-faridpur",
+            "is_active": true,
+            "sort_order": 17,
+            "rates": []
+        },
+        {
+            "division": "Feni",
+            "district": "Feni",
+            "upazila": "Feni",
+            "postal_code": "Feni",
+            "location_key": "feni-feni-feni",
+            "is_active": true,
+            "sort_order": 18,
+            "rates": []
+        },
+        {
+            "division": "Gaibandha",
+            "district": "Gaibandha",
+            "upazila": "Gaibandha",
+            "postal_code": "Gaibandha",
+            "location_key": "gaibandha-gaibandha-gaibandha",
+            "is_active": true,
+            "sort_order": 19,
+            "rates": []
+        },
+        {
+            "division": "Gazipur",
+            "district": "Gazipur",
+            "upazila": "Gazipur",
+            "postal_code": "Gazipur",
+            "location_key": "gazipur-gazipur-gazipur",
+            "is_active": true,
+            "sort_order": 20,
+            "rates": []
+        },
+        {
+            "division": "Gopalganj",
+            "district": "Gopalganj",
+            "upazila": "Gopalganj",
+            "postal_code": "Gopalganj",
+            "location_key": "gopalganj-gopalganj-gopalganj",
+            "is_active": true,
+            "sort_order": 21,
+            "rates": []
+        },
+        {
+            "division": "Habiganj",
+            "district": "Habiganj",
+            "upazila": "Habiganj",
+            "postal_code": "Habiganj",
+            "location_key": "habiganj-habiganj-habiganj",
+            "is_active": true,
+            "sort_order": 22,
+            "rates": []
+        },
+        {
+            "division": "Jamalpur",
+            "district": "Jamalpur",
+            "upazila": "Jamalpur",
+            "postal_code": "Jamalpur",
+            "location_key": "jamalpur-jamalpur-jamalpur",
+            "is_active": true,
+            "sort_order": 23,
+            "rates": []
+        },
+        {
+            "division": "Jessore",
+            "district": "Jessore",
+            "upazila": "Jessore",
+            "postal_code": "Jessore",
+            "location_key": "jessore-jessore-jessore",
+            "is_active": true,
+            "sort_order": 24,
+            "rates": []
+        },
+        {
+            "division": "Jhalokati",
+            "district": "Jhalokati",
+            "upazila": "Jhalokati",
+            "postal_code": "Jhalokati",
+            "location_key": "jhalokati-jhalokati-jhalokati",
+            "is_active": true,
+            "sort_order": 25,
+            "rates": []
+        },
+        {
+            "division": "Jhenaidah",
+            "district": "Jhenaidah",
+            "upazila": "Jhenaidah",
+            "postal_code": "Jhenaidah",
+            "location_key": "jhenaidah-jhenaidah-jhenaidah",
+            "is_active": true,
+            "sort_order": 26,
+            "rates": []
+        },
+        {
+            "division": "Joypurhat",
+            "district": "Joypurhat",
+            "upazila": "Joypurhat",
+            "postal_code": "Joypurhat",
+            "location_key": "joypurhat-joypurhat-joypurhat",
+            "is_active": true,
+            "sort_order": 27,
+            "rates": []
+        },
+        {
+            "division": "Khagrachari",
+            "district": "Khagrachari",
+            "upazila": "Khagrachari",
+            "postal_code": "Khagrachari",
+            "location_key": "khagrachari-khagrachari-khagrachari",
+            "is_active": true,
+            "sort_order": 28,
+            "rates": []
+        },
+        {
+            "division": "Khulna",
+            "district": "Khulna",
+            "upazila": "Khulna",
+            "postal_code": "Khulna",
+            "location_key": "khulna-khulna-khulna",
+            "is_active": true,
+            "sort_order": 29,
+            "rates": []
+        },
+        {
+            "division": "Kishoreganj",
+            "district": "Kishoreganj",
+            "upazila": "Kishoreganj",
+            "postal_code": "Kishoreganj",
+            "location_key": "kishoreganj-kishoreganj-kishoreganj",
+            "is_active": true,
+            "sort_order": 30,
+            "rates": []
+        },
+        {
+            "division": "Kurigram",
+            "district": "Kurigram",
+            "upazila": "Kurigram",
+            "postal_code": "Kurigram",
+            "location_key": "kurigram-kurigram-kurigram",
+            "is_active": true,
+            "sort_order": 31,
+            "rates": []
+        },
+        {
+            "division": "Kustia",
+            "district": "Kustia",
+            "upazila": "Kustia",
+            "postal_code": "Kustia",
+            "location_key": "kustia-kustia-kustia",
+            "is_active": true,
+            "sort_order": 32,
+            "rates": []
+        },
+        {
+            "division": "Lalmonirhat",
+            "district": "Lalmonirhat",
+            "upazila": "Lalmonirhat",
+            "postal_code": "Lalmonirhat",
+            "location_key": "lalmonirhat-lalmonirhat-lalmonirhat",
+            "is_active": true,
+            "sort_order": 33,
+            "rates": []
+        },
+        {
+            "division": "Laxmipur",
+            "district": "Laxmipur",
+            "upazila": "Laxmipur",
+            "postal_code": "Laxmipur",
+            "location_key": "laxmipur-laxmipur-laxmipur",
+            "is_active": true,
+            "sort_order": 34,
+            "rates": []
+        },
+        {
+            "division": "Madaripur",
+            "district": "Madaripur",
+            "upazila": "Madaripur",
+            "postal_code": "Madaripur",
+            "location_key": "madaripur-madaripur-madaripur",
+            "is_active": true,
+            "sort_order": 35,
+            "rates": []
+        },
+        {
+            "division": "Magura",
+            "district": "Magura",
+            "upazila": "Magura",
+            "postal_code": "Magura",
+            "location_key": "magura-magura-magura",
+            "is_active": true,
+            "sort_order": 36,
+            "rates": []
+        },
+        {
+            "division": "Manikganj",
+            "district": "Manikganj",
+            "upazila": "Manikganj",
+            "postal_code": "Manikganj",
+            "location_key": "manikganj-manikganj-manikganj",
+            "is_active": true,
+            "sort_order": 37,
+            "rates": []
+        },
+        {
+            "division": "Meherpur",
+            "district": "Meherpur",
+            "upazila": "Meherpur",
+            "postal_code": "Meherpur",
+            "location_key": "meherpur-meherpur-meherpur",
+            "is_active": true,
+            "sort_order": 38,
+            "rates": []
+        },
+        {
+            "division": "Moulovibazar",
+            "district": "Moulovibazar",
+            "upazila": "Moulovibazar",
+            "postal_code": "Moulovibazar",
+            "location_key": "moulovibazar-moulovibazar-moulovibazar",
+            "is_active": true,
+            "sort_order": 39,
+            "rates": []
+        },
+        {
+            "division": "Munshiganj",
+            "district": "Munshiganj",
+            "upazila": "Munshiganj",
+            "postal_code": "Munshiganj",
+            "location_key": "munshiganj-munshiganj-munshiganj",
+            "is_active": true,
+            "sort_order": 40,
+            "rates": []
+        },
+        {
+            "division": "Mymensingh",
+            "district": "Mymensingh",
+            "upazila": "Mymensingh",
+            "postal_code": "Mymensingh",
+            "location_key": "mymensingh-mymensingh-mymensingh",
+            "is_active": true,
+            "sort_order": 41,
+            "rates": []
+        },
+        {
+            "division": "Naogaon",
+            "district": "Naogaon",
+            "upazila": "Naogaon",
+            "postal_code": "Naogaon",
+            "location_key": "naogaon-naogaon-naogaon",
+            "is_active": true,
+            "sort_order": 42,
+            "rates": []
+        },
+        {
+            "division": "Narail",
+            "district": "Narail",
+            "upazila": "Narail",
+            "postal_code": "Narail",
+            "location_key": "narail-narail-narail",
+            "is_active": true,
+            "sort_order": 43,
+            "rates": []
+        },
+        {
+            "division": "Narayanganj",
+            "district": "Narayanganj",
+            "upazila": "Narayanganj",
+            "postal_code": "Narayanganj",
+            "location_key": "narayanganj-narayanganj-narayanganj",
+            "is_active": true,
+            "sort_order": 44,
+            "rates": []
+        },
+        {
+            "division": "Narshingdi",
+            "district": "Narshingdi",
+            "upazila": "Narshingdi",
+            "postal_code": "Narshingdi",
+            "location_key": "narshingdi-narshingdi-narshingdi",
+            "is_active": true,
+            "sort_order": 45,
+            "rates": []
+        },
+        {
+            "division": "Natore",
+            "district": "Natore",
+            "upazila": "Natore",
+            "postal_code": "Natore",
+            "location_key": "natore-natore-natore",
+            "is_active": true,
+            "sort_order": 46,
+            "rates": []
+        },
+        {
+            "division": "Netrokona",
+            "district": "Netrokona",
+            "upazila": "Netrokona",
+            "postal_code": "Netrokona",
+            "location_key": "netrokona-netrokona-netrokona",
+            "is_active": true,
+            "sort_order": 47,
+            "rates": []
+        },
+        {
+            "division": "Nilphamari",
+            "district": "Nilphamari",
+            "upazila": "Nilphamari",
+            "postal_code": "Nilphamari",
+            "location_key": "nilphamari-nilphamari-nilphamari",
+            "is_active": true,
+            "sort_order": 48,
+            "rates": []
+        },
+        {
+            "division": "Noakhali",
+            "district": "Noakhali",
+            "upazila": "Noakhali",
+            "postal_code": "Noakhali",
+            "location_key": "noakhali-noakhali-noakhali",
+            "is_active": true,
+            "sort_order": 49,
+            "rates": []
+        },
+        {
+            "division": "Pabna",
+            "district": "Pabna",
+            "upazila": "Pabna",
+            "postal_code": "Pabna",
+            "location_key": "pabna-pabna-pabna",
+            "is_active": true,
+            "sort_order": 50,
+            "rates": []
+        },
+        {
+            "division": "Panchgarh",
+            "district": "Panchgarh",
+            "upazila": "Panchgarh",
+            "postal_code": "Panchgarh",
+            "location_key": "panchgarh-panchgarh-panchgarh",
+            "is_active": true,
+            "sort_order": 51,
+            "rates": []
+        },
+        {
+            "division": "Patuakhali",
+            "district": "Patuakhali",
+            "upazila": "Patuakhali",
+            "postal_code": "Patuakhali",
+            "location_key": "patuakhali-patuakhali-patuakhali",
+            "is_active": true,
+            "sort_order": 52,
+            "rates": []
+        },
+        {
+            "division": "Pirojpur",
+            "district": "Pirojpur",
+            "upazila": "Pirojpur",
+            "postal_code": "Pirojpur",
+            "location_key": "pirojpur-pirojpur-pirojpur",
+            "is_active": true,
+            "sort_order": 53,
+            "rates": []
+        },
+        {
+            "division": "Rajbari",
+            "district": "Rajbari",
+            "upazila": "Rajbari",
+            "postal_code": "Rajbari",
+            "location_key": "rajbari-rajbari-rajbari",
+            "is_active": true,
+            "sort_order": 54,
+            "rates": []
+        },
+        {
+            "division": "Rajshahi",
+            "district": "Rajshahi",
+            "upazila": "Rajshahi",
+            "postal_code": null,
+            "location_key": "rajshahi-rajshahi-rajshahi",
+            "is_active": true,
+            "sort_order": 55,
+            "rates": []
+        },
+        {
+            "division": "Rangamati",
+            "district": "Rangamati",
+            "upazila": "Rangamati",
+            "postal_code": "Rangamati",
+            "location_key": "rangamati-rangamati-rangamati",
+            "is_active": true,
+            "sort_order": 56,
+            "rates": []
+        },
+        {
+            "division": "Rangpur",
+            "district": "Rangpur",
+            "upazila": "Rangpur",
+            "postal_code": "Rangpur",
+            "location_key": "rangpur-rangpur-rangpur",
+            "is_active": true,
+            "sort_order": 57,
+            "rates": []
+        },
+        {
+            "division": "Shariatpur",
+            "district": "Shariatpur",
+            "upazila": "Shariatpur",
+            "postal_code": "Shariatpur",
+            "location_key": "shariatpur-shariatpur-shariatpur",
+            "is_active": true,
+            "sort_order": 58,
+            "rates": []
+        },
+        {
+            "division": "Shatkhira",
+            "district": "Shatkhira",
+            "upazila": "Shatkhira",
+            "postal_code": "Shatkhira",
+            "location_key": "shatkhira-shatkhira-shatkhira",
+            "is_active": true,
+            "sort_order": 59,
+            "rates": []
+        },
+        {
+            "division": "Sherpur",
+            "district": "Sherpur",
+            "upazila": "Sherpur",
+            "postal_code": "Sherpur",
+            "location_key": "sherpur-sherpur-sherpur",
+            "is_active": true,
+            "sort_order": 60,
+            "rates": []
+        },
+        {
+            "division": "Sirajganj",
+            "district": "Sirajganj",
+            "upazila": "Sirajganj",
+            "postal_code": "Sirajganj",
+            "location_key": "sirajganj-sirajganj-sirajganj",
+            "is_active": true,
+            "sort_order": 61,
+            "rates": []
+        },
+        {
+            "division": "Sunamganj",
+            "district": "Sunamganj",
+            "upazila": "Sunamganj",
+            "postal_code": "Sunamganj",
+            "location_key": "sunamganj-sunamganj-sunamganj",
+            "is_active": true,
+            "sort_order": 62,
+            "rates": []
+        },
+        {
+            "division": "Sylhet",
+            "district": "Sylhet",
+            "upazila": "Sylhet",
+            "postal_code": "Sylhet",
+            "location_key": "sylhet-sylhet-sylhet",
+            "is_active": true,
+            "sort_order": 63,
+            "rates": []
+        },
+        {
+            "division": "Tangail",
+            "district": "Tangail",
+            "upazila": "Tangail",
+            "postal_code": "Tangail",
+            "location_key": "tangail-tangail-tangail",
+            "is_active": true,
+            "sort_order": 64,
+            "rates": []
+        },
+        {
+            "division": "Thakurgaon",
+            "district": "Thakurgaon",
+            "upazila": "Thakurgaon",
+            "postal_code": "Thakurgaon",
+            "location_key": "thakurgaon-thakurgaon-thakurgaon",
+            "is_active": true,
+            "sort_order": 65,
+            "rates": []
         }
     ],
     "vendors": [],
@@ -1081,7 +1581,7 @@
                     "purchase_price": "720.00",
                     "regular_price": "1400.00",
                     "sale_price": "1050.00",
-                    "stock_quantity": 3,
+                    "stock_quantity": 2,
                     "low_stock_threshold": 5,
                     "stock_status": "in_stock",
                     "image": "products/variations/01M1MTAEWD37AXXMBQRH2QHX8X.jpg",
