@@ -100,6 +100,7 @@ class AdminPanelProvider extends PanelProvider
                             AdminNavigationGroup::SeoOverview,
                             AdminNavigationGroup::ApiIntegration,
                             AdminNavigationGroup::User,
+                            AdminNavigationGroup::Pages,
                             AdminNavigationGroup::GeneralSettings,
                         ], true),
                     )),
@@ -112,6 +113,8 @@ class AdminPanelProvider extends PanelProvider
                 ...$this->apiIntegrationNavigationItems(),
 
                 ...$this->userNavigationItems(),
+
+                ...$this->contentPageNavigationItems(),
 
                 ...$this->generalSettingsNavigationItems(),
 
@@ -302,6 +305,34 @@ class AdminPanelProvider extends PanelProvider
                 ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.general-settings')
                     && request()->string('section', 'general')->toString() === $item[0])
                 ->url(fn (): string => GeneralSettings::getUrl(['section' => $item[0]])),
+            $items,
+            array_keys($items),
+        );
+    }
+
+    /** @return array<NavigationItem> */
+    private function contentPageNavigationItems(): array
+    {
+        $items = [
+            [null, 'All Pages', Heroicon::OutlinedDocumentText],
+            ['contact-us', 'Contact Us', Heroicon::OutlinedPhone],
+            ['blog', 'Blog', Heroicon::OutlinedBookOpen],
+            ['about-us', 'About Us', Heroicon::OutlinedInformationCircle],
+        ];
+
+        return array_map(
+            fn (array $item, int $sort): NavigationItem => NavigationItem::make($item[1])
+                ->key('content-pages-'.($item[0] ?? 'all'))
+                ->group(AdminNavigationGroup::Pages)
+                ->icon($item[2])
+                ->sort($sort)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.general-settings')
+                    && request()->string('section')->toString() === 'pages'
+                    && request()->string('page')->toString() === ($item[0] ?? ''))
+                ->url(fn (): string => GeneralSettings::getUrl(array_filter([
+                    'section' => 'pages',
+                    'page' => $item[0],
+                ]))),
             $items,
             array_keys($items),
         );

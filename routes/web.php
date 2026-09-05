@@ -32,6 +32,9 @@ Route::middleware('auth')->group(function (): void {
 Route::get('/wishlist', [WishlistController::class, 'index'])->name('store.wishlist.index');
 Route::post('/wishlist/{product}', [WishlistController::class, 'store'])->name('store.wishlist.store');
 Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy'])->name('store.wishlist.destroy');
+Route::get('/contact-us', ContentPageController::class)->defaults('slug', 'contact-us')->name('store.contact');
+Route::get('/about-us', ContentPageController::class)->defaults('slug', 'about-us')->name('store.about');
+Route::get('/blog', ContentPageController::class)->defaults('slug', 'blog')->name('store.blog');
 Route::get('/page/{slug}', ContentPageController::class)->name('store.pages.show');
 Route::get('/offer/{landingPage:slug}/preview', [LandingPageController::class, 'preview'])
     ->middleware('signed')

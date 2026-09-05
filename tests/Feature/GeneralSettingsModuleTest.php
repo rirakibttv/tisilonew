@@ -67,6 +67,32 @@ class GeneralSettingsModuleTest extends TestCase
         $this->get('/page/draft-page')->assertNotFound();
     }
 
+    public function test_core_content_pages_have_clean_urls_and_homepage_links(): void
+    {
+        SiteSetting::put('pages', [
+            'pages' => collect([
+                ['name' => 'Contact Us', 'slug' => 'contact-us'],
+                ['name' => 'Blog', 'slug' => 'blog'],
+                ['name' => 'About Us', 'slug' => 'about-us'],
+            ])->map(fn (array $page): array => [
+                ...$page,
+                'title' => $page['name'],
+                'description' => '<p>'.$page['name'].' content</p>',
+                'status' => true,
+            ])->all(),
+        ]);
+
+        $this->get('/contact-us')->assertOk()->assertSee('Contact Us content');
+        $this->get('/blog')->assertOk()->assertSee('Blog content');
+        $this->get('/about-us')->assertOk()->assertSee('About Us content');
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee(route('store.contact'), false)
+            ->assertSee(route('store.blog'), false)
+            ->assertSee(route('store.about'), false);
+    }
+
     public function test_storefront_uses_saved_logo_favicon_and_head_settings(): void
     {
         SiteSetting::put('general', [

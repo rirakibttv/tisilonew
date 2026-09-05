@@ -2,7 +2,35 @@
     $cartItems = session('store_cart', []);
     $cartCount = collect($cartItems)->sum('quantity');
     $cartSubtotal = collect($cartItems)->sum(fn ($line) => ($line['price'] ?? 0) * ($line['quantity'] ?? 1));
+    $hotline = $contactSettings['phone'] ?? $contactSettings['hotline'] ?? '01794313455';
+    $whatsapp = $contactSettings['whatsapp'] ?? $hotline;
+    $whatsappLink = 'https://wa.me/88' . ltrim(preg_replace('/[^0-9]/', '', $whatsapp), '88');
+    $activeSocialLinks = collect($socialLinks ?? [])->where('status', true)->take(4);
 @endphp
+
+<!-- Top Info Bar -->
+<div class="hidden border-b border-blue-500 bg-blue-600 py-1.5 text-xs text-white md:block">
+    <div class="storefront-shell grid grid-cols-3 items-center gap-4">
+        <div class="flex items-center gap-3">
+            @forelse($activeSocialLinks as $social)
+                <a href="{{ $social['link'] }}" target="_blank" rel="noopener" class="font-semibold transition hover:text-blue-100">{{ $social['title'] }}</a>
+            @empty
+                <span>Facebook</span><span>LinkedIn</span><span>Instagram</span><span>YouTube</span>
+            @endforelse
+        </div>
+        <div class="flex items-center justify-center gap-3 text-center font-semibold">
+            <span class="hidden xl:inline">{{ $generalSettings['top_headline'] ?? 'সারাদেশে দ্রুত ডেলিভারি' }}</span>
+            <a href="tel:{{ $hotline }}" class="transition hover:text-blue-100">
+                Phone: {{ $hotline }}
+            </a>
+        </div>
+        <div class="flex items-center justify-end gap-4 font-semibold">
+            <a href="/admin" class="transition hover:text-blue-100">Seller Central</a>
+            <a href="{{ route('store.blog') }}" class="transition hover:text-blue-100">Blog</a>
+            <a href="{{ route('store.about') }}" class="transition hover:text-blue-100">About Us</a>
+        </div>
+    </div>
+</div>
 
 <!-- Main Header -->
 <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/98 shadow-xs backdrop-blur-md">
@@ -42,6 +70,11 @@
 
         <!-- Right Header Items -->
         <div class="ml-auto flex items-center gap-2 sm:gap-3">
+            <a href="{{ $whatsappLink }}" target="_blank" rel="noopener" class="hidden items-center gap-2 px-2 text-xs font-bold leading-tight text-slate-700 transition hover:text-green-600 lg:flex">
+                <span class="grid size-9 place-items-center rounded-full bg-green-50 text-green-600">@svg('heroicon-o-chat-bubble-left-right', 'size-5')</span>
+                <span><span class="block text-[10px] text-slate-400">WhatsApp</span>{{ $whatsapp }}</span>
+            </a>
+
             <!-- Cart Dialog with Live Preview -->
             <div class="relative group" id="cart-qty">
                 <a href="{{ route('store.cart.index') }}" class="relative flex min-h-11 items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3 text-slate-700 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700" aria-label="কার্ট">
@@ -111,12 +144,10 @@
                 <a href="{{ route('store.home') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.home') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">Home</a>
                 <a href="{{ route('store.shop.index') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.shop.index', 'store.products.index') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">Shop</a>
                 <a href="/admin" class="flex h-full items-center border-b-2 border-transparent transition hover:border-purple-700 hover:text-purple-700">Sellers</a>
-                <a href="{{ route('store.pages.show', ['slug' => 'contact-us']) }}" class="flex h-full items-center border-b-2 border-transparent transition hover:border-purple-700 hover:text-purple-700">Contact</a>
             </div>
 
-            <a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="flex items-center gap-2 text-sm font-bold text-slate-700 transition hover:text-purple-700">
-                @svg('heroicon-o-user', 'size-4 text-purple-700')
-                <span>আমার অ্যাকাউন্ট</span>
+            <a href="{{ route('store.contact') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.contact') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">
+                Contact
             </a>
         </div>
     </div>
@@ -141,7 +172,7 @@
     <div class="flex border-b border-slate-100 bg-slate-50 text-xs font-bold text-slate-600">
         <a href="{{ route('store.home') }}" class="flex-1 py-3 text-center border-r border-slate-200 hover:text-purple-700">Home</a>
         <a href="{{ route('store.shop.index') }}" class="flex-1 py-3 text-center border-r border-slate-200 hover:text-purple-700">Shop</a>
-        <a href="/admin" class="flex-1 py-3 text-center hover:text-purple-700">Sellers</a>
+        <a href="{{ route('store.contact') }}" class="flex-1 py-3 text-center hover:text-purple-700">Contact</a>
     </div>
 
     <!-- Multi-level Categories in Drawer -->

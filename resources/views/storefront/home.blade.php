@@ -124,6 +124,26 @@
         </div>
     </section>
 
+    <!-- Marketplace Service Highlights -->
+    <section class="storefront-shell pt-4">
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+            @foreach ([
+                ['heroicon-o-truck', 'দ্রুত ডেলিভারি', 'সারাদেশে বিশ্বস্ত কুরিয়ারে ডেলিভারি'],
+                ['heroicon-o-shield-check', 'ক্যাশ অন ডেলিভারি', 'পণ্য দেখে টাকা পরিশোধের সুবিধা'],
+                ['heroicon-o-arrow-path', 'সহজ রিটার্ন', 'ত্রুটিপূর্ণ পণ্যে দ্রুত এক্সচেঞ্জ'],
+                ['heroicon-o-chat-bubble-left-right', '২৪/৭ গ্রাহক সেবা', 'হোয়াটসঅ্যাপ ও ফোনে সহায়তা'],
+            ] as [$icon, $title, $description])
+                <div class="flex items-center gap-3.5 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
+                    <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-purple-50 text-purple-700">@svg($icon, 'size-6')</span>
+                    <div>
+                        <p class="text-xs font-bold text-slate-900 sm:text-sm">{{ $title }}</p>
+                        <p class="mt-0.5 line-clamp-1 text-[11px] text-slate-400">{{ $description }}</p>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </section>
+
     <!-- 2. Bottom Ads Banner Area (Side-by-Side Promotional Banners) -->
     <section class="storefront-shell pt-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -296,25 +316,6 @@
         </section>
     @endif
 
-    <!-- 9. Service Trust Highlights -->
-    <section class="storefront-shell pt-12">
-        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-            @foreach ([
-                ['heroicon-o-truck', 'দ্রুত ডেলিভারি', 'সারাদেশে বিশ্বস্ত কুরিয়ারে ডেলিভারি'],
-                ['heroicon-o-shield-check', 'ক্যাশ অন ডেলিভারি', 'পণ্য দেখে টাকা পরিশোধের সুবিধা'],
-                ['heroicon-o-arrow-path', 'সহজ রিটার্ন', 'ত্রুটিপূর্ণ পণ্যে দ্রুত এক্সচেঞ্জ'],
-                ['heroicon-o-chat-bubble-left-right', '২৪/৭ গ্রাহক সেবা', 'হোয়াটসঅ্যাপ ও ফোনে সহায়তা'],
-            ] as [$icon, $title, $description])
-                <div class="flex items-center gap-3.5 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
-                    <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-purple-50 text-purple-700">@svg($icon, 'size-6')</span>
-                    <div>
-                        <p class="text-xs sm:text-sm font-bold text-slate-900">{{ $title }}</p>
-                        <p class="mt-0.5 text-[11px] text-slate-400 line-clamp-1">{{ $description }}</p>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    </section>
 </div>
 
 @push('scripts')

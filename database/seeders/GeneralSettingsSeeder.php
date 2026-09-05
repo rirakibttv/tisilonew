@@ -9,6 +9,30 @@ class GeneralSettingsSeeder extends Seeder
 {
     public function run(): void
     {
+        $defaultPages = [
+            [
+                'name' => 'Contact Us',
+                'title' => 'আমাদের সঙ্গে যোগাযোগ করুন',
+                'slug' => 'contact-us',
+                'description' => '<p>Tisilo-এর পণ্য, অর্ডার, ডেলিভারি, রিটার্ন অথবা বিক্রেতা-সংক্রান্ত যেকোনো সহায়তার জন্য আমাদের সঙ্গে যোগাযোগ করুন।</p><h2>গ্রাহক সহায়তা</h2><p>আমাদের সাপোর্ট টিম আপনার প্রশ্নের দ্রুত ও নির্ভরযোগ্য উত্তর দিতে প্রস্তুত। ফোন, WhatsApp অথবা ইমেইলের মাধ্যমে যোগাযোগ করতে পারেন।</p><h2>ব্যবসায়িক যোগাযোগ</h2><p>ভেন্ডর নিবন্ধন, ব্র্যান্ড পার্টনারশিপ ও কর্পোরেট অর্ডারের জন্য যোগাযোগের সময় আপনার প্রতিষ্ঠান ও প্রয়োজনের সংক্ষিপ্ত তথ্য দিন।</p>',
+                'status' => true,
+            ],
+            [
+                'name' => 'Blog',
+                'title' => 'Tisilo Blog',
+                'slug' => 'blog',
+                'description' => '<p>স্মার্ট অনলাইন কেনাকাটা, নতুন পণ্য, অফার, লাইফস্টাইল ও মার্কেটপ্লেসের প্রয়োজনীয় আপডেট জানতে Tisilo Blog অনুসরণ করুন।</p><h2>সর্বশেষ গল্প ও গাইড</h2><p>আমাদের সম্পাদকীয় টিম নিয়মিত পণ্য বাছাইয়ের গাইড, ব্যবহারিক পরামর্শ এবং বিশেষ ক্যাম্পেইনের খবর প্রকাশ করবে। নতুন লেখা শিগগিরই আসছে।</p>',
+                'status' => true,
+            ],
+            [
+                'name' => 'About Us',
+                'title' => 'Tisilo সম্পর্কে',
+                'slug' => 'about-us',
+                'description' => '<p>Tisilo বাংলাদেশের গ্রাহক ও বিশ্বস্ত বিক্রেতাদের এক প্ল্যাটফর্মে যুক্ত করা একটি আধুনিক মাল্টি-ভেন্ডর মার্কেটপ্লেস।</p><h2>আমাদের লক্ষ্য</h2><p>যাচাইকৃত বিক্রেতা, মানসম্মত পণ্য, স্বচ্ছ মূল্য এবং নির্ভরযোগ্য ডেলিভারির মাধ্যমে অনলাইন কেনাকাটাকে সহজ ও নিরাপদ করা।</p><h2>কেন Tisilo</h2><p>আমরা গ্রাহকসেবা, নিরাপদ পেমেন্ট, সহজ রিটার্ন এবং সারা দেশে কার্যকর ডেলিভারিকে অগ্রাধিকার দিই।</p>',
+                'status' => true,
+            ],
+        ];
+
         $defaults = [
             'general' => [
                 'site_name' => 'Tisilo',
@@ -33,7 +57,7 @@ class GeneralSettingsSeeder extends Seeder
             ],
             'social' => ['links' => []],
             'contact' => ['status' => true],
-            'pages' => ['pages' => []],
+            'pages' => ['pages' => $defaultPages],
             'order_restriction' => ['order_limit_time' => 24, 'order_limit_qty' => 2, 'enabled' => false],
             'email' => [
                 'MAIL_MAILER' => 'smtp',
@@ -72,6 +96,24 @@ class GeneralSettingsSeeder extends Seeder
         ];
 
         foreach ($defaults as $key => $values) {
+            if ($key === 'pages') {
+                $current = SiteSetting::valuesFor('pages');
+                $pages = collect($current['pages'] ?? []);
+
+                foreach ($defaultPages as $page) {
+                    if (! $pages->contains(fn (array $existing): bool => ($existing['slug'] ?? null) === $page['slug'])) {
+                        $pages->push($page);
+                    }
+                }
+
+                SiteSetting::put('pages', [
+                    ...$current,
+                    'pages' => $pages->values()->all(),
+                ]);
+
+                continue;
+            }
+
             if (! SiteSetting::query()->where('key', $key)->exists()) {
                 SiteSetting::put($key, $values);
             }

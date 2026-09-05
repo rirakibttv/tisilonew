@@ -40,6 +40,39 @@
     .product-gallery-option[aria-pressed='true'] {
         @apply border-orange-500 ring-2 ring-orange-100;
     }
+
+    .storefront-content {
+        @apply text-base leading-8 text-slate-600;
+    }
+
+    .storefront-content > * + * {
+        @apply mt-5;
+    }
+
+    .storefront-content h2 {
+        @apply mt-8 text-2xl font-black leading-tight text-slate-950;
+    }
+
+    .storefront-content h3 {
+        @apply mt-7 text-xl font-black text-slate-950;
+    }
+
+    .storefront-content a {
+        @apply font-bold text-purple-700 underline underline-offset-4;
+    }
+
+    .storefront-content ul,
+    .storefront-content ol {
+        @apply space-y-2 pl-6;
+    }
+
+    .storefront-content ul {
+        list-style: disc;
+    }
+
+    .storefront-content ol {
+        list-style: decimal;
+    }
 }
 
 /* Tisilo admin shell */

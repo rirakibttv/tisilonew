@@ -44,6 +44,9 @@
                     Useful Link
                 </h3>
                 <ul class="mt-4 space-y-2.5 text-xs text-slate-400">
+                    <li><a href="{{ route('store.about') }}" class="transition hover:text-purple-400 hover:pl-1">About Us</a></li>
+                    <li><a href="{{ route('store.contact') }}" class="transition hover:text-purple-400 hover:pl-1">Contact Us</a></li>
+                    <li><a href="{{ route('store.blog') }}" class="transition hover:text-purple-400 hover:pl-1">Blog</a></li>
                     <li><a href="{{ route('store.pages.show', 'complaint') }}" class="transition hover:text-purple-400 hover:pl-1">Complaints</a></li>
                     <li><a href="{{ route('store.pages.show', 'order-procedure') }}" class="transition hover:text-purple-400 hover:pl-1">Order procedure</a></li>
                     <li><a href="{{ route('store.pages.show', 'delivery-rules') }}" class="transition hover:text-purple-400 hover:pl-1">Delivery Rules</a></li>
