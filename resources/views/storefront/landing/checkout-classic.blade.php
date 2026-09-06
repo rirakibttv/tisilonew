@@ -5,8 +5,8 @@
     $districtRegions = $regions->unique(fn (array $quote): string => mb_strtolower(trim((string) $quote['district'])))->values();
 @endphp
 
-<section id="order-now" class="scroll-mt-5 px-4 py-8 pb-28 sm:px-6 md:pb-10">
-    <div class="campaign-green-border mx-auto max-w-4xl rounded-md border-4 bg-white p-2 shadow-sm sm:p-3">
+<section id="order-now" class="storefront-shell scroll-mt-5 py-8 pb-28 md:pb-10">
+    <div class="campaign-green-border rounded-md border-4 bg-white p-2 shadow-sm sm:p-3">
         <h2 class="campaign-green-bg px-4 py-3 text-center text-lg font-black text-white sm:text-2xl">অফারটি সীমিত সময়ের জন্য, তাই অফার শেষ হওয়ার আগেই অর্ডার করুন</h2>
 
         @if($errors->any())

@@ -60,7 +60,7 @@
     @endif
 
     <header class="bg-gradient-to-r from-[#053b19] via-[#079433] to-[#053b19] text-white shadow-md">
-        <div class="mx-auto grid min-h-24 max-w-6xl items-center gap-4 px-4 py-4 sm:px-6 md:grid-cols-[180px_minmax(0,1fr)_auto]">
+        <div class="storefront-shell grid min-h-24 items-center gap-4 py-4 md:grid-cols-[180px_minmax(0,1fr)_auto]">
             <a href="{{ route('store.home') }}" class="justify-self-center md:justify-self-start" aria-label="Tisilo homepage">
                 @if($logoUrl)
                     <img src="{{ $logoUrl }}" alt="{{ $generalSettings['site_name'] ?? 'Tisilo' }}" class="h-10 w-auto object-contain">
@@ -81,7 +81,7 @@
     </header>
 
     <main>
-        <section class="mx-auto grid max-w-6xl items-stretch gap-4 px-4 py-6 sm:px-6 lg:grid-cols-2">
+        <section class="storefront-shell grid items-stretch gap-4 py-6 lg:grid-cols-2">
             <div class="flex flex-col gap-5 py-1">
                 <div class="campaign-green-border grid min-h-28 place-items-center border-2 border-dashed px-6 py-5 text-center">
                     <h1 class="text-3xl font-black leading-tight sm:text-4xl">{{ $landingPage->headline }}</h1>
@@ -112,7 +112,7 @@
             </div>
         </section>
 
-        <section class="mx-auto max-w-4xl border-x border-slate-200 px-4 py-7 sm:px-6">
+        <section class="storefront-shell border-x border-slate-200 py-7">
             <h2 class="border-b border-slate-200 pb-3 text-center font-serif text-2xl font-black">{{ $landingPage->offer_title ?: $primaryProduct->name }}</h2>
             <article class="campaign-copy mt-4 text-sm leading-7 text-slate-700">{!! $detailBody !!}</article>
             @if(count($landingPage->benefits ?? []))
@@ -124,21 +124,23 @@
             @endif
         </section>
 
-        <section class="campaign-green-border mx-auto mt-6 max-w-4xl rounded-md border-4 bg-white p-3 sm:p-6">
-            <h2 class="rounded-md bg-[#28633a] px-5 py-3 text-center font-serif text-2xl font-black text-white shadow-md">{{ $landingPage->name }}</h2>
-            @if($galleryImages->isNotEmpty())
-                <div class="mt-5 grid gap-2 sm:grid-cols-3">@foreach($galleryImages as $image)<img src="{{ $image }}" alt="{{ $landingPage->name }} ছবি {{ $loop->iteration }}" loading="lazy" class="aspect-square w-full object-cover">@endforeach</div>
-            @endif
-            <div class="mt-4 text-center"><a href="#order-now" class="campaign-bg inline-flex rounded-md border-2 border-amber-500 px-7 py-3 text-lg font-black text-white shadow-lg">অর্ডার করতে ক্লিক করুন 🛒</a></div>
+        <section class="storefront-shell mt-6">
+            <div class="campaign-green-border rounded-md border-4 bg-white p-3 sm:p-6">
+                <h2 class="rounded-md bg-[#28633a] px-5 py-3 text-center font-serif text-2xl font-black text-white shadow-md">{{ $landingPage->name }}</h2>
+                @if($galleryImages->isNotEmpty())
+                    <div class="mt-5 grid gap-2 sm:grid-cols-3">@foreach($galleryImages as $image)<img src="{{ $image }}" alt="{{ $landingPage->name }} ছবি {{ $loop->iteration }}" loading="lazy" class="aspect-square w-full object-cover">@endforeach</div>
+                @endif
+                <div class="mt-4 text-center"><a href="#order-now" class="campaign-bg inline-flex rounded-md border-2 border-amber-500 px-7 py-3 text-lg font-black text-white shadow-lg">অর্ডার করতে ক্লিক করুন 🛒</a></div>
+            </div>
         </section>
 
         @if($landingPage->video_embed_url)
-            <section class="mx-auto max-w-4xl px-4 py-8 sm:px-6"><div class="campaign-green-border overflow-hidden rounded-lg border-4 shadow-xl"><iframe src="{{ $landingPage->video_embed_url }}" title="{{ $landingPage->name }} video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="aspect-video w-full"></iframe></div></section>
+            <section class="storefront-shell py-8"><div class="campaign-green-border overflow-hidden rounded-lg border-4 shadow-xl"><iframe src="{{ $landingPage->video_embed_url }}" title="{{ $landingPage->name }} video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="aspect-video w-full"></iframe></div></section>
         @endif
 
         @include('storefront.landing.checkout-classic')
 
-        <section class="mx-auto max-w-4xl px-4 pb-12 sm:px-6">
+        <section class="storefront-shell pb-12">
             <h2 class="campaign-green-bg px-5 py-3 text-center text-2xl font-black text-white">কাস্টমার রিভিউ</h2>
             @if($reviewImages->isNotEmpty())
                 <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">@foreach($reviewImages as $image)<img src="{{ $image }}" alt="কাস্টমার রিভিউ ছবি {{ $loop->iteration }}" loading="lazy" class="aspect-square w-full object-cover">@endforeach</div>
@@ -150,7 +152,7 @@
         </section>
 
         @if(count($landingPage->faqs ?? []))
-            <section class="mx-auto max-w-4xl px-4 pb-14 sm:px-6"><h2 class="campaign-green-bg px-5 py-3 text-center text-2xl font-black text-white">সাধারণ প্রশ্ন ও উত্তর</h2><div class="mt-5 space-y-3">@foreach($landingPage->faqs as $faq)<details class="rounded-xl border border-slate-200 p-5"><summary class="cursor-pointer font-black">{{ $faq['question'] ?? '' }}</summary><p class="mt-3 text-sm leading-7 text-slate-600">{{ $faq['answer'] ?? '' }}</p></details>@endforeach</div></section>
+            <section class="storefront-shell pb-14"><h2 class="campaign-green-bg px-5 py-3 text-center text-2xl font-black text-white">সাধারণ প্রশ্ন ও উত্তর</h2><div class="mt-5 space-y-3">@foreach($landingPage->faqs as $faq)<details class="rounded-xl border border-slate-200 p-5"><summary class="cursor-pointer font-black">{{ $faq['question'] ?? '' }}</summary><p class="mt-3 text-sm leading-7 text-slate-600">{{ $faq['answer'] ?? '' }}</p></details>@endforeach</div></section>
         @endif
     </main>
 

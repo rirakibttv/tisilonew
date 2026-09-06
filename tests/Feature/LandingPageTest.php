@@ -39,6 +39,8 @@ class LandingPageTest extends TestCase
             ->assertOk()
             ->assertSee($published->headline)
             ->assertSee($product->name)
+            ->assertSee('class="storefront-shell grid items-stretch', false)
+            ->assertSee('id="order-now" class="storefront-shell', false)
             ->assertSee('এখনই অর্ডার করুন');
 
         $this->get(route('store.landing.show', $draft))->assertNotFound();
