@@ -106,7 +106,6 @@
                 </div>
                 <input type="hidden" name="customer_email" value="{{ old('customer_email', auth()->user()?->email) }}">
                 <input type="hidden" name="payment_method" value="cod">
-                <label class="mt-3 flex items-start gap-2 text-[11px] leading-5 text-slate-600"><input type="checkbox" name="terms" value="1" @checked(old('terms')) required class="mt-1 size-4 shrink-0 accent-green-700"><span>আমি অর্ডার, ডেলিভারি ও রিটার্ন সংক্রান্ত শর্তাবলিতে সম্মত।</span></label>
                 @if($preview)<p class="mt-3 text-xs font-bold text-amber-700">প্রিভিউতে অর্ডার বন্ধ আছে।</p>@endif
                 <button type="submit" data-campaign-submit @disabled($preview) class="campaign-green-bg mt-3 min-h-12 w-full rounded px-5 py-3 text-sm font-black text-white shadow disabled:opacity-50">অর্ডার সম্পন্ন করুন</button>
             </div>

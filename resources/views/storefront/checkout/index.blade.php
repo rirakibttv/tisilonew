@@ -102,11 +102,6 @@
                     <div class="flex justify-between border-t border-slate-100 pt-3 text-base"><span class="font-black text-slate-900">সর্বমোট</span><span class="font-black text-slate-900" data-order-total>৳{{ number_format($subtotal, 0) }}</span></div>
                 </div>
 
-                <label class="mt-6 flex items-start gap-3 text-xs leading-5 text-slate-500">
-                    <input type="checkbox" name="terms" value="1" required class="mt-0.5 size-4 shrink-0 accent-orange-500">
-                    <span>আমি অর্ডার, ডেলিভারি ও রিটার্ন সংক্রান্ত শর্তাবলিতে সম্মত।</span>
-                </label>
-
                 @if ($checkoutNote)
                     <div class="prose prose-sm mt-4 max-w-none rounded-xl bg-slate-50 p-4 text-xs text-slate-500">{!! $checkoutNote !!}</div>
                 @endif

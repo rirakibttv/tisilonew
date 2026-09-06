@@ -44,7 +44,9 @@ class CheckoutTest extends TestCase
         $this->get(route('store.checkout.index'))
             ->assertOk()
             ->assertSee('অর্ডার সম্পন্ন করুন')
-            ->assertSee('Checkout Product');
+            ->assertSee('Checkout Product')
+            ->assertDontSee('name="terms"', false)
+            ->assertDontSee('আমি অর্ডার, ডেলিভারি ও রিটার্ন সংক্রান্ত শর্তাবলিতে সম্মত।');
 
         $response = $this->post(route('store.checkout.store'), $this->checkoutData());
         $order = Order::query()->sole();
@@ -164,7 +166,6 @@ class CheckoutTest extends TestCase
             'address_line' => 'House 10, Road 5',
             'shipping_region_id' => $this->shippingRegionId,
             'payment_method' => 'cod',
-            'terms' => '1',
         ];
     }
 

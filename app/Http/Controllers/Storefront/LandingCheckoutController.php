@@ -66,7 +66,6 @@ class LandingCheckoutController extends Controller
                 'shipping_region_id' => ['required', 'integer'],
                 'payment_method' => ['required', Rule::in(['cod'])],
                 'notes' => ['nullable', 'string', 'max:1000'],
-                'terms' => ['accepted'],
             ], [
                 'customer_name.required' => 'আপনার নাম লিখুন।',
                 'customer_phone.required' => 'মোবাইল নম্বর লিখুন।',
@@ -75,7 +74,6 @@ class LandingCheckoutController extends Controller
                 'district_search.required' => 'জেলার নাম লিখে তালিকা থেকে নির্বাচন করুন।',
                 'thana.required' => 'থানা বা উপজেলার নাম লিখুন।',
                 'shipping_region_id.required' => 'জেলার নাম লিখে তালিকা থেকে নির্বাচন করুন।',
-                'terms.accepted' => 'অর্ডারের শর্তাবলিতে সম্মতি দিন।',
             ])->validate();
 
             $cart = $selection->cart($landingPage, $validated);

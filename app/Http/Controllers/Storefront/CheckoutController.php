@@ -69,7 +69,6 @@ class CheckoutController extends Controller
             'shipping_region_id' => ['required', 'integer', Rule::in($regions->keys()->all())],
             'payment_method' => ['required', Rule::in(['cod'])],
             'notes' => ['nullable', 'string', 'max:1000'],
-            'terms' => ['accepted'],
         ], [
             'customer_name.required' => 'আপনার নাম লিখুন।',
             'customer_phone.required' => 'মোবাইল নম্বর লিখুন।',
@@ -77,7 +76,6 @@ class CheckoutController extends Controller
             'address_line.required' => 'সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন।',
             'shipping_region_id.required' => 'উপজেলা/থানা নির্বাচন করুন।',
             'shipping_region_id.in' => 'এই এলাকায় নির্বাচিত পণ্যের shipping rate পাওয়া যায়নি।',
-            'terms.accepted' => 'অর্ডার করতে শর্তাবলিতে সম্মতি দিন।',
         ]);
 
         $quote = $regions->get((int) $validated['shipping_region_id']);

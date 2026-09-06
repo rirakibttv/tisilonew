@@ -112,10 +112,6 @@
                     </label>
                 </div>
                 <input type="hidden" name="payment_method" value="cod">
-                <label class="mt-5 flex items-start gap-3 text-xs leading-6 text-slate-600">
-                    <input type="checkbox" name="terms" value="1" @checked(old('terms')) required class="mt-1 size-4 shrink-0 accent-orange-500">
-                    <span>আমি অর্ডার, ডেলিভারি ও রিটার্ন সংক্রান্ত শর্তাবলিতে সম্মত।</span>
-                </label>
                 @if($preview)<p class="mt-4 text-sm font-bold text-amber-700">প্রিভিউতে অর্ডার বন্ধ আছে। পেজ প্রকাশ করার পরে অর্ডার নেওয়া যাবে।</p>@endif
                 <button type="submit" data-campaign-submit @disabled($preview) class="campaign-bg mt-5 min-h-14 w-full rounded-2xl px-5 py-4 text-base font-black text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50">অর্ডার নিশ্চিত করুন</button>
                 <p class="mt-3 text-center text-xs text-slate-500">অ্যাকাউন্ট ছাড়াই অর্ডার করতে পারবেন।</p>

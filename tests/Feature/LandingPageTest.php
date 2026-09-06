@@ -145,6 +145,8 @@ class LandingPageTest extends TestCase
             ->assertSee('name="thana"', false)
             ->assertSee('name="shipping_region_id"', false)
             ->assertSee(route('store.landing.order', $campaign), false)
+            ->assertDontSee('name="terms"', false)
+            ->assertDontSee('আমি অর্ডার, ডেলিভারি ও রিটার্ন সংক্রান্ত শর্তাবলিতে সম্মত।')
             ->assertDontSee('name="redirect_to"', false);
         $token = session('landing_checkout.'.$campaign->id.'.token');
         $payload = [...$this->checkoutData(), 'checkout_token' => $token, 'product_id' => $product->id, 'quantity' => 2, 'price' => 1, 'shipping_amount' => 0];
@@ -345,7 +347,6 @@ class LandingPageTest extends TestCase
             'thana' => 'Mirpur',
             'shipping_region_id' => $this->shippingRegionId,
             'payment_method' => 'cod',
-            'terms' => '1',
         ];
     }
 }
