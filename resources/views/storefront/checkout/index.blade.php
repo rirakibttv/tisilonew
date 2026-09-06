@@ -3,6 +3,10 @@
 @section('title', 'চেকআউট — Tisilo')
 
 @section('content')
+    @php
+        $selectedQuote = $regions->get((int) old('shipping_region_id'));
+        $districtRegions = $regions->unique(fn (array $quote): string => mb_strtolower(trim((string) $quote['district'])))->values();
+    @endphp
     <section class="border-b border-slate-200 bg-white">
         <div class="storefront-shell py-10">
             <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">Secure checkout</p>
@@ -34,10 +38,6 @@
                             মোবাইল নম্বর <span class="text-rose-500">*</span>
                             <input name="customer_phone" value="{{ old('customer_phone', auth()->user()?->phone) }}" required inputmode="tel" autocomplete="tel" placeholder="01XXXXXXXXX" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
                         </label>
-                        <label class="text-sm font-bold text-slate-700 sm:col-span-2">
-                            ইমেইল (ঐচ্ছিক)
-                            <input type="email" name="customer_email" value="{{ old('customer_email', auth()->user()?->email) }}" autocomplete="email" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
-                        </label>
                     </div>
                 </div>
 
@@ -48,17 +48,23 @@
                             সম্পূর্ণ ঠিকানা <span class="text-rose-500">*</span>
                             <textarea name="address_line" required rows="3" autocomplete="street-address" placeholder="বাসা/রোড/এলাকার বিস্তারিত ঠিকানা" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">{{ old('address_line') }}</textarea>
                         </label>
-                        <label class="text-sm font-bold text-slate-700 sm:col-span-2">
-                            উপজেলা/থানা নির্বাচন করুন <span class="text-rose-500">*</span>
-                            <select name="shipping_region_id" required data-shipping-region class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
-                                <option value="">Division › District › Upazila/থানা</option>
-                                @foreach ($regions as $regionId => $quote)
-                                    <option value="{{ $regionId }}" @selected((string) old('shipping_region_id') === (string) $regionId)>{{ $quote['name'] }} — ৳{{ number_format($quote['amount'], 0) }} ({{ $quote['estimated_min_days'] }}–{{ $quote['estimated_max_days'] }} দিন)</option>
+                        <div class="relative text-sm font-bold text-slate-700 sm:col-span-2" data-district-combobox>
+                            <label for="checkout-district">জেলার নাম লিখুন <span class="text-rose-500">*</span></label>
+                            <input id="checkout-district" name="district_search" type="text" value="{{ old('district_search', $selectedQuote['district'] ?? '') }}" required autocomplete="off" placeholder="জেলা লিখে নির্বাচন করুন" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="checkout-district-options" data-district-search class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
+                            <input type="hidden" name="shipping_region_id" value="{{ old('shipping_region_id') }}" data-shipping-region>
+                            <div id="checkout-district-options" data-district-options role="listbox" class="absolute inset-x-0 top-full z-30 mt-1 hidden max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+                                @foreach ($districtRegions as $quote)
+                                    <button type="button" role="option" data-region-option data-region-id="{{ $quote['region_id'] }}" class="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-orange-50"><span>{{ $quote['district'] }}</span><span class="text-xs font-semibold text-slate-500">৳{{ number_format($quote['amount'], 0) }}</span></button>
                                 @endforeach
-                            </select>
+                            </div>
                             @if ($regions->isEmpty())
                                 <span class="mt-2 block text-xs text-rose-600">এই কার্টের Shipping Class-এর জন্য কোনো সক্রিয় Region rate পাওয়া যায়নি।</span>
                             @endif
+                        </div>
+                        <label class="text-sm font-bold text-slate-700 sm:col-span-2">
+                            থানা/উপজেলা লিখুন <span class="text-rose-500">*</span>
+                            <input name="thana" value="{{ old('thana') }}" required maxlength="120" autocomplete="address-level3" placeholder="থানা বা উপজেলার নাম" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
+                            <span class="mt-2 block text-xs font-normal text-slate-500">ডেলিভারি লোকেশন নিশ্চিত করতে লিখুন; চার্জ জেলা অনুযায়ী হিসাব হবে।</span>
                         </label>
                     </div>
                 </div>
@@ -98,15 +104,15 @@
 
                 <div class="mt-5 space-y-3 border-t border-slate-200 pt-5 text-sm">
                     <div class="flex justify-between"><span class="text-slate-500">সাবটোটাল</span><span class="font-bold">৳{{ number_format($subtotal, 0) }}</span></div>
-                    <div class="flex justify-between"><span class="text-slate-500">ডেলিভারি</span><span class="font-bold text-orange-600" data-shipping-amount>এলাকা নির্বাচন করুন</span></div>
-                    <div class="flex justify-between border-t border-slate-100 pt-3 text-base"><span class="font-black text-slate-900">সর্বমোট</span><span class="font-black text-slate-900" data-order-total>৳{{ number_format($subtotal, 0) }}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">ডেলিভারি</span><span class="font-bold text-orange-600" data-shipping-amount>{{ $selectedQuote ? '৳'.number_format($selectedQuote['amount'], 0) : 'জেলা নির্বাচন করুন' }}</span></div>
+                    <div class="flex justify-between border-t border-slate-100 pt-3 text-base"><span class="font-black text-slate-900">সর্বমোট</span><span class="font-black text-slate-900" data-order-total>{{ $selectedQuote ? '৳'.number_format($subtotal + $selectedQuote['amount'], 0) : 'জেলা নির্বাচন করুন' }}</span></div>
                 </div>
 
                 @if ($checkoutNote)
                     <div class="prose prose-sm mt-4 max-w-none rounded-xl bg-slate-50 p-4 text-xs text-slate-500">{!! $checkoutNote !!}</div>
                 @endif
 
-                <button class="mt-6 h-12 w-full rounded-xl bg-orange-500 px-5 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600">অর্ডার নিশ্চিত করুন</button>
+                <button data-checkout-submit class="mt-6 h-12 w-full rounded-xl bg-orange-500 px-5 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50">অর্ডার নিশ্চিত করুন</button>
                 <a href="{{ route('store.cart.index') }}" class="mt-4 block text-center text-sm font-bold text-slate-500 hover:text-orange-600">কার্টে ফিরে যান</a>
             </aside>
         </form>
@@ -118,20 +124,113 @@
     <script>
         (() => {
             const form = document.querySelector('[data-shipping-checkout]');
-            const select = form?.querySelector('[data-shipping-region]');
+            const region = form?.querySelector('[data-shipping-region]');
+            const districtSearch = form?.querySelector('[data-district-search]');
+            const districtOptions = form?.querySelector('[data-district-options]');
+            const submit = form?.querySelector('[data-checkout-submit]');
             const quotesElement = document.getElementById('shipping-quotes');
-            if (! form || ! select || ! quotesElement) return;
+            if (! form || ! region || ! districtSearch || ! districtOptions || ! submit || ! quotesElement) return;
 
             const quotes = JSON.parse(quotesElement.textContent || '{}');
+            const quoteList = Object.values(quotes);
             const subtotal = Number(form.dataset.subtotal || 0);
             const money = value => `৳${new Intl.NumberFormat('bn-BD', { maximumFractionDigits: 0 }).format(value)}`;
+            const districtLabel = quote => String(quote?.district || quote?.name || '').trim();
+            const districtQuotes = () => {
+                const seen = new Set();
+
+                return quoteList.filter(quote => {
+                    const key = districtLabel(quote).toLocaleLowerCase('bn-BD');
+                    if (! key || seen.has(key)) return false;
+                    seen.add(key);
+
+                    return true;
+                });
+            };
+            const closeOptions = () => {
+                districtOptions.classList.add('hidden');
+                districtSearch.setAttribute('aria-expanded', 'false');
+            };
+            const renderOptions = (filter = '') => {
+                const query = filter.trim().toLocaleLowerCase('bn-BD');
+                const matches = districtQuotes().filter(quote => districtLabel(quote).toLocaleLowerCase('bn-BD').includes(query));
+                districtOptions.replaceChildren();
+                matches.forEach(quote => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.role = 'option';
+                    button.dataset.regionOption = '';
+                    button.dataset.regionId = quote.region_id;
+                    button.className = 'flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-orange-50';
+                    const label = document.createElement('span');
+                    label.className = 'font-bold';
+                    label.textContent = districtLabel(quote);
+                    const price = document.createElement('span');
+                    price.className = 'text-xs font-semibold text-slate-500';
+                    price.textContent = money(Number(quote.amount));
+                    button.append(label, price);
+                    districtOptions.append(button);
+                });
+                if (! matches.length) {
+                    const empty = document.createElement('p');
+                    empty.className = 'px-3 py-3 text-xs font-semibold text-rose-600';
+                    empty.textContent = 'এই জেলার জন্য ডেলিভারি রেট পাওয়া যায়নি।';
+                    districtOptions.append(empty);
+                }
+            };
             const update = () => {
-                const quote = quotes[select.value];
-                form.querySelector('[data-shipping-amount]').textContent = quote ? money(Number(quote.amount)) : 'এলাকা নির্বাচন করুন';
-                form.querySelector('[data-order-total]').textContent = money(subtotal + Number(quote?.amount || 0));
+                const quote = quotes[region.value];
+                form.querySelector('[data-shipping-amount]').textContent = quote ? money(Number(quote.amount)) : 'জেলা নির্বাচন করুন';
+                form.querySelector('[data-order-total]').textContent = quote ? money(subtotal + Number(quote.amount)) : 'জেলা নির্বাচন করুন';
+                submit.disabled = ! quote;
+            };
+            const selectDistrict = quote => {
+                if (! quote) return;
+                region.value = String(quote.region_id);
+                districtSearch.value = districtLabel(quote);
+                closeOptions();
+                update();
             };
 
-            select.addEventListener('change', update);
+            districtSearch.addEventListener('focus', () => {
+                renderOptions(districtSearch.value);
+                districtOptions.classList.remove('hidden');
+                districtSearch.setAttribute('aria-expanded', 'true');
+            });
+            districtSearch.addEventListener('input', () => {
+                const value = districtSearch.value.trim().toLocaleLowerCase('bn-BD');
+                const exact = districtQuotes().find(quote => districtLabel(quote).toLocaleLowerCase('bn-BD') === value);
+                region.value = exact ? String(exact.region_id) : '';
+                renderOptions(districtSearch.value);
+                districtOptions.classList.remove('hidden');
+                districtSearch.setAttribute('aria-expanded', 'true');
+                update();
+            });
+            districtSearch.addEventListener('keydown', event => {
+                if (event.key === 'Escape') closeOptions();
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    districtOptions.querySelector('[data-region-option]')?.focus();
+                }
+                if (event.key === 'Enter') {
+                    const first = districtOptions.querySelector('[data-region-option]');
+                    if (first && ! districtOptions.classList.contains('hidden')) {
+                        event.preventDefault();
+                        selectDistrict(quotes[first.dataset.regionId]);
+                    }
+                }
+            });
+            districtOptions.addEventListener('click', event => {
+                const option = event.target.closest('[data-region-option]');
+                if (option) selectDistrict(quotes[option.dataset.regionId]);
+            });
+            document.addEventListener('click', event => {
+                if (! event.target.closest('[data-district-combobox]')) closeOptions();
+            });
+            form.addEventListener('submit', event => {
+                if (! region.value) event.preventDefault();
+            });
+            renderOptions();
             update();
         })();
     </script>

@@ -64,8 +64,9 @@ class CheckoutController extends Controller
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:32', 'regex:/^[0-9+\-\s]{8,20}$/'],
-            'customer_email' => ['nullable', 'email', 'max:255'],
             'address_line' => ['required', 'string', 'max:500'],
+            'district_search' => ['required', 'string', 'max:120'],
+            'thana' => ['required', 'string', 'max:120'],
             'shipping_region_id' => ['required', 'integer', Rule::in($regions->keys()->all())],
             'payment_method' => ['required', Rule::in(['cod'])],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -74,14 +75,16 @@ class CheckoutController extends Controller
             'customer_phone.required' => 'মোবাইল নম্বর লিখুন।',
             'customer_phone.regex' => 'সঠিক মোবাইল নম্বর লিখুন।',
             'address_line.required' => 'সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন।',
-            'shipping_region_id.required' => 'উপজেলা/থানা নির্বাচন করুন।',
+            'district_search.required' => 'জেলার নাম লিখে তালিকা থেকে নির্বাচন করুন।',
+            'thana.required' => 'থানা বা উপজেলার নাম লিখুন।',
+            'shipping_region_id.required' => 'জেলার নাম লিখে তালিকা থেকে নির্বাচন করুন।',
             'shipping_region_id.in' => 'এই এলাকায় নির্বাচিত পণ্যের shipping rate পাওয়া যায়নি।',
         ]);
 
         $quote = $regions->get((int) $validated['shipping_region_id']);
         $validated['division'] = $quote['division'];
         $validated['district'] = $quote['district'];
-        $validated['upazila'] = $quote['upazila'];
+        $validated['upazila'] = $validated['thana'];
         $validated['postal_code'] = $quote['postal_code'];
         $validated['landing_page_id'] = $this->activeLandingPage($request)?->getKey();
         $validated['marketing_attribution'] = $this->marketingAttribution($request);

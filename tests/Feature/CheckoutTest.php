@@ -45,6 +45,10 @@ class CheckoutTest extends TestCase
             ->assertOk()
             ->assertSee('অর্ডার সম্পন্ন করুন')
             ->assertSee('Checkout Product')
+            ->assertSee('name="district_search"', false)
+            ->assertSee('data-district-options', false)
+            ->assertSee('name="thana"', false)
+            ->assertDontSee('name="customer_email"', false)
             ->assertDontSee('name="terms"', false)
             ->assertDontSee('আমি অর্ডার, ডেলিভারি ও রিটার্ন সংক্রান্ত শর্তাবলিতে সম্মত।');
 
@@ -61,6 +65,9 @@ class CheckoutTest extends TestCase
         $this->assertSame('cod', $order->payment_method);
         $this->assertSame('2580.00', $order->total_amount);
         $this->assertSame($this->shippingRegionId, $order->shipping_region_id);
+        $this->assertNull($order->customer_email);
+        $this->assertSame('Dhaka', $order->shipping_address['district']);
+        $this->assertSame('Mirpur Model', $order->shipping_address['upazila']);
         $this->assertSame('Standard', $order->shipping_breakdown['classes'][0]['shipping_class']);
         $this->assertDatabaseHas('order_items', [
             'order_id' => $order->id,
@@ -162,8 +169,9 @@ class CheckoutTest extends TestCase
         return [
             'customer_name' => 'Checkout Customer',
             'customer_phone' => '01700000000',
-            'customer_email' => 'checkout@example.com',
             'address_line' => 'House 10, Road 5',
+            'district_search' => 'Dhaka',
+            'thana' => 'Mirpur Model',
             'shipping_region_id' => $this->shippingRegionId,
             'payment_method' => 'cod',
         ];
