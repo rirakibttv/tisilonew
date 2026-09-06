@@ -59,13 +59,13 @@
                             <option value="{{ $variation['id'] }}" @selected($initialSelection['product_variation_id'] === $variation['id']) @disabled($variation['available'] < 1)>{{ $variation['label'] }} — ৳{{ number_format($variation['price'], 2) }}</option>
                         @endforeach
                     </select>
-                    <div data-variation-options class="mt-2 flex gap-2 overflow-x-auto pb-2" role="group" aria-label="পণ্যের ভ্যারিয়েশন নির্বাচন করুন">
+                    <div data-variation-options class="mt-2 grid grid-cols-1 gap-2 pb-2" role="group" aria-label="পণ্যের ভ্যারিয়েশন নির্বাচন করুন">
                         @foreach($selectedProduct['variations'] as $variation)
-                            <button type="button" data-variation-option="{{ $variation['id'] }}" aria-pressed="{{ $initialSelection['product_variation_id'] === $variation['id'] ? 'true' : 'false' }}" @disabled($variation['available'] < 1) class="campaign-variation-option relative min-w-36 shrink-0 rounded-lg border-2 border-slate-200 bg-white p-2 text-left disabled:opacity-40">
+                            <button type="button" data-variation-option="{{ $variation['id'] }}" aria-pressed="{{ $initialSelection['product_variation_id'] === $variation['id'] ? 'true' : 'false' }}" @disabled($variation['available'] < 1) class="campaign-variation-option relative flex w-full items-center gap-3 rounded-lg border-2 border-slate-200 bg-white p-2 text-left disabled:opacity-40">
                                 <span class="campaign-variation-check absolute right-1 top-1 hidden size-5 place-items-center rounded-full text-[10px] font-black text-white">✓</span>
-                                @if($variation['image'])<img src="{{ $variation['image'] }}" alt="{{ $variation['label'] }}" loading="lazy" class="mb-2 size-12 object-cover">@endif
-                                <span class="block text-[11px] font-bold leading-4">{{ $variation['label'] }}</span>
-                                <span class="campaign-text mt-1 block text-xs font-black">৳{{ number_format($variation['price'], 2) }}</span>
+                                @if($variation['image'])<img src="{{ $variation['image'] }}" alt="{{ $variation['label'] }}" loading="lazy" class="size-14 shrink-0 object-cover">@endif
+                                <span class="min-w-0 flex-1 text-[11px] font-bold leading-4">{{ $variation['label'] }}</span>
+                                <span class="campaign-text shrink-0 pr-7 text-xs font-black">৳{{ number_format($variation['price'], 2) }}</span>
                             </button>
                         @endforeach
                     </div>

@@ -44,21 +44,21 @@
                             <option value="{{ $variation['id'] }}" @selected($initialSelection['product_variation_id'] === $variation['id']) @disabled($variation['available'] < 1)>{{ $variation['label'] }} — ৳{{ number_format($variation['price'], 2) }}{{ $variation['available'] < 1 ? ' (স্টক নেই)' : '' }}</option>
                         @endforeach
                     </select>
-                    <div data-variation-options class="mt-3 flex gap-3 overflow-x-auto px-1 pb-3 pt-1" role="group" aria-label="পণ্যের ভ্যারিয়েশন নির্বাচন করুন">
+                    <div data-variation-options class="mt-3 grid grid-cols-1 gap-3 px-1 pb-3 pt-1" role="group" aria-label="পণ্যের ভ্যারিয়েশন নির্বাচন করুন">
                         @foreach($selectedProduct['variations'] as $variation)
                             <button
                                 type="button"
                                 data-variation-option="{{ $variation['id'] }}"
                                 aria-pressed="{{ $initialSelection['product_variation_id'] === $variation['id'] ? 'true' : 'false' }}"
                                 @disabled($variation['available'] < 1)
-                                class="campaign-variation-option relative min-w-44 max-w-56 shrink-0 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-3 text-left transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-45"
+                                class="campaign-variation-option relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-3 text-left transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-45"
                             >
                                 <span class="campaign-variation-check absolute right-1.5 top-1.5 hidden size-6 place-items-center rounded-full text-xs font-black text-white">✓</span>
                                 @if($variation['image'])
-                                    <img src="{{ $variation['image'] }}" alt="{{ $variation['label'] }}" loading="lazy" class="mb-2 aspect-square w-20 rounded-xl bg-slate-50 object-cover">
+                                    <img src="{{ $variation['image'] }}" alt="{{ $variation['label'] }}" loading="lazy" class="size-16 shrink-0 rounded-xl bg-slate-50 object-cover">
                                 @endif
-                                <span class="block break-words text-xs font-bold leading-5">{{ $variation['label'] }}</span>
-                                <span class="campaign-text mt-1 block text-sm font-black">৳{{ number_format($variation['price'], 2) }}</span>
+                                <span class="min-w-0 flex-1 break-words text-xs font-bold leading-5">{{ $variation['label'] }}</span>
+                                <span class="campaign-text shrink-0 pr-8 text-sm font-black">৳{{ number_format($variation['price'], 2) }}</span>
                                 @if($variation['available'] < 1)<span class="mt-1 block text-[10px] font-bold text-rose-600">স্টক নেই</span>@endif
                             </button>
                         @endforeach

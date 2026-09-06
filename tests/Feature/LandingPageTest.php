@@ -191,7 +191,7 @@ class LandingPageTest extends TestCase
         $campaign->products()->attach($product);
         $selection = ['product_id' => $product->id, 'product_variation_id' => $variation->id, 'quantity' => 2, 'price' => 1];
         $this->get(route('store.landing.show', $campaign))->assertOk()
-            ->assertSee('data-variation-options', false)
+            ->assertSee('data-variation-options class="mt-2 grid grid-cols-1', false)
             ->assertSee('data-variation-option="'.$variation->id.'"', false)
             ->assertSee(asset('storage/products/variations/blue.jpg'), false);
         $this->postJson(route('store.landing.quote', $campaign), $selection)->assertOk()

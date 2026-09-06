@@ -93,7 +93,7 @@ if (campaignForm && campaignData) {
         button.dataset.variationOption = item.id;
         button.disabled = item.available < 1;
         button.setAttribute('aria-pressed', 'false');
-        button.className = 'campaign-variation-option relative min-w-44 max-w-56 shrink-0 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-3 text-left transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-45';
+        button.className = 'campaign-variation-option relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-3 text-left transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-45';
 
         const check = document.createElement('span');
         check.className = 'campaign-variation-check absolute right-1.5 top-1.5 hidden size-6 place-items-center rounded-full text-xs font-black text-white';
@@ -105,17 +105,17 @@ if (campaignForm && campaignData) {
             image.src = item.image;
             image.alt = item.label;
             image.loading = 'lazy';
-            image.className = 'mb-2 aspect-square w-20 rounded-xl bg-slate-50 object-cover';
+            image.className = 'size-16 shrink-0 rounded-xl bg-slate-50 object-cover';
             button.append(image);
         }
 
         const label = document.createElement('span');
-        label.className = 'block break-words text-xs font-bold leading-5';
+        label.className = 'min-w-0 flex-1 break-words text-xs font-bold leading-5';
         label.textContent = item.label;
         button.append(label);
 
         const price = document.createElement('span');
-        price.className = 'campaign-text mt-1 block text-sm font-black';
+        price.className = 'campaign-text shrink-0 pr-8 text-sm font-black';
         price.textContent = money(item.price);
         button.append(price);
 
