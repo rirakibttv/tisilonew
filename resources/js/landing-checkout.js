@@ -7,6 +7,8 @@ if (campaignForm && campaignData) {
     const variation = campaignForm.elements.product_variation_id;
     const quantity = campaignForm.elements.quantity;
     const region = campaignForm.elements.shipping_region_id;
+    const districtSearch = campaignForm.querySelector('[data-district-search]');
+    const districtOptions = campaignForm.querySelector('[data-district-options]');
     const variationOptions = campaignForm.querySelector('[data-variation-options]');
     const selectedVariationLabel = campaignForm.querySelector('[data-selected-variation-label]');
     const submit = campaignForm.querySelector('[data-campaign-submit]');
@@ -25,6 +27,59 @@ if (campaignForm && campaignData) {
 
     const selectedProduct = () => data.products.find(item => String(item.id) === product.value);
     const selectedOption = () => selectedProduct()?.variations.find(item => String(item.id) === variation.value);
+    const districtLabel = item => String(item?.district || item?.name || '').trim();
+    const districtQuotes = () => {
+        const seen = new Set();
+
+        return regions.filter(item => {
+            const key = districtLabel(item).toLocaleLowerCase('bn-BD');
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+
+            return true;
+        });
+    };
+    const closeDistrictOptions = () => {
+        districtOptions?.classList.add('hidden');
+        districtSearch?.setAttribute('aria-expanded', 'false');
+    };
+    const renderDistrictOptions = (filter = '') => {
+        if (!districtOptions) return;
+        const query = filter.trim().toLocaleLowerCase('bn-BD');
+        const matches = districtQuotes().filter(item => districtLabel(item).toLocaleLowerCase('bn-BD').includes(query));
+        districtOptions.replaceChildren();
+        matches.forEach(item => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.role = 'option';
+            button.dataset.regionOption = '';
+            button.dataset.regionId = item.region_id;
+            button.dataset.regionDistrict = districtLabel(item);
+            button.className = 'flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-green-50';
+
+            const label = document.createElement('span');
+            label.className = 'font-semibold';
+            label.textContent = districtLabel(item);
+            const price = document.createElement('span');
+            price.className = 'text-xs text-slate-500';
+            price.textContent = money(item.amount);
+            button.append(label, price);
+            districtOptions.append(button);
+        });
+        if (!matches.length) {
+            const empty = document.createElement('p');
+            empty.className = 'px-3 py-3 text-xs text-rose-600';
+            empty.textContent = 'এই জেলার জন্য ডেলিভারি রেট পাওয়া যায়নি।';
+            districtOptions.append(empty);
+        }
+    };
+    const selectDistrict = item => {
+        if (!item) return;
+        region.value = String(item.region_id);
+        districtSearch.value = districtLabel(item);
+        closeDistrictOptions();
+        updateTotals();
+    };
     const syncVariationOptions = () => {
         const option = selectedOption();
         variationOptions?.querySelectorAll('[data-variation-option]').forEach(button => {
@@ -91,8 +146,8 @@ if (campaignForm && campaignData) {
     const updateTotals = () => {
         const quote = regions.find(item => String(item.region_id) === region.value);
         campaignForm.querySelector('[data-campaign-subtotal]').textContent = money(subtotal);
-        campaignForm.querySelector('[data-campaign-shipping]').textContent = ready && quote ? money(quote.amount) : 'উপজেলা/থানা নির্বাচন করুন';
-        campaignForm.querySelector('[data-campaign-total]').textContent = ready && quote ? money(subtotal + Number(quote.amount)) : 'এলাকা নির্বাচন করুন';
+        campaignForm.querySelector('[data-campaign-shipping]').textContent = ready && quote ? money(quote.amount) : 'জেলা নির্বাচন করুন';
+        campaignForm.querySelector('[data-campaign-total]').textContent = ready && quote ? money(subtotal + Number(quote.amount)) : 'জেলা নির্বাচন করুন';
         submit.disabled = preview || !ready || !quote || submitting;
     };
     const updateProduct = (resetVariation = false) => {
@@ -141,9 +196,19 @@ if (campaignForm && campaignData) {
             if (optionPrice) optionPrice.textContent = money(option.price);
             regions = payload.regions;
             const previousRegion = region.value;
-            region.replaceChildren(new Option('বিভাগ › জেলা › উপজেলা/থানা নির্বাচন করুন', ''));
-            regions.forEach(item => region.add(new Option(`${item.name} — ${money(item.amount)}`, item.region_id)));
-            if (regions.some(item => String(item.region_id) === previousRegion)) region.value = previousRegion;
+            const previousDistrict = districtSearch.value;
+            renderDistrictOptions(previousDistrict);
+            const previousQuote = regions.find(item => String(item.region_id) === previousRegion);
+            const matchingDistrict = districtQuotes().find(item => districtLabel(item).toLocaleLowerCase('bn-BD') === previousDistrict.trim().toLocaleLowerCase('bn-BD'));
+            if (previousQuote) {
+                region.value = previousRegion;
+                districtSearch.value = districtLabel(previousQuote);
+            } else if (matchingDistrict) {
+                region.value = String(matchingDistrict.region_id);
+                districtSearch.value = districtLabel(matchingDistrict);
+            } else {
+                region.value = '';
+            }
             ready = regions.length > 0;
             status.textContent = ready ? '' : 'নির্বাচিত পণ্যের জন্য কোনো সক্রিয় ডেলিভারি রেট নেই।';
             retry.hidden = ready;
@@ -177,7 +242,41 @@ if (campaignForm && campaignData) {
         queueQuote();
     });
     quantity.addEventListener('input', queueQuote);
-    region.addEventListener('change', updateTotals);
+    districtSearch?.addEventListener('focus', () => {
+        renderDistrictOptions(districtSearch.value);
+        districtOptions?.classList.remove('hidden');
+        districtSearch.setAttribute('aria-expanded', 'true');
+    });
+    districtSearch?.addEventListener('input', () => {
+        const exact = districtQuotes().find(item => districtLabel(item).toLocaleLowerCase('bn-BD') === districtSearch.value.trim().toLocaleLowerCase('bn-BD'));
+        region.value = exact ? String(exact.region_id) : '';
+        renderDistrictOptions(districtSearch.value);
+        districtOptions?.classList.remove('hidden');
+        districtSearch.setAttribute('aria-expanded', 'true');
+        updateTotals();
+    });
+    districtSearch?.addEventListener('keydown', event => {
+        if (event.key === 'Escape') closeDistrictOptions();
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            districtOptions?.querySelector('[data-region-option]')?.focus();
+        }
+        if (event.key === 'Enter') {
+            const first = districtOptions?.querySelector('[data-region-option]');
+            if (first && !districtOptions.classList.contains('hidden')) {
+                event.preventDefault();
+                selectDistrict(regions.find(item => String(item.region_id) === first.dataset.regionId));
+            }
+        }
+    });
+    districtOptions?.addEventListener('click', event => {
+        const option = event.target.closest('[data-region-option]');
+        if (!option) return;
+        selectDistrict(regions.find(item => String(item.region_id) === option.dataset.regionId));
+    });
+    document.addEventListener('click', event => {
+        if (!event.target.closest('[data-district-combobox]')) closeDistrictOptions();
+    });
     retry.addEventListener('click', queueQuote);
     campaignForm.querySelectorAll('[data-quantity-step]').forEach(button => button.addEventListener('click', () => {
         quantity.value = String(Math.max(1, Math.min(Number(quantity.max), Number(quantity.value || 1) + Number(button.dataset.quantityStep))));
@@ -204,6 +303,7 @@ if (campaignForm && campaignData) {
         updateTotals();
     });
     updateProduct();
+    renderDistrictOptions();
     updateTotals();
     const stickyCta = document.querySelector('[data-campaign-sticky-cta]');
     if (stickyCta && 'IntersectionObserver' in window) {

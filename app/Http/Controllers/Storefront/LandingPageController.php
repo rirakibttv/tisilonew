@@ -89,7 +89,7 @@ class LandingPageController extends Controller
             }
         }
 
-        return view('storefront.landing.show', [
+        return view('storefront.landing.show-classic', [
             'landingPage' => $landingPage,
             'primaryProduct' => $primaryProduct,
             'preview' => $preview,

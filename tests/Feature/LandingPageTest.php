@@ -136,8 +136,11 @@ class LandingPageTest extends TestCase
         $cart = ['unrelated' => ['product_id' => 123, 'quantity' => 4]];
         $this->withSession(['store_cart' => $cart])
             ->get(route('store.landing.show', $campaign))->assertOk()
-            ->assertSee('এই পেজেই অর্ডার সম্পন্ন করুন')
+            ->assertSee('অফারটি সীমিত সময়ের জন্য')
             ->assertSee('name="customer_name"', false)
+            ->assertSee('name="district_search"', false)
+            ->assertSee('data-district-options', false)
+            ->assertSee('name="thana"', false)
             ->assertSee('name="shipping_region_id"', false)
             ->assertSee(route('store.landing.order', $campaign), false)
             ->assertDontSee('name="redirect_to"', false);
@@ -153,6 +156,8 @@ class LandingPageTest extends TestCase
         $this->assertSame($campaign->id, $order->landing_page_id);
         $this->assertSame('1998.00', $order->subtotal_amount);
         $this->assertSame('2078.00', $order->total_amount);
+        $this->assertSame('Dhaka', $order->shipping_address['district']);
+        $this->assertSame('Mirpur', $order->shipping_address['upazila']);
         $this->assertSame(18, $product->fresh()->stock_quantity);
         $this->assertSame('facebook', $order->marketing_attribution['source']);
         $this->get($response->headers->get('Location'))->assertOk()->assertSee($order->order_number);
@@ -334,6 +339,8 @@ class LandingPageTest extends TestCase
             'customer_phone' => '01700000000',
             'customer_email' => 'landing@example.com',
             'address_line' => 'House 10, Road 5',
+            'district_search' => 'Dhaka',
+            'thana' => 'Mirpur',
             'shipping_region_id' => $this->shippingRegionId,
             'payment_method' => 'cod',
             'terms' => '1',
