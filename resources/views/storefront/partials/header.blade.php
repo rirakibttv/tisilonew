@@ -25,7 +25,7 @@
             </a>
         </div>
         <div class="flex items-center justify-end gap-4 font-semibold">
-            <a href="/admin" class="transition hover:text-blue-100">Seller Central</a>
+            <a href="{{ url('/seller') }}" class="transition hover:text-blue-100">Seller Central</a>
             <a href="{{ route('store.blog') }}" class="transition hover:text-blue-100">Blog</a>
             <a href="{{ route('store.about') }}" class="transition hover:text-blue-100">About Us</a>
         </div>

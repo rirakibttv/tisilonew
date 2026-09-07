@@ -42,12 +42,11 @@ class LandingPageForm
                         ->required()
                         ->maxLength(255),
                     Select::make('status')
-                        ->options(['draft' => 'Draft', 'published' => 'Published'])
+                        ->label('Status')
+                        ->options(['published' => 'Published', 'draft' => 'Draft'])
                         ->default('draft')
+                        ->helperText('Published দিয়ে Save করলে page সঙ্গে সঙ্গে live হবে; Draft দিলে public হবে না।')
                         ->required(),
-                    DateTimePicker::make('published_at')
-                        ->label('Publish At')
-                        ->helperText('Leave blank to publish immediately when status is Published.'),
                     Select::make('products')
                         ->relationship('products', 'name', modifyQueryUsing: fn ($query) => $query->where('status', 'published'))
                         ->multiple()

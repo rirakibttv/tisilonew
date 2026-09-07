@@ -36,7 +36,6 @@ class LandingPage extends Model
         'meta_title',
         'meta_description',
         'og_image',
-        'published_at',
     ];
 
     protected function casts(): array
@@ -56,18 +55,15 @@ class LandingPage extends Model
         static::saving(function (self $landingPage): void {
             $landingPage->slug = Str::slug($landingPage->slug ?: $landingPage->name);
 
-            if ($landingPage->status === 'published' && ! $landingPage->published_at) {
-                $landingPage->published_at = now();
-            }
+            $landingPage->published_at = $landingPage->status === 'published'
+                ? ($landingPage->published_at ?: now())
+                : null;
         });
     }
 
     public function scopePublished(Builder $query): Builder
     {
-        return $query->where('status', 'published')
-            ->where(fn (Builder $published): Builder => $published
-                ->whereNull('published_at')
-                ->orWhere('published_at', '<=', now()));
+        return $query->where('status', 'published');
     }
 
     public function products(): BelongsToMany

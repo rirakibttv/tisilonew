@@ -112,6 +112,7 @@ class LandingPageTest extends TestCase
             ->assertOk()
             ->assertSee('Campaign Basics')
             ->assertSee('Header Title')
+            ->assertDontSee('Publish At')
             ->assertDontSee('Meta Pixel ID');
 
         $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tisilo-landing-'.Str::random(8).'.json';
@@ -134,6 +135,25 @@ class LandingPageTest extends TestCase
         } finally {
             File::delete($path);
         }
+    }
+
+    public function test_status_is_the_only_publish_control_for_a_landing_page(): void
+    {
+        $landingPage = $this->landingPage('status-only-campaign', 'draft');
+        $landingPage->products()->attach($this->product());
+
+        $this->assertNull($landingPage->published_at);
+        $this->get(route('store.landing.show', $landingPage))->assertNotFound();
+
+        $landingPage->update(['status' => 'published']);
+
+        $this->assertNotNull($landingPage->fresh()->published_at);
+        $this->get(route('store.landing.show', $landingPage))->assertOk();
+
+        $landingPage->update(['status' => 'draft']);
+
+        $this->assertNull($landingPage->fresh()->published_at);
+        $this->get(route('store.landing.show', $landingPage))->assertNotFound();
     }
 
     public function test_inline_form_places_one_order_without_changing_the_shopping_cart(): void

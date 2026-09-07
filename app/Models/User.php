@@ -69,6 +69,7 @@ class User extends Authenticatable implements FilamentUser
 
         return match ($panel->getId()) {
             'admin' => $this->role->canAccessAdminPanel(),
+            'seller' => in_array($this->role, [UserRole::VendorOwner, UserRole::VendorStaff], true),
             default => false,
         };
     }

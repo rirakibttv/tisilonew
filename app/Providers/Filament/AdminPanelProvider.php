@@ -48,6 +48,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->passwordReset()
             ->brandName('Tisilo')
             ->sidebarCollapsibleOnDesktop()
             ->sidebarWidth('15.5rem')

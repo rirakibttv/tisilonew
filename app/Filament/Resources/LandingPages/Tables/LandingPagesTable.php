@@ -30,7 +30,7 @@ class LandingPagesTable
                     ->color(fn (string $state): string => $state === 'published' ? 'success' : 'gray')
                     ->formatStateUsing(fn (string $state): string => ucfirst($state))
                     ->sortable(),
-                TextColumn::make('published_at')->label('Published')->dateTime('d M Y, h:i A')->placeholder('Not scheduled')->sortable(),
+                TextColumn::make('published_at')->label('Published At')->dateTime('d M Y, h:i A')->placeholder('Draft')->sortable(),
             ])
             ->filters([
                 SelectFilter::make('status')->options(['draft' => 'Draft', 'published' => 'Published']),

@@ -64,7 +64,7 @@
                     <li><a href="{{ route('store.pages.show', 'privacy-policy') }}" class="transition hover:text-purple-400 hover:pl-1">Privacy Policy</a></li>
                     <li><a href="{{ route('store.pages.show', 'terms-and-conditions') }}" class="transition hover:text-purple-400 hover:pl-1">Terms & Conditions</a></li>
                     <li><a href="{{ route('store.shop.index') }}" class="transition hover:text-purple-400 hover:pl-1">Shop All Products</a></li>
-                    <li><a href="/admin" class="transition hover:text-purple-400 hover:pl-1">Seller Center</a></li>
+                    <li><a href="{{ url('/seller') }}" class="transition hover:text-purple-400 hover:pl-1">Seller Center</a></li>
                 </ul>
             </div>
 
