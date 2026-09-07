@@ -94,6 +94,11 @@ class LandingCheckoutController extends Controller
                     $attribution[$key] = str((string) $decoded[$key])->stripTags()->limit(191, '')->toString();
                 }
             }
+            foreach (['fbp' => '_fbp', 'fbc' => '_fbc'] as $key => $cookie) {
+                if (filled($request->cookie($cookie))) {
+                    $attribution[$key] = str((string) $request->cookie($cookie))->stripTags()->limit(255, '')->toString();
+                }
+            }
             $validated['marketing_attribution'] = $attribution ?: null;
             $order = $checkout->place($cart, $validated, $quote);
         } catch (ValidationException $exception) {
@@ -104,7 +109,8 @@ class LandingCheckoutController extends Controller
         $request->session()->put($sessionKey.'.order_id', $order->id);
         try {
             $analytics->record($request, [
-                'event_type' => 'purchase', 'order_id' => $order->id, 'value' => $order->total_amount,
+                'event_type' => 'purchase', 'event_id' => 'purchase-'.$order->order_number,
+                'order_id' => $order->id, 'value' => $order->total_amount,
                 'metadata' => ['currency' => $order->currency, 'invoice_id' => $order->order_number, 'payment_method' => 'cod'],
             ]);
         } catch (Throwable) {

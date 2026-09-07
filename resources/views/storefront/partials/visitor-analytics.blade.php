@@ -44,6 +44,10 @@
             current.source = current.source || 'facebook';
             current.medium = current.medium || 'paid_social';
             current.click_source = 'facebook';
+            var facebookClickId = params.get('fbclid').replace(/[^A-Za-z0-9_-]/g, '').substring(0, 250);
+            if (facebookClickId) {
+                document.cookie = '_fbc=' + encodeURIComponent('fb.1.' + Date.now() + '.' + facebookClickId) + '; Max-Age=7776000; Path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
+            }
         } else if (params.get('gclid')) {
             current.source = current.source || 'google';
             current.medium = current.medium || 'cpc';

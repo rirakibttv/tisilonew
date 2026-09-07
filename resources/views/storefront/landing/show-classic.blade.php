@@ -21,6 +21,7 @@
         $galleryImages = collect(range(0, 2))->map(fn ($index) => $campaignImages->isNotEmpty() ? $campaignImages[$index % $campaignImages->count()] : null)->filter();
         $reviewImages = collect(range(0, 4))->map(fn ($index) => $campaignImages->isNotEmpty() ? $campaignImages[$index % $campaignImages->count()] : null)->filter();
         $deadline = $landingPage->countdown_ends_at?->toIso8601String();
+        $headerTitle = $landingPage->header_title ?: $landingPage->headline;
     @endphp
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -68,7 +69,7 @@
                     <span class="font-serif text-3xl font-black italic">{{ $generalSettings['site_name'] ?? 'Tisilo' }}</span>
                 @endif
             </a>
-            <p class="text-center text-lg font-black sm:text-xl">{{ $landingPage->hero_badge ?: $landingPage->name }}</p>
+            <p class="text-center text-lg font-black sm:text-xl">{{ $headerTitle }}</p>
             <div id="campaign-countdown" data-deadline="{{ $deadline }}" class="grid grid-cols-4 gap-1.5" aria-label="অফারের সময় বাকি">
                 @foreach([['days', 'Days'], ['hours', 'Hours'], ['minutes', 'Minutes'], ['seconds', 'Seconds']] as [$part, $label])
                     <div class="min-w-16 rounded-xl border border-dashed border-white/80 bg-white/5 px-2 py-2 text-center">
@@ -126,16 +127,16 @@
 
         <section class="storefront-shell mt-6">
             <div class="campaign-green-border rounded-md border-4 bg-white p-3 sm:p-6">
-                <h2 class="rounded-md bg-[#28633a] px-5 py-3 text-center font-serif text-2xl font-black text-white shadow-md">{{ $landingPage->name }}</h2>
+                <h2 class="rounded-md bg-[#28633a] px-5 py-3 text-center font-serif text-2xl font-black text-white shadow-md">{{ $landingPage->offer_title ?: $headerTitle }}</h2>
                 @if($galleryImages->isNotEmpty())
-                    <div class="mt-5 grid gap-2 sm:grid-cols-3">@foreach($galleryImages as $image)<img src="{{ $image }}" alt="{{ $landingPage->name }} ছবি {{ $loop->iteration }}" loading="lazy" class="aspect-square w-full object-cover">@endforeach</div>
+                    <div class="mt-5 grid gap-2 sm:grid-cols-3">@foreach($galleryImages as $image)<img src="{{ $image }}" alt="{{ $primaryProduct->name }} ছবি {{ $loop->iteration }}" loading="lazy" class="aspect-square w-full object-cover">@endforeach</div>
                 @endif
                 <div class="mt-4 text-center"><a href="#order-now" class="campaign-bg inline-flex rounded-md border-2 border-amber-500 px-7 py-3 text-lg font-black text-white shadow-lg">অর্ডার করতে ক্লিক করুন 🛒</a></div>
             </div>
         </section>
 
         @if($landingPage->video_embed_url)
-            <section class="storefront-shell py-8"><div class="campaign-green-border overflow-hidden rounded-lg border-4 shadow-xl"><iframe src="{{ $landingPage->video_embed_url }}" title="{{ $landingPage->name }} video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="aspect-video w-full"></iframe></div></section>
+            <section class="storefront-shell py-8"><div class="campaign-green-border overflow-hidden rounded-lg border-4 shadow-xl"><iframe src="{{ $landingPage->video_embed_url }}" title="{{ $headerTitle }} video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="aspect-video w-full"></iframe></div></section>
         @endif
 
         @include('storefront.landing.checkout-classic')

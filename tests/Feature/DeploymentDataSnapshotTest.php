@@ -22,6 +22,47 @@ class DeploymentDataSnapshotTest extends TestCase
 {
     use DatabaseTransactions;
 
+    public function test_facebook_capi_snapshot_updates_events_without_overwriting_production_connection(): void
+    {
+        $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tisilo-facebook-capi-'.Str::random(10).'.json';
+        $service = app(DeploymentDataSnapshot::class);
+
+        try {
+            SiteSetting::put('facebook_capi', [
+                'enabled' => false,
+                'pixel_id' => '111111111',
+                'api_version' => 'v22.0',
+                'events' => ['Purchase', 'OrderCancelled'],
+            ], ['access_token' => 'local-token']);
+
+            $service->export($path);
+            $snapshot = json_decode(File::get($path), true, 512, JSON_THROW_ON_ERROR);
+            $facebook = collect($snapshot['site_settings'])->firstWhere('key', 'facebook_capi');
+
+            $this->assertSame(['events' => ['Purchase', 'OrderCancelled']], $facebook['values']);
+
+            SiteSetting::put('facebook_capi', [
+                'enabled' => true,
+                'pixel_id' => '999999999',
+                'api_version' => 'v23.0',
+                'test_event_code' => 'TEST999',
+                'events' => ['PageView'],
+            ], ['access_token' => 'production-token']);
+
+            $service->import($path);
+
+            $values = SiteSetting::valuesFor('facebook_capi');
+            $this->assertTrue($values['enabled']);
+            $this->assertSame('999999999', $values['pixel_id']);
+            $this->assertSame('v23.0', $values['api_version']);
+            $this->assertSame('TEST999', $values['test_event_code']);
+            $this->assertSame(['Purchase', 'OrderCancelled'], $values['events']);
+            $this->assertSame('production-token', SiteSetting::secretsFor('facebook_capi')['access_token']);
+        } finally {
+            File::delete($path);
+        }
+    }
+
     public function test_snapshot_includes_complete_catalog_and_user_data_without_session_secrets(): void
     {
         $token = Str::lower(Str::random(10));

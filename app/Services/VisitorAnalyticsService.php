@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\VisitorEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Throwable;
 
 class VisitorAnalyticsService
 {
@@ -16,6 +17,8 @@ class VisitorAnalyticsService
         'add_payment_info',
         'purchase',
     ];
+
+    public function __construct(private MetaConversionsApiService $meta) {}
 
     /** @param array<string, mixed> $data */
     public function record(Request $request, array $data): VisitorEvent
@@ -48,9 +51,17 @@ class VisitorAnalyticsService
             'occurred_at' => now(),
         ];
 
-        return $attributes['event_key']
+        $event = $attributes['event_key']
             ? VisitorEvent::updateOrCreate(['event_key' => $attributes['event_key']], $attributes)
             : VisitorEvent::create($attributes);
+
+        try {
+            $this->meta->queueVisitorEvent($request, $event);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+
+        return $event;
     }
 
     public function visitorId(Request $request, mixed $candidate = null): string

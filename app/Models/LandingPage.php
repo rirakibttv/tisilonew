@@ -15,6 +15,7 @@ class LandingPage extends Model
 
     protected $fillable = [
         'name',
+        'header_title',
         'slug',
         'status',
         'hero_badge',
@@ -32,7 +33,6 @@ class LandingPage extends Model
         'faqs',
         'video_url',
         'countdown_ends_at',
-        'facebook_pixel_id',
         'meta_title',
         'meta_description',
         'og_image',

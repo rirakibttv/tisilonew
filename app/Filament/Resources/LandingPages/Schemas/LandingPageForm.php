@@ -25,6 +25,7 @@ class LandingPageForm
                 ->schema([
                     TextInput::make('name')
                         ->label('Internal Campaign Name')
+                        ->helperText('শুধু Admin panel-এ ব্যবহৃত হবে; public landing page-এ দেখানো হবে না।')
                         ->required()
                         ->maxLength(255)
                         ->live(onBlur: true)
@@ -34,6 +35,12 @@ class LandingPageForm
                         ->required()
                         ->maxLength(255)
                         ->unique(ignoreRecord: true),
+                    TextInput::make('header_title')
+                        ->label('Header Title')
+                        ->helperText('Landing page-এর সবুজ header bar-এ এই title দেখাবে।')
+                        ->placeholder('Top Title')
+                        ->required()
+                        ->maxLength(255),
                     Select::make('status')
                         ->options(['draft' => 'Draft', 'published' => 'Published'])
                         ->default('draft')
@@ -138,14 +145,9 @@ class LandingPageForm
                         ->collapsible(),
                 ]),
 
-            Section::make('Facebook Ads & SEO')
+            Section::make('SEO')
                 ->columns(2)
                 ->schema([
-                    TextInput::make('facebook_pixel_id')
-                        ->label('Meta Pixel ID')
-                        ->helperText('Configuration placeholder only. External Meta tracking stays disabled until data-sharing is explicitly authorised.')
-                        ->regex('/^[0-9]{5,32}$/')
-                        ->maxLength(32),
                     TextInput::make('meta_title')->maxLength(255),
                     Textarea::make('meta_description')->rows(3)->maxLength(500)->columnSpanFull(),
                 ]),

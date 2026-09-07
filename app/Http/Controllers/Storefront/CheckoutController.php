@@ -96,6 +96,7 @@ class CheckoutController extends Controller
         try {
             $analytics->record($request, [
                 'event_type' => 'purchase',
+                'event_id' => 'purchase-'.$order->order_number,
                 'order_id' => $order->getKey(),
                 'value' => $order->total_amount,
                 'metadata' => [
@@ -138,14 +139,17 @@ class CheckoutController extends Controller
     private function marketingAttribution(Request $request): ?array
     {
         $decoded = json_decode(urldecode((string) $request->cookie('tisilo_attr')), true);
-        if (! is_array($decoded)) {
-            return null;
-        }
+        $decoded = is_array($decoded) ? $decoded : [];
 
         $safe = [];
         foreach (['source', 'medium', 'campaign', 'content', 'term', 'click_source'] as $key) {
             if (isset($decoded[$key]) && is_scalar($decoded[$key])) {
                 $safe[$key] = str((string) $decoded[$key])->stripTags()->limit(191, '')->toString();
+            }
+        }
+        foreach (['fbp' => '_fbp', 'fbc' => '_fbc'] as $key => $cookie) {
+            if (filled($request->cookie($cookie))) {
+                $safe[$key] = str((string) $request->cookie($cookie))->stripTags()->limit(255, '')->toString();
             }
         }
 

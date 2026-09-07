@@ -336,7 +336,7 @@ class ApiIntegrationSettings extends Page
     private function facebookCapiComponents(): array
     {
         return [
-            Section::make('Meta Conversions API')->description('Configuration only. No visitor or order data is sent merely by saving this form.')->columns(2)->schema([
+            Section::make('Meta Conversions API')->description('One secure configuration for the full website and every landing page. Enabled events are sent server-side with hashed customer matching data and queued retries.')->columns(2)->schema([
                 Toggle::make('enabled')->default(false),
                 TextInput::make('pixel_id')->label('Dataset / Pixel ID')->regex('/^[0-9]{5,32}$/')->maxLength(32),
                 Select::make('api_version')->options(['v23.0' => 'v23.0', 'v22.0' => 'v22.0', 'v21.0' => 'v21.0'])->default('v23.0'),
@@ -347,7 +347,14 @@ class ApiIntegrationSettings extends Page
                     'ViewContent' => 'ViewContent',
                     'AddToCart' => 'AddToCart',
                     'InitiateCheckout' => 'InitiateCheckout',
+                    'AddPaymentInfo' => 'AddPaymentInfo',
                     'Purchase' => 'Purchase',
+                    'OrderConfirmed' => 'Order Confirmed',
+                    'OrderProcessing' => 'Order Processing',
+                    'OrderShipped' => 'Order Shipped',
+                    'OrderDelivered' => 'Order Delivered',
+                    'OrderCancelled' => 'Order Cancelled',
+                    'OrderRefunded' => 'Order Refunded',
                 ])->columns(3)->columnSpanFull(),
             ]),
         ];

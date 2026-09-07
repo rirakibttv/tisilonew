@@ -37,6 +37,8 @@ class LandingPageTest extends TestCase
 
         $this->get(route('store.landing.show', $published))
             ->assertOk()
+            ->assertSee($published->header_title)
+            ->assertDontSee($published->name)
             ->assertSee($published->headline)
             ->assertSee($product->name)
             ->assertSee('class="storefront-shell grid items-stretch', false)
@@ -106,7 +108,11 @@ class LandingPageTest extends TestCase
             ->assertOk()
             ->assertSeeInOrder(['Create Landing Page', 'All Landing Pages']);
         $this->actingAs($admin)->get('/admin/landing-pages')->assertOk()->assertSee($landingPage->name);
-        $this->actingAs($admin)->get('/admin/landing-pages/create')->assertOk()->assertSee('Campaign Basics');
+        $this->actingAs($admin)->get('/admin/landing-pages/create')
+            ->assertOk()
+            ->assertSee('Campaign Basics')
+            ->assertSee('Header Title')
+            ->assertDontSee('Meta Pixel ID');
 
         $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tisilo-landing-'.Str::random(8).'.json';
         try {
@@ -115,6 +121,8 @@ class LandingPageTest extends TestCase
             $data = collect($snapshot['landing_pages'])->firstWhere('slug', $landingPage->slug);
 
             $this->assertSame($landingPage->headline, $data['headline']);
+            $this->assertSame($landingPage->header_title, $data['header_title']);
+            $this->assertArrayNotHasKey('facebook_pixel_id', $data);
             $this->assertSame([$product->slug], $data['product_slugs']);
 
             $landingPage->update(['headline' => 'Changed headline']);
@@ -282,6 +290,7 @@ class LandingPageTest extends TestCase
     {
         return LandingPage::query()->create([
             'name' => Str::headline($slug),
+            'header_title' => 'Header title for '.$slug,
             'slug' => $slug.'-'.Str::lower(Str::random(6)),
             'status' => $status,
             'hero_badge' => 'বিশেষ অফার',

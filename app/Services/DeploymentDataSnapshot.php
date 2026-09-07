@@ -80,7 +80,7 @@ class DeploymentDataSnapshot
             ])->all(),
             'site_settings' => SiteSetting::query()->orderBy('key')->get()->map(fn (SiteSetting $setting): array => [
                 'key' => $setting->key,
-                'values' => $setting->values ?? [],
+                'values' => $this->exportableSettingValues($setting),
             ])->all(),
             'shipping_classes' => ShippingClass::query()->orderBy('code')->get()->map(
                 fn (ShippingClass $class): array => Arr::only(
@@ -224,10 +224,10 @@ class DeploymentDataSnapshot
                 ->get()
                 ->map(fn (LandingPage $landingPage): array => [
                     ...Arr::only($landingPage->toArray(), [
-                        'name', 'slug', 'status', 'hero_badge', 'headline', 'subheadline', 'cta_text',
+                        'name', 'header_title', 'slug', 'status', 'hero_badge', 'headline', 'subheadline', 'cta_text',
                         'hero_image', 'theme_color', 'offer_title', 'offer_body', 'trust_title',
                         'benefits', 'gallery_images', 'reviews', 'faqs', 'video_url',
-                        'countdown_ends_at', 'facebook_pixel_id', 'meta_title', 'meta_description',
+                        'countdown_ends_at', 'meta_title', 'meta_description',
                         'og_image', 'published_at',
                     ]),
                     'product_slugs' => $landingPage->products->pluck('slug')->values()->all(),
@@ -336,7 +336,11 @@ class DeploymentDataSnapshot
 
             foreach ($snapshot['site_settings'] ?? [] as $data) {
                 $setting = SiteSetting::query()->firstOrNew(['key' => $data['key']]);
-                $setting->values = $data['values'] ?? [];
+                $setting->values = $this->importableSettingValues(
+                    (string) $data['key'],
+                    $data['values'] ?? [],
+                    $setting->values ?? [],
+                );
                 $setting->save();
                 SiteSetting::forget($data['key']);
                 $counts['site_settings']++;
@@ -591,5 +595,34 @@ class DeploymentDataSnapshot
         return str_starts_with($path, DIRECTORY_SEPARATOR) || preg_match('/^[A-Za-z]:[\\\\\/]/', $path)
             ? $path
             : base_path($path);
+    }
+
+    /** @return array<string, mixed> */
+    private function exportableSettingValues(SiteSetting $setting): array
+    {
+        $values = $setting->values ?? [];
+
+        // Meta credentials and activation state belong to each deployment. Only the
+        // event policy is portable, so a catalog import cannot disable production CAPI.
+        return $setting->key === 'facebook_capi'
+            ? Arr::only($values, ['events'])
+            : $values;
+    }
+
+    /**
+     * @param  array<string, mixed>  $incoming
+     * @param  array<string, mixed>  $existing
+     * @return array<string, mixed>
+     */
+    private function importableSettingValues(string $key, array $incoming, array $existing): array
+    {
+        if ($key !== 'facebook_capi') {
+            return $incoming;
+        }
+
+        return [
+            ...$incoming,
+            ...Arr::only($existing, ['enabled', 'pixel_id', 'api_version', 'test_event_code']),
+        ];
     }
 }

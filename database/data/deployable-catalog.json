@@ -628,14 +628,19 @@
         {
             "key": "facebook_capi",
             "values": {
-                "enabled": false,
-                "api_version": "v23.0",
                 "events": [
                     "PageView",
                     "ViewContent",
                     "AddToCart",
                     "InitiateCheckout",
-                    "Purchase"
+                    "AddPaymentInfo",
+                    "Purchase",
+                    "OrderConfirmed",
+                    "OrderProcessing",
+                    "OrderShipped",
+                    "OrderDelivered",
+                    "OrderCancelled",
+                    "OrderRefunded"
                 ]
             }
         },
@@ -1640,6 +1645,7 @@
     "landing_pages": [
         {
             "name": "Premium Quality Panel Cotton Bed Sheets",
+            "header_title": "Premium Quality Panel Cotton Bed Sheets",
             "slug": "premium-quality-panel-cotton-bed-sheets",
             "status": "published",
             "hero_badge": null,
@@ -1657,11 +1663,10 @@
             "faqs": [],
             "video_url": null,
             "countdown_ends_at": "2026-08-30T22:38:04.000000Z",
-            "facebook_pixel_id": null,
             "meta_title": null,
             "meta_description": null,
             "og_image": null,
-            "published_at": "2026-09-06T19:08:31.000000Z",
+            "published_at": "2026-09-06T19:32:31.000000Z",
             "product_slugs": [
                 "premium-quality-panel-cotton-bed-sheets"
             ]

@@ -11,6 +11,7 @@
         $logoPath = $generalSettings['dark_logo'] ?? $generalSettings['white_logo'] ?? null;
         $logoUrl = $logoPath ? asset('storage/'.ltrim($logoPath, '/')) : null;
         $phone = $contactSettings['phone'] ?? $contactSettings['hotline'] ?? null;
+        $headerTitle = $landingPage->header_title ?: $landingPage->headline;
     @endphp
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -127,7 +128,7 @@
         @if($landingPage->video_embed_url)
             <section class="mx-auto max-w-5xl px-4 py-16 sm:px-6">
                 <div class="overflow-hidden rounded-3xl bg-slate-950 shadow-2xl">
-                    <iframe src="{{ $landingPage->video_embed_url }}" title="{{ $landingPage->name }} video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="aspect-video w-full"></iframe>
+                    <iframe src="{{ $landingPage->video_embed_url }}" title="{{ $headerTitle }} video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="aspect-video w-full"></iframe>
                 </div>
             </section>
         @endif
@@ -137,7 +138,7 @@
                 <h2 class="text-center text-3xl font-black">বাস্তব ছবিতে আরও বিস্তারিত</h2>
                 <div class="mt-9 grid grid-cols-2 gap-4 md:grid-cols-4">
                     @foreach($landingPage->gallery_images as $image)
-                        <img src="{{ asset('storage/'.ltrim($image, '/')) }}" alt="{{ $landingPage->name }} gallery {{ $loop->iteration }}" loading="lazy" class="aspect-square w-full rounded-2xl object-cover shadow-sm">
+                        <img src="{{ asset('storage/'.ltrim($image, '/')) }}" alt="{{ $primaryProduct->name }} gallery {{ $loop->iteration }}" loading="lazy" class="aspect-square w-full rounded-2xl object-cover shadow-sm">
                     @endforeach
                 </div>
             </section>

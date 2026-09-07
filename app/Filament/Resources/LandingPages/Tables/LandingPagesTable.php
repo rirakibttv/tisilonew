@@ -22,6 +22,7 @@ class LandingPagesTable
             ->columns([
                 ImageColumn::make('hero_image')->label('Hero')->disk('public')->square(),
                 TextColumn::make('name')->label('Campaign')->description(fn ($record): string => '/offer/'.$record->slug)->searchable()->sortable(),
+                TextColumn::make('header_title')->label('Header Title')->placeholder('Uses headline')->searchable()->toggleable(),
                 TextColumn::make('products_count')->label('Products')->counts('products')->sortable(),
                 TextColumn::make('orders_count')->label('Orders')->counts('orders')->sortable(),
                 TextColumn::make('status')
@@ -29,7 +30,6 @@ class LandingPagesTable
                     ->color(fn (string $state): string => $state === 'published' ? 'success' : 'gray')
                     ->formatStateUsing(fn (string $state): string => ucfirst($state))
                     ->sortable(),
-                TextColumn::make('facebook_pixel_id')->label('Meta Pixel (prepared)')->placeholder('Not set')->copyable()->toggleable(),
                 TextColumn::make('published_at')->label('Published')->dateTime('d M Y, h:i A')->placeholder('Not scheduled')->sortable(),
             ])
             ->filters([
