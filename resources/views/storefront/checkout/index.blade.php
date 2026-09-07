@@ -71,13 +71,9 @@
 
                 <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
                     <h2 class="text-xl font-black text-slate-950">পেমেন্ট</h2>
-                    <label class="mt-5 flex cursor-pointer items-center gap-4 rounded-2xl border-2 border-orange-200 bg-orange-50 p-5">
-                        <input type="radio" name="payment_method" value="cod" checked class="size-5 accent-orange-500">
-                        <span>
-                            <span class="block font-black text-slate-900">ক্যাশ অন ডেলিভারি</span>
-                            <span class="mt-1 block text-xs text-slate-500">পণ্য হাতে পাওয়ার পর মূল্য পরিশোধ করুন।</span>
-                        </span>
-                    </label>
+                    <div class="mt-5">
+                        @include('storefront.partials.payment-methods')
+                    </div>
                     <label class="mt-5 block text-sm font-bold text-slate-700">
                         অর্ডার নোট (ঐচ্ছিক)
                         <textarea name="notes" rows="3" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">{{ old('notes') }}</textarea>

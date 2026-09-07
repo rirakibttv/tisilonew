@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Storefront\AccountController;
+use App\Http\Controllers\Storefront\BkashPaymentController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\ContentPageController;
@@ -53,6 +54,9 @@ Route::post('/checkout', [CheckoutController::class, 'store'])->name('store.chec
 Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])
     ->middleware('signed')
     ->name('store.checkout.success');
+Route::get('/payments/bkash/callback', BkashPaymentController::class)
+    ->middleware('throttle:30,1')
+    ->name('store.payments.bkash.callback');
 Route::post('/analytics/events', VisitorAnalyticsController::class)
     ->middleware('throttle:120,1')
     ->name('visitor.analytics.track');

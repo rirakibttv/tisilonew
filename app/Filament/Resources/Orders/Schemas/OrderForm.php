@@ -23,7 +23,7 @@ class OrderForm
                 Select::make('payment_status')->label('Payment Status')->options(PaymentStatus::options())->required(),
                 Select::make('payment_method')
                     ->label('Payment Method')
-                    ->options(['cod' => 'Cash on Delivery'])
+                    ->options(['cod' => 'Cash on Delivery', 'bkash' => 'bKash'])
                     ->required(),
                 TextInput::make('channel')->required()->maxLength(30),
                 TextInput::make('tracking_number')->label('Tracking Number')->maxLength(255),

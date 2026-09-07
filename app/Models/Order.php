@@ -119,6 +119,11 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function paymentTransactions(): HasMany
+    {
+        return $this->hasMany(PaymentTransaction::class);
+    }
+
     public function incompleteOrders(): HasMany
     {
         return $this->hasMany(IncompleteOrder::class, 'converted_order_id');

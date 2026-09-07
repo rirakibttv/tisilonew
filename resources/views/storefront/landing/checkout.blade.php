@@ -80,7 +80,9 @@
                     <div class="flex justify-between gap-3"><dt>ডেলিভারি চার্জ</dt><dd data-campaign-shipping class="text-right font-bold">{{ $selectedQuote ? '৳'.number_format($selectedQuote['amount'], 2) : 'উপজেলা/থানা নির্বাচন করুন' }}</dd></div>
                     <div class="flex justify-between gap-3 border-t border-slate-100 pt-4 text-lg font-black"><dt>সর্বমোট</dt><dd data-campaign-total class="campaign-text">{{ $selectedQuote ? '৳'.number_format($initialSubtotal + $selectedQuote['amount'], 2) : 'এলাকা নির্বাচন করুন' }}</dd></div>
                 </dl>
-                <p class="mt-5 rounded-xl bg-emerald-50 p-4 text-sm font-bold text-emerald-700">ক্যাশ অন ডেলিভারি — পণ্য হাতে পেয়ে মূল্য পরিশোধ করুন।</p>
+                <div class="mt-5">
+                    @include('storefront.partials.payment-methods')
+                </div>
                 <p class="mt-4 text-xs leading-5 text-slate-500">এই অফারের অর্ডার আলাদাভাবে হবে। আপনার সাধারণ শপিং কার্টের পণ্য অপরিবর্তিত থাকবে।</p>
             </div>
 
@@ -111,7 +113,6 @@
                         <textarea name="notes" rows="2" maxlength="1000" class="mt-2 w-full rounded-xl border border-slate-200 p-3 font-normal">{{ old('notes') }}</textarea>
                     </label>
                 </div>
-                <input type="hidden" name="payment_method" value="cod">
                 @if($preview)<p class="mt-4 text-sm font-bold text-amber-700">প্রিভিউতে অর্ডার বন্ধ আছে। পেজ প্রকাশ করার পরে অর্ডার নেওয়া যাবে।</p>@endif
                 <button type="submit" data-campaign-submit @disabled($preview) class="campaign-bg mt-5 min-h-14 w-full rounded-2xl px-5 py-4 text-base font-black text-white shadow-lg disabled:cursor-not-allowed disabled:opacity-50">অর্ডার নিশ্চিত করুন</button>
                 <p class="mt-3 text-center text-xs text-slate-500">অ্যাকাউন্ট ছাড়াই অর্ডার করতে পারবেন।</p>

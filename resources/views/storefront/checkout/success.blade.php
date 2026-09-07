@@ -15,7 +15,7 @@
             <div class="mx-auto mt-8 grid max-w-lg gap-4 rounded-2xl bg-slate-50 p-6 text-left sm:grid-cols-2">
                 <div><p class="text-xs text-slate-500">অর্ডার নম্বর</p><p class="mt-1 font-black text-slate-900">{{ $order->order_number }}</p></div>
                 <div><p class="text-xs text-slate-500">মোট মূল্য</p><p class="mt-1 font-black text-orange-600">৳{{ number_format($order->total_amount, 0) }}</p></div>
-                <div><p class="text-xs text-slate-500">পেমেন্ট</p><p class="mt-1 font-black text-slate-900">ক্যাশ অন ডেলিভারি</p></div>
+                <div><p class="text-xs text-slate-500">পেমেন্ট</p><p class="mt-1 font-black text-slate-900">{{ app(\App\Services\PaymentMethodService::class)->label($order->payment_method) }}</p></div>
                 <div><p class="text-xs text-slate-500">স্ট্যাটাস</p><p class="mt-1 font-black text-amber-600">{{ $order->status->label() }}</p></div>
             </div>
 

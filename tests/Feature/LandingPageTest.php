@@ -11,6 +11,7 @@ use App\Models\ProductVariation;
 use App\Models\ShippingClass;
 use App\Models\ShippingRegion;
 use App\Models\ShippingRegionRate;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\DeploymentDataSnapshot;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -26,6 +27,12 @@ class LandingPageTest extends TestCase
     private ?int $shippingClassId = null;
 
     private ?int $shippingRegionId = null;
+
+    protected function tearDown(): void
+    {
+        SiteSetting::forget('payment');
+        parent::tearDown();
+    }
 
     public function test_published_campaign_is_public_and_draft_requires_signed_preview(): void
     {
@@ -158,6 +165,12 @@ class LandingPageTest extends TestCase
 
     public function test_inline_form_places_one_order_without_changing_the_shopping_cart(): void
     {
+        SiteSetting::put('payment', [
+            'cod_enabled' => true,
+            'bkash_enabled' => true,
+            'default_gateway' => 'cod',
+            'currency' => 'BDT',
+        ]);
         $this->shippingSettings();
         $product = $this->product();
         $product->update(['manage_stock' => true]);
@@ -172,6 +185,9 @@ class LandingPageTest extends TestCase
             ->assertSee('data-district-options', false)
             ->assertSee('name="thana"', false)
             ->assertSee('name="shipping_region_id"', false)
+            ->assertSee('value="cod"', false)
+            ->assertSee('value="bkash"', false)
+            ->assertSee('bKash')
             ->assertSee(route('store.landing.order', $campaign), false)
             ->assertDontSee('name="terms"', false)
             ->assertDontSee('আমি অর্ডার, ডেলিভারি ও রিটার্ন সংক্রান্ত শর্তাবলিতে সম্মত।')

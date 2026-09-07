@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LandingPage;
 use App\Models\SiteSetting;
 use App\Services\LandingCheckoutService;
+use App\Services\PaymentMethodService;
 use App\Services\ShippingRateService;
 use App\Services\VisitorAnalyticsService;
 use Illuminate\Contracts\View\View;
@@ -102,6 +103,8 @@ class LandingPageController extends Controller
             'generalSettings' => SiteSetting::valuesFor('general'),
             'contactSettings' => SiteSetting::valuesFor('contact'),
             'seoSettings' => SiteSetting::valuesFor('seo'),
+            'paymentMethods' => app(PaymentMethodService::class)->enabled(),
+            'defaultPaymentMethod' => app(PaymentMethodService::class)->default(),
         ]);
     }
 }

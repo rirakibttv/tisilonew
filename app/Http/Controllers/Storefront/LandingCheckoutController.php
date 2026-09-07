@@ -5,13 +5,16 @@ namespace App\Http\Controllers\Storefront;
 use App\Http\Controllers\Controller;
 use App\Models\LandingPage;
 use App\Models\Order;
+use App\Services\BkashPaymentService;
 use App\Services\CheckoutService;
 use App\Services\LandingCheckoutService;
+use App\Services\PaymentMethodService;
 use App\Services\ShippingRateService;
 use App\Services\VisitorAnalyticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -33,8 +36,16 @@ class LandingCheckoutController extends Controller
         ])->header('Cache-Control', 'no-store, private');
     }
 
-    public function store(Request $request, LandingPage $landingPage, LandingCheckoutService $selection, ShippingRateService $shipping, CheckoutService $checkout, VisitorAnalyticsService $analytics): RedirectResponse
-    {
+    public function store(
+        Request $request,
+        LandingPage $landingPage,
+        LandingCheckoutService $selection,
+        ShippingRateService $shipping,
+        CheckoutService $checkout,
+        BkashPaymentService $bkash,
+        PaymentMethodService $paymentMethods,
+        VisitorAnalyticsService $analytics,
+    ): RedirectResponse {
         $this->ensurePublished($landingPage);
         $sessionKey = 'landing_checkout.'.$landingPage->id;
         $state = $request->session()->get($sessionKey, []);
@@ -50,6 +61,19 @@ class LandingCheckoutController extends Controller
             $reference = hash('sha256', $landingPage->id.':'.$state['token']);
             $existing = Order::query()->where('checkout_reference', $reference)->first();
             if ($existing) {
+                if ($existing->payment_method === 'bkash' && $existing->payment_status->value !== 'paid') {
+                    $transaction = $existing->paymentTransactions()->where('status', 'initiated')->latest('id')->first();
+                    if ($transaction?->redirect_url) {
+                        $request->session()->put('bkash_payment', [
+                            'transaction_id' => $transaction->getKey(),
+                            'order_id' => $existing->getKey(),
+                        ]);
+
+                        return redirect()->away($transaction->redirect_url);
+                    }
+
+                    throw ValidationException::withMessages(['payment_method' => 'আগের bKash payment সম্পন্ন হয়নি। পেজটি রিফ্রেশ করে আবার চেষ্টা করুন।']);
+                }
                 $request->session()->put($sessionKey.'.order_id', $existing->id);
 
                 return $this->receipt($existing);
@@ -64,7 +88,7 @@ class LandingCheckoutController extends Controller
                 'district_search' => ['required', 'string', 'max:120'],
                 'thana' => ['required', 'string', 'max:120'],
                 'shipping_region_id' => ['required', 'integer'],
-                'payment_method' => ['required', Rule::in(['cod'])],
+                'payment_method' => ['required', Rule::in($paymentMethods->keys())],
                 'notes' => ['nullable', 'string', 'max:1000'],
             ], [
                 'customer_name.required' => 'আপনার নাম লিখুন।',
@@ -74,6 +98,8 @@ class LandingCheckoutController extends Controller
                 'district_search.required' => 'জেলার নাম লিখে তালিকা থেকে নির্বাচন করুন।',
                 'thana.required' => 'থানা বা উপজেলার নাম লিখুন।',
                 'shipping_region_id.required' => 'জেলার নাম লিখে তালিকা থেকে নির্বাচন করুন।',
+                'payment_method.required' => 'একটি পেমেন্ট পদ্ধতি নির্বাচন করুন।',
+                'payment_method.in' => 'নির্বাচিত পেমেন্ট পদ্ধতিটি এখন চালু নেই।',
             ])->validate();
 
             $cart = $selection->cart($landingPage, $validated);
@@ -100,10 +126,30 @@ class LandingCheckoutController extends Controller
                 }
             }
             $validated['marketing_attribution'] = $attribution ?: null;
+            if ($validated['payment_method'] === 'bkash') {
+                $payment = DB::transaction(function () use ($checkout, $bkash, $cart, $validated, $quote): array {
+                    $order = $checkout->place($cart, $validated, $quote);
+
+                    return ['order' => $order, ...$bkash->initiate($order)];
+                }, attempts: 3);
+                $request->session()->put('bkash_payment', [
+                    'transaction_id' => $payment['transaction']->getKey(),
+                    'order_id' => $payment['order']->getKey(),
+                ]);
+
+                return redirect()->away($payment['redirect_url']);
+            }
+
             $order = $checkout->place($cart, $validated, $quote);
         } catch (ValidationException $exception) {
             return redirect(route('store.landing.show', $landingPage).'#order-now')
                 ->withErrors($exception->errors())->withInput($request->except(['_token', 'checkout_token']));
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect(route('store.landing.show', $landingPage).'#order-now')
+                ->withErrors(['payment_method' => 'bKash payment শুরু করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন অথবা ক্যাশ অন ডেলিভারি নির্বাচন করুন।'])
+                ->withInput($request->except(['_token', 'checkout_token']));
         }
 
         $request->session()->put($sessionKey.'.order_id', $order->id);
@@ -111,7 +157,7 @@ class LandingCheckoutController extends Controller
             $analytics->record($request, [
                 'event_type' => 'purchase', 'event_id' => 'purchase-'.$order->order_number,
                 'order_id' => $order->id, 'value' => $order->total_amount,
-                'metadata' => ['currency' => $order->currency, 'invoice_id' => $order->order_number, 'payment_method' => 'cod'],
+                'metadata' => ['currency' => $order->currency, 'invoice_id' => $order->order_number, 'payment_method' => $order->payment_method],
             ]);
         } catch (Throwable) {
             // Analytics must not interrupt a confirmed order.

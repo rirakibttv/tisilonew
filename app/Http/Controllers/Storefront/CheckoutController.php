@@ -8,13 +8,16 @@ use App\Models\IncompleteOrder;
 use App\Models\LandingPage;
 use App\Models\Order;
 use App\Models\SiteSetting;
+use App\Services\BkashPaymentService;
 use App\Services\CheckoutService;
+use App\Services\PaymentMethodService;
 use App\Services\ShippingRateService;
 use App\Services\VisitorAnalyticsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Throwable;
@@ -25,8 +28,8 @@ class CheckoutController extends Controller
         Request $request,
         VisitorAnalyticsService $analytics,
         ShippingRateService $shippingRates,
-    ): View|RedirectResponse
-    {
+        PaymentMethodService $paymentMethods,
+    ): View|RedirectResponse {
         $cart = collect($request->session()->get('store_cart', []));
         if ($cart->isEmpty()) {
             return to_route('store.cart.index')->withErrors(['cart' => 'চেকআউট করার আগে কার্টে পণ্য যোগ করুন।']);
@@ -50,12 +53,16 @@ class CheckoutController extends Controller
             'subtotal' => $this->subtotal($cart),
             'regions' => $regions,
             'checkoutNote' => SiteSetting::valuesFor('general')['checkout_note'] ?? null,
+            'paymentMethods' => $paymentMethods->enabled(),
+            'defaultPaymentMethod' => $paymentMethods->default(),
         ]);
     }
 
     public function store(
         Request $request,
         CheckoutService $checkout,
+        BkashPaymentService $bkash,
+        PaymentMethodService $paymentMethods,
         VisitorAnalyticsService $analytics,
         ShippingRateService $shippingRates,
     ): RedirectResponse {
@@ -68,7 +75,7 @@ class CheckoutController extends Controller
             'district_search' => ['required', 'string', 'max:120'],
             'thana' => ['required', 'string', 'max:120'],
             'shipping_region_id' => ['required', 'integer', Rule::in($regions->keys()->all())],
-            'payment_method' => ['required', Rule::in(['cod'])],
+            'payment_method' => ['required', Rule::in($paymentMethods->keys())],
             'notes' => ['nullable', 'string', 'max:1000'],
         ], [
             'customer_name.required' => 'আপনার নাম লিখুন।',
@@ -79,6 +86,8 @@ class CheckoutController extends Controller
             'thana.required' => 'থানা বা উপজেলার নাম লিখুন।',
             'shipping_region_id.required' => 'জেলার নাম লিখে তালিকা থেকে নির্বাচন করুন।',
             'shipping_region_id.in' => 'এই এলাকায় নির্বাচিত পণ্যের shipping rate পাওয়া যায়নি।',
+            'payment_method.required' => 'একটি পেমেন্ট পদ্ধতি নির্বাচন করুন।',
+            'payment_method.in' => 'নির্বাচিত পেমেন্ট পদ্ধতিটি এখন চালু নেই।',
         ]);
 
         $quote = $regions->get((int) $validated['shipping_region_id']);
@@ -88,6 +97,29 @@ class CheckoutController extends Controller
         $validated['postal_code'] = $quote['postal_code'];
         $validated['landing_page_id'] = $this->activeLandingPage($request)?->getKey();
         $validated['marketing_attribution'] = $this->marketingAttribution($request);
+        if ($validated['payment_method'] === 'bkash') {
+            try {
+                $payment = DB::transaction(function () use ($checkout, $bkash, $cart, $validated, $quote): array {
+                    $order = $checkout->place($cart, $validated, $quote);
+
+                    return ['order' => $order, ...$bkash->initiate($order)];
+                }, attempts: 3);
+            } catch (Throwable $exception) {
+                report($exception);
+
+                return back()->withInput()->withErrors([
+                    'payment_method' => 'bKash payment শুরু করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন অথবা ক্যাশ অন ডেলিভারি নির্বাচন করুন।',
+                ]);
+            }
+
+            $request->session()->put('bkash_payment', [
+                'transaction_id' => $payment['transaction']->getKey(),
+                'order_id' => $payment['order']->getKey(),
+            ]);
+
+            return redirect()->away($payment['redirect_url']);
+        }
+
         $order = $checkout->place($cart, $validated, $quote);
 
         $this->completeIncompleteOrder($request, $order);

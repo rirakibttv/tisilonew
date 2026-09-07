@@ -102,10 +102,10 @@
                     </div>
 
                     <label class="block text-xs font-bold">থানা/উপজেলা লিখুন <span class="text-rose-600">*</span><input name="thana" value="{{ old('thana') }}" required maxlength="120" autocomplete="address-level3" placeholder="থানা বা উপজেলার নাম" class="mt-1 h-11 w-full border border-slate-200 px-3 font-normal outline-none focus:border-green-600"><span class="mt-1 block text-[10px] font-normal leading-4 text-slate-500">ডেলিভারি লোকেশন নিশ্চিত করার জন্য লিখুন; চার্জ জেলা অনুযায়ী হিসাব হবে।</span></label>
+                    @include('storefront.partials.payment-methods')
                     <label class="block text-xs font-bold">অর্ডার নোট (ঐচ্ছিক)<textarea name="notes" rows="2" maxlength="1000" class="mt-1 w-full border border-slate-200 p-3 font-normal outline-none focus:border-green-600">{{ old('notes') }}</textarea></label>
                 </div>
                 <input type="hidden" name="customer_email" value="{{ old('customer_email', auth()->user()?->email) }}">
-                <input type="hidden" name="payment_method" value="cod">
                 @if($preview)<p class="mt-3 text-xs font-bold text-amber-700">প্রিভিউতে অর্ডার বন্ধ আছে।</p>@endif
                 <button type="submit" data-campaign-submit @disabled($preview) class="campaign-green-bg mt-3 min-h-12 w-full rounded px-5 py-3 text-sm font-black text-white shadow disabled:opacity-50">অর্ডার সম্পন্ন করুন</button>
             </div>

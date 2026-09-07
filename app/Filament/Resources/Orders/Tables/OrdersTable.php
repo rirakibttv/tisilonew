@@ -49,6 +49,7 @@ class OrdersTable
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'cod' => 'Cash on Delivery',
+                        'bkash' => 'bKash',
                         default => ucfirst(str_replace('_', ' ', $state)),
                     })
                     ->toggleable(),

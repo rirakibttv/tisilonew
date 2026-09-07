@@ -192,6 +192,80 @@ class CheckoutService
         ]);
     }
 
+    public function cancelUnpaid(Order $order): Order
+    {
+        return DB::transaction(function () use ($order): Order {
+            $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->getKey());
+            if ($lockedOrder->payment_status === PaymentStatus::Paid || $lockedOrder->status === OrderStatus::Cancelled) {
+                return $lockedOrder;
+            }
+
+            $items = $lockedOrder->items()->with(['product', 'productVariation'])->get();
+            foreach ($items as $item) {
+                if ($item->vendor_listing_item_id) {
+                    $this->releaseVendorReservations($item);
+                } elseif ($item->product_variation_id) {
+                    $variation = ProductVariation::query()->lockForUpdate()->find($item->product_variation_id);
+                    $variation?->increment('stock_quantity', $item->quantity);
+                    $variation?->update(['stock_status' => 'in_stock']);
+                } elseif ($item->product?->manage_stock) {
+                    $product = Product::query()->lockForUpdate()->find($item->product_id);
+                    $product?->increment('stock_quantity', $item->quantity);
+                    $product?->update(['stock_status' => 'in_stock']);
+                }
+            }
+
+            $lockedOrder->update([
+                'status' => OrderStatus::Cancelled,
+                'payment_status' => PaymentStatus::Failed,
+            ]);
+
+            return $lockedOrder->fresh();
+        }, attempts: 3);
+    }
+
+    private function releaseVendorReservations(OrderItem $item): void
+    {
+        $reservations = InventoryMovement::query()
+            ->where('reference_type', $item->getMorphClass())
+            ->where('reference_id', $item->getKey())
+            ->where('type', InventoryMovementType::Reservation->value)
+            ->get();
+
+        foreach ($reservations as $reservation) {
+            $idempotencyKey = "payment-cancel-order-item-{$item->getKey()}-stock-{$reservation->inventory_stock_id}";
+            if (InventoryMovement::query()->where('idempotency_key', $idempotencyKey)->exists()) {
+                continue;
+            }
+
+            $stock = InventoryStock::query()->lockForUpdate()->find($reservation->inventory_stock_id);
+            if (! $stock) {
+                continue;
+            }
+
+            $quantityBefore = $stock->quantity;
+            $reservedBefore = $stock->reserved_quantity;
+            $released = min($reservedBefore, max(0, (int) $reservation->reserved_delta));
+            $reservedAfter = $reservedBefore - $released;
+            $stock->forceFill(['reserved_quantity' => $reservedAfter])->save();
+
+            InventoryMovement::query()->create([
+                'inventory_stock_id' => $stock->getKey(),
+                'type' => InventoryMovementType::ReservationRelease,
+                'reserved_delta' => -$released,
+                'quantity_before' => $quantityBefore,
+                'quantity_after' => $quantityBefore,
+                'reserved_before' => $reservedBefore,
+                'reserved_after' => $reservedAfter,
+                'reference_type' => $item->getMorphClass(),
+                'reference_id' => $item->getKey(),
+                'idempotency_key' => $idempotencyKey,
+                'reason' => 'Release inventory after unsuccessful online payment',
+                'created_at' => now(),
+            ]);
+        }
+    }
+
     /** @param Collection<int, InventoryStock> $stocks */
     private function reserveVendorStock(Collection $stocks, VendorListingItem $listingItem, OrderItem $orderItem, int $quantity): void
     {

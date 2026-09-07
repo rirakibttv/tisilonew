@@ -3,21 +3,26 @@
 namespace Tests\Feature;
 
 use App\Enums\IncompleteOrderStatus;
+use App\Enums\PaymentStatus;
 use App\Enums\VendorListingStatus;
 use App\Enums\VendorStatus;
 use App\Models\InventoryStock;
 use App\Models\Order;
+use App\Models\PaymentTransaction;
 use App\Models\Product;
 use App\Models\ShippingClass;
 use App\Models\ShippingPartner;
 use App\Models\ShippingRegion;
 use App\Models\ShippingRegionRate;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorListing;
 use App\Models\VendorListingItem;
 use App\Models\VendorWarehouse;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\Client\Request as HttpRequest;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -30,6 +35,12 @@ class CheckoutTest extends TestCase
     private int $shippingRegionId;
 
     private int $shippingPartnerId;
+
+    protected function tearDown(): void
+    {
+        SiteSetting::forget('payment');
+        parent::tearDown();
+    }
 
     public function test_customer_can_checkout_and_create_a_pending_order(): void
     {
@@ -80,6 +91,80 @@ class CheckoutTest extends TestCase
             'status' => IncompleteOrderStatus::Converted->value,
         ]);
         $this->assertSame(8, $product->fresh()->stock_quantity);
+        $this->assertEmpty(session('store_cart', []));
+    }
+
+    public function test_checkout_shows_cod_and_bkash_and_completes_a_bkash_payment(): void
+    {
+        $this->enableBkash();
+        $this->shippingSettings();
+        $product = $this->product('bKash Checkout Product', 1250, 10);
+        $this->post(route('store.cart.store'), [
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ])->assertRedirect(route('store.cart.index'));
+
+        $this->get(route('store.checkout.index'))
+            ->assertOk()
+            ->assertSee('value="cod"', false)
+            ->assertSee('value="bkash"', false)
+            ->assertSee('ক্যাশ অন ডেলিভারি')
+            ->assertSee('bKash');
+
+        Http::fake(function (HttpRequest $request) {
+            if (str_ends_with($request->url(), '/tokenized/checkout/token/grant')) {
+                return Http::response(['id_token' => 'test-bkash-token', 'expires_in' => 3600], 200);
+            }
+            if (str_ends_with($request->url(), '/tokenized/checkout/create')) {
+                return Http::response([
+                    'paymentID' => 'TEST-BKASH-PAYMENT',
+                    'bkashURL' => 'https://tokenized.sandbox.bka.sh/checkout/test-payment',
+                    'transactionStatus' => 'Initiated',
+                    'statusCode' => '0000',
+                ], 200);
+            }
+            if (str_ends_with($request->url(), '/tokenized/checkout/execute')) {
+                $order = Order::query()->sole();
+
+                return Http::response([
+                    'paymentID' => 'TEST-BKASH-PAYMENT',
+                    'trxID' => 'TEST-TRX-123',
+                    'transactionStatus' => 'Completed',
+                    'amount' => $order->total_amount,
+                    'currency' => $order->currency,
+                    'merchantInvoiceNumber' => $order->order_number,
+                    'statusCode' => '0000',
+                ], 200);
+            }
+
+            return Http::response([], 404);
+        });
+
+        $response = $this->post(route('store.checkout.store'), [
+            ...$this->checkoutData(),
+            'payment_method' => 'bkash',
+        ]);
+        $response->assertRedirect('https://tokenized.sandbox.bka.sh/checkout/test-payment');
+        $order = Order::query()->sole();
+        $transaction = PaymentTransaction::query()->sole();
+        $this->assertSame('bkash', $order->payment_method);
+        $this->assertSame(PaymentStatus::Pending, $order->payment_status);
+        $this->assertSame('initiated', $transaction->status);
+        $this->assertNotEmpty(session('store_cart'));
+
+        $callback = $this->get(route('store.payments.bkash.callback', [
+            'paymentID' => 'TEST-BKASH-PAYMENT',
+            'status' => 'success',
+        ]));
+
+        $callback->assertRedirect();
+        $this->get($callback->headers->get('Location'))
+            ->assertOk()
+            ->assertSee('bKash')
+            ->assertSee($order->order_number);
+        $this->assertSame(PaymentStatus::Paid, $order->fresh()->payment_status);
+        $this->assertSame('completed', $transaction->fresh()->status);
+        $this->assertSame('TEST-TRX-123', $transaction->fresh()->transaction_id);
         $this->assertEmpty(session('store_cart', []));
     }
 
@@ -224,6 +309,22 @@ class CheckoutTest extends TestCase
             'stock_status' => $stock > 0 ? 'in_stock' : 'out_of_stock',
             'status' => 'published',
             'shipping_class_id' => $this->shippingClassId,
+        ]);
+    }
+
+    private function enableBkash(): void
+    {
+        SiteSetting::put('payment', [
+            'cod_enabled' => true,
+            'bkash_enabled' => true,
+            'bkash_environment' => 'sandbox',
+            'bkash_username' => 'sandbox-user',
+            'default_gateway' => 'cod',
+            'currency' => 'BDT',
+        ], [
+            'bkash_password' => 'sandbox-password',
+            'bkash_app_key' => 'test-app-key-'.Str::random(12),
+            'bkash_app_secret' => 'sandbox-secret',
         ]);
     }
 }
