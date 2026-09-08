@@ -616,7 +616,7 @@ class ApiIntegrationSettings extends Page
 
         return [
             Section::make('Cloudflare Zone Connection')
-                ->description('Create a scoped API token with Zone Read, Analytics Read, DNS Read, and Cache Purge permissions. Cache Rules and TTL values remain controlled from the Cloudflare Dashboard.')
+                ->description('Create a scoped API token with Zone Read, Zone Settings Read, Analytics Read, DNS Read, and Cache Purge permissions. Cache Rules and TTL values remain controlled from the Cloudflare Dashboard.')
                 ->columns(2)
                 ->schema([
                     TextInput::make('zone_id')
