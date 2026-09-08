@@ -41,7 +41,7 @@ class ApiIntegrationSettings extends Page
         'facebook_capi' => 'Facebook CAPI',
         'facebook_auto_post' => 'FB Auto Post',
         'search_console' => 'Google Search Console',
-        'fraud' => 'Manage Fraud API',
+        'fraud' => 'Manage Fraud Checker',
         'google_analytics' => 'Google Analytics',
         'google_tag_manager' => 'Google Tag Manager',
         'cloudflare' => 'Cloudflare API',
@@ -544,19 +544,31 @@ class ApiIntegrationSettings extends Page
     private function fraudComponents(): array
     {
         return [
-            Section::make('Fraud & Duplicate Order API')->columns(2)->schema([
-                Toggle::make('enabled')->default(false),
-                Select::make('provider')->options([
-                    'BD Courier' => 'BD Courier',
-                    'FraudBD' => 'FraudBD',
-                    'custom' => 'Custom Provider',
-                ])->default('BD Courier')->required(),
-                TextInput::make('endpoint')->url()->maxLength(500)->columnSpanFull(),
-                TextInput::make('timeout_seconds')->numeric()->minValue(1)->maxValue(30)->default(8),
-                TextInput::make('risk_threshold')->numeric()->minValue(0)->maxValue(100)->default(70),
-                $this->secretInput('fraud_api_key', 'Fraud API Key'),
-                $this->secretInput('duplicate_order_api_key', 'Duplicate Order API Key'),
-            ]),
+            Section::make('Fraud Checker Provider')
+                ->description('এই configuration-ই Fraud Checker API page ব্যবহার করে। Provider protection থাকলে production hosting IP allowlist করতে হবে।')
+                ->columns(2)->schema([
+                    Toggle::make('enabled')->label('Enable fraud checking')->default(false),
+                    Select::make('provider')->options([
+                        'BD Courier' => 'BD Courier',
+                        'FraudBD' => 'FraudBD',
+                        'custom' => 'Custom Provider',
+                    ])->default('BD Courier')->required(),
+                    TextInput::make('endpoint')->label('Provider HTTPS Endpoint')->url()->regex('/^https:\/\//i')->maxLength(500)->required()->columnSpanFull(),
+                    Select::make('http_method')->label('Request Method')->options(['POST' => 'POST', 'GET' => 'GET'])->default('POST')->required(),
+                    Select::make('auth_type')->label('API Key Placement')->options([
+                        'bearer' => 'Bearer token',
+                        'header' => 'Custom header',
+                        'query' => 'Query parameter',
+                        'none' => 'No authentication',
+                    ])->default('bearer')->required(),
+                    TextInput::make('phone_field')->label('Mobile Field Name')->default('phone')->regex('/^[A-Za-z0-9_.-]+$/')->maxLength(80)->required(),
+                    TextInput::make('api_key_header')->label('Custom API Key Header')->default('X-API-Key')->regex('/^[A-Za-z0-9-]+$/')->maxLength(120),
+                    TextInput::make('api_key_parameter')->label('API Key Query Parameter')->default('api_key')->regex('/^[A-Za-z0-9_.-]+$/')->maxLength(120),
+                    TextInput::make('timeout_seconds')->numeric()->minValue(1)->maxValue(30)->default(8),
+                    TextInput::make('risk_threshold')->label('Minimum Safe Delivery Rate (%)')->numeric()->minValue(1)->maxValue(100)->default(70),
+                    $this->secretInput('fraud_api_key', 'Fraud API Key'),
+                    $this->secretInput('duplicate_order_api_key', 'Duplicate Order API Key'),
+                ]),
         ];
     }
 

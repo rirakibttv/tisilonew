@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Enums\AdminNavigationGroup;
 use App\Filament\Pages\ApiIntegrationSettings;
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\FraudChecker;
 use App\Filament\Pages\GeneralSettings;
 use App\Filament\Pages\ModuleOverview;
 use App\Filament\Pages\SeoOverview;
@@ -95,6 +96,8 @@ class AdminPanelProvider extends PanelProvider
                     array_values(array_filter(
                         AdminNavigationGroup::cases(),
                         fn (AdminNavigationGroup $group): bool => ! in_array($group, [
+                            AdminNavigationGroup::PosSystem,
+                            AdminNavigationGroup::FraudCheckerApi,
                             AdminNavigationGroup::OrderPanel,
                             AdminNavigationGroup::Shipping,
                             AdminNavigationGroup::LandingPage,
@@ -106,6 +109,22 @@ class AdminPanelProvider extends PanelProvider
                         ], true),
                     )),
                 ),
+
+                NavigationItem::make('POS System')
+                    ->key('pos-system-direct')
+                    ->icon(Heroicon::OutlinedCalculator)
+                    ->sort(-1)
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.module-overview')
+                        && request()->string('module')->toString() === AdminNavigationGroup::PosSystem->slug())
+                    ->url(fn (): string => ModuleOverview::getUrl(['module' => AdminNavigationGroup::PosSystem->slug()])),
+
+                NavigationItem::make('Fraud Checker API')
+                    ->key('fraud-checker-direct')
+                    ->icon(Heroicon::OutlinedShieldCheck)
+                    ->sort(0)
+                    ->visible(fn (): bool => FraudChecker::canAccess())
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.fraud-checker'))
+                    ->url(fn (): string => FraudChecker::getUrl()),
 
                 ...$this->orderPanelNavigationItems(),
 
@@ -261,7 +280,7 @@ class AdminPanelProvider extends PanelProvider
             ['facebook_capi', 'Facebook CAPI', Heroicon::OutlinedShare],
             ['facebook_auto_post', 'FB Auto Post', Heroicon::OutlinedPaperAirplane],
             ['search_console', 'Google Search Console', Heroicon::OutlinedMagnifyingGlass],
-            ['fraud', 'Manage Fraud API', Heroicon::OutlinedShieldCheck],
+            ['fraud', 'Manage Fraud Checker', Heroicon::OutlinedShieldCheck],
             ['google_analytics', 'Google Analytics', Heroicon::OutlinedChartBarSquare],
             ['google_tag_manager', 'Google Tag Manager', Heroicon::OutlinedTag],
             ['cloudflare', 'Cloudflare API', Heroicon::OutlinedGlobeAlt],

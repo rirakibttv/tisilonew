@@ -104,7 +104,11 @@ class GeneralSettings extends Page
             })->values()->all();
         }
 
-        SiteSetting::put($this->section, $values, $secretUpdates);
+        SiteSetting::put(
+            $this->section,
+            [...SiteSetting::valuesFor($this->section), ...$values],
+            $secretUpdates,
+        );
 
         Notification::make()
             ->success()
@@ -396,5 +400,4 @@ class GeneralSettings extends Page
             ]),
         ];
     }
-
 }
