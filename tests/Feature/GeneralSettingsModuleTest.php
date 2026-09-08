@@ -34,6 +34,34 @@ class GeneralSettingsModuleTest extends TestCase
         $this->assertArrayNotHasKey('shipping', GeneralSettings::SECTIONS);
     }
 
+    public function test_fraud_configuration_only_exists_in_api_integration_master_settings(): void
+    {
+        $admin = User::factory()->create([
+            'role' => UserRole::Admin,
+            'status' => UserStatus::Active,
+        ]);
+
+        $this->assertArrayNotHasKey('fraud', GeneralSettings::SECTIONS);
+
+        $this->actingAs($admin)
+            ->get('/admin')
+            ->assertOk()
+            ->assertDontSee('Fraud API Settings')
+            ->assertSee('Manage Fraud Checker');
+
+        $this->actingAs($admin)
+            ->get('/admin/general-settings?section=fraud')
+            ->assertNotFound();
+
+        $this->actingAs($admin)
+            ->get('/admin/api-integrations?section=fraud')
+            ->assertOk()
+            ->assertSee('Manage Fraud Checker')
+            ->assertSee('Fraud Checker Provider')
+            ->assertSee('Provider HTTPS Endpoint')
+            ->assertSee('Minimum Safe Delivery Rate');
+    }
+
     public function test_active_content_page_is_available_on_the_storefront(): void
     {
         SiteSetting::put('pages', [

@@ -45,7 +45,6 @@ class GeneralSettings extends Page
         'email' => 'Email Settings',
         'cronjob' => 'Cronjob',
         'sitemap' => 'Sitemap Settings',
-        'fraud' => 'Fraud API Settings',
     ];
 
     public function mount(): void
@@ -183,7 +182,6 @@ class GeneralSettings extends Page
     {
         return match ($this->section) {
             'email' => ['MAIL_PASSWORD'],
-            'fraud' => ['fraud_api_key', 'duplicate_order_api_key'],
             default => [],
         };
     }
@@ -201,7 +199,6 @@ class GeneralSettings extends Page
             'email' => $this->emailComponents(),
             'cronjob' => $this->cronjobComponents(),
             'sitemap' => $this->sitemapComponents(),
-            'fraud' => $this->fraudComponents(),
         };
     }
 
@@ -383,20 +380,6 @@ class GeneralSettings extends Page
                 Toggle::make('include_pages')->default(true),
                 TextInput::make('path')->disabled(),
                 TextInput::make('last_generated_at')->disabled(),
-            ]),
-        ];
-    }
-
-    /** @return array<mixed> */
-    private function fraudComponents(): array
-    {
-        return [
-            Section::make('Fraud Checker API')->columns(2)->schema([
-                Toggle::make('enabled')->default(false),
-                TextInput::make('provider')->required(),
-                TextInput::make('endpoint')->url()->required()->columnSpanFull(),
-                TextInput::make('fraud_api_key')->password()->revealable()->placeholder('Leave blank to keep the saved key'),
-                TextInput::make('duplicate_order_api_key')->password()->revealable()->placeholder('Leave blank to keep the saved key'),
             ]),
         ];
     }

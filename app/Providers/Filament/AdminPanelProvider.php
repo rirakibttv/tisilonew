@@ -313,7 +313,6 @@ class AdminPanelProvider extends PanelProvider
             ['email', 'Email Settings', Heroicon::OutlinedEnvelope],
             ['cronjob', 'Cronjob', Heroicon::OutlinedClock],
             ['sitemap', 'Sitemap Settings', Heroicon::OutlinedGlobeAlt],
-            ['fraud', 'Fraud API Settings', Heroicon::OutlinedShieldExclamation],
         ];
 
         return array_map(
