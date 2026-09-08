@@ -157,13 +157,14 @@ class GoogleAnalyticsService
             ['name' => 'totalRevenue'],
         ];
         $endpoint = "https://analyticsdata.googleapis.com/v1beta/properties/{$propertyId}:runReport";
+        $startDate = (max(3, $days) - 1).'daysAgo';
         $summaryResponse = $client->post($endpoint, [
-            'dateRanges' => [['startDate' => max(3, $days).'daysAgo', 'endDate' => 'today']],
+            'dateRanges' => [['startDate' => $startDate, 'endDate' => 'today']],
             'metrics' => $metrics,
             'limit' => '1',
         ]);
         $dailyResponse = $client->post($endpoint, [
-            'dateRanges' => [['startDate' => max(3, $days).'daysAgo', 'endDate' => 'today']],
+            'dateRanges' => [['startDate' => $startDate, 'endDate' => 'today']],
             'dimensions' => [['name' => 'date']],
             'metrics' => $metrics,
             'orderBys' => [['dimension' => ['dimensionName' => 'date']]],

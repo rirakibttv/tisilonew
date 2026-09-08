@@ -645,7 +645,7 @@ class ApiIntegrationSettings extends Page
                     TextInput::make('active_zone_setting_count')->label('Active Zone Settings')->disabled(),
                     TextInput::make('traffic_requests')->label('Requests (14 days)')->disabled(),
                     TextInput::make('traffic_page_views')->label('Page Views')->disabled(),
-                    TextInput::make('traffic_unique_visitors')->label('Unique Visitors')->disabled(),
+                    TextInput::make('traffic_unique_visitors')->label('Peak Daily Visitors')->disabled(),
                     TextInput::make('traffic_threats')->label('Threats Blocked')->disabled(),
                     TextInput::make('traffic_cache_hit_rate')->label('Cache Hit Rate')->disabled(),
                     TextInput::make('traffic_bandwidth_saved_rate')->label('Bandwidth Saved')->disabled(),

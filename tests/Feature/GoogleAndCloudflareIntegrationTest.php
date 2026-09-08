@@ -84,6 +84,7 @@ class GoogleAndCloudflareIntegrationTest extends TestCase
         );
         Http::assertSent(fn (HttpRequest $request): bool => $request->url() === 'https://analyticsdata.googleapis.com/v1beta/properties/123456789:runReport'
             && $request->hasHeader('Authorization', 'Bearer google-oauth-token')
+            && $request->data()['dateRanges'][0]['startDate'] === '27daysAgo'
         );
     }
 
