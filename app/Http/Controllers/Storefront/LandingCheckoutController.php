@@ -125,6 +125,9 @@ class LandingCheckoutController extends Controller
                     $attribution[$key] = str((string) $request->cookie($cookie))->stripTags()->limit(255, '')->toString();
                 }
             }
+            if (filled($request->cookie('tisilo_ga_cid'))) {
+                $attribution['ga_client_id'] = str((string) $request->cookie('tisilo_ga_cid'))->stripTags()->limit(255, '')->toString();
+            }
             $validated['marketing_attribution'] = $attribution ?: null;
             if ($validated['payment_method'] === 'bkash') {
                 $payment = DB::transaction(function () use ($checkout, $bkash, $cart, $validated, $quote): array {

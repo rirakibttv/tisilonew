@@ -4,6 +4,9 @@
 
     var endpoint = @json(route('visitor.analytics.track'));
     var csrfToken = @json(csrf_token());
+    var googleAnalyticsEnabled = @json(filter_var($googleAnalyticsSettings['enabled'] ?? false, FILTER_VALIDATE_BOOL));
+    var googleMeasurementId = @json($googleAnalyticsSettings['measurement_id'] ?? null);
+    var googleAnonymizeIp = @json(filter_var($googleAnalyticsSettings['anonymize_ip'] ?? true, FILTER_VALIDATE_BOOL));
     var storageKey = 'tisilo_visitor_id';
     var attributionKey = 'tisilo_traffic_attribution';
 
@@ -68,6 +71,25 @@
         }
     }
 
+    function initializeGoogleAnalytics(id) {
+        if (!googleAnalyticsEnabled || !/^G-[A-Z0-9]{4,20}$/.test(googleMeasurementId || '')) return;
+
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        window.gtag('js', new Date());
+        window.gtag('config', googleMeasurementId, {
+            client_id: id,
+            send_page_view: false,
+            anonymize_ip: googleAnonymizeIp
+        });
+
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(googleMeasurementId);
+        document.head.appendChild(script);
+        document.cookie = 'tisilo_ga_cid=' + encodeURIComponent(id) + '; Max-Age=31536000; Path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
+    }
+
     function track(eventType, details) {
         details = details || {};
         var id = visitorId();
@@ -94,6 +116,8 @@
         }).catch(function () {});
     }
 
+    var currentVisitorId = visitorId();
+    initializeGoogleAnalytics(currentVisitorId);
     window.TisiloAnalytics = { track: track, visitorId: visitorId };
 
     if (document.readyState === 'loading') {

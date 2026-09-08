@@ -38,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
                     'generalSettings' => SiteSetting::valuesFor('general'),
                     'seoSettings' => SiteSetting::valuesFor('seo'),
                     'contactSettings' => SiteSetting::valuesFor('contact'),
+                    'googleAnalyticsSettings' => SiteSetting::valuesFor('google_analytics'),
                     'socialLinks' => SiteSetting::valuesFor('social')['links'] ?? [],
                     'contentPages' => collect(SiteSetting::valuesFor('pages')['pages'] ?? [])
                         ->where('status', true)

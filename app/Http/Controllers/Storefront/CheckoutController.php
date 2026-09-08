@@ -184,6 +184,9 @@ class CheckoutController extends Controller
                 $safe[$key] = str((string) $request->cookie($cookie))->stripTags()->limit(255, '')->toString();
             }
         }
+        if (filled($request->cookie('tisilo_ga_cid'))) {
+            $safe['ga_client_id'] = str((string) $request->cookie('tisilo_ga_cid'))->stripTags()->limit(255, '')->toString();
+        }
 
         return $safe ?: null;
     }

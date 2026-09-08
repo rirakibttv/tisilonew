@@ -18,7 +18,10 @@ class VisitorAnalyticsService
         'purchase',
     ];
 
-    public function __construct(private MetaConversionsApiService $meta) {}
+    public function __construct(
+        private MetaConversionsApiService $meta,
+        private GoogleAnalyticsService $googleAnalytics,
+    ) {}
 
     /** @param array<string, mixed> $data */
     public function record(Request $request, array $data): VisitorEvent
@@ -57,6 +60,12 @@ class VisitorAnalyticsService
 
         try {
             $this->meta->queueVisitorEvent($request, $event);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+
+        try {
+            $this->googleAnalytics->queueVisitorEvent($request, $event);
         } catch (Throwable $exception) {
             report($exception);
         }

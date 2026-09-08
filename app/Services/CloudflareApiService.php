@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -29,6 +30,94 @@ class CloudflareApiService
             ]),
             'Cloudflare cache purge',
         );
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public function zoneSettings(string $apiToken, string $zoneId): array
+    {
+        $result = $this->result(
+            $this->client($apiToken)->get("zones/{$zoneId}/settings"),
+            'Cloudflare zone-settings sync',
+        );
+
+        return array_is_list($result) ? $result : [];
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public function dnsRecords(string $apiToken, string $zoneId): array
+    {
+        $result = $this->result(
+            $this->client($apiToken)->get("zones/{$zoneId}/dns_records", ['per_page' => 100]),
+            'Cloudflare DNS-record sync',
+        );
+
+        return array_is_list($result) ? $result : [];
+    }
+
+    /** @return array{summary: array<string, float|int>, rows: array<int, array<string, mixed>>} */
+    public function trafficAnalytics(string $apiToken, string $zoneId, int $days = 14): array
+    {
+        $query = <<<'GRAPHQL'
+query TisiloZoneTraffic($zoneTag: string!, $start: Date!, $end: Date!) {
+  viewer {
+    zones(filter: {zoneTag: $zoneTag}) {
+      httpRequests1dGroups(
+        limit: 31
+        filter: {date_geq: $start, date_leq: $end}
+        orderBy: [date_ASC]
+      ) {
+        dimensions { date }
+        sum { requests bytes cachedRequests cachedBytes threats pageViews }
+        uniq { uniques }
+      }
+    }
+  }
+}
+GRAPHQL;
+
+        $response = $this->client($apiToken)->post('graphql', [
+            'query' => $query,
+            'variables' => [
+                'zoneTag' => $zoneId,
+                'start' => now()->subDays(max(2, $days) - 1)->toDateString(),
+                'end' => now()->toDateString(),
+            ],
+        ]);
+        $payload = $response->json();
+        $errors = is_array($payload) ? ($payload['errors'] ?? []) : [];
+        if (! $response->successful() || $errors !== []) {
+            $message = collect($errors)->pluck('message')->filter()->implode('; ');
+            throw new RuntimeException('Cloudflare traffic-analytics sync failed'.($message ? ': '.$message : " (HTTP {$response->status()})"));
+        }
+
+        $rows = collect(Arr::get($payload, 'data.viewer.zones.0.httpRequests1dGroups', []))
+            ->map(fn (array $row): array => [
+                'date' => (string) Arr::get($row, 'dimensions.date', ''),
+                'requests' => (int) Arr::get($row, 'sum.requests', 0),
+                'page_views' => (int) Arr::get($row, 'sum.pageViews', 0),
+                'bytes' => (int) Arr::get($row, 'sum.bytes', 0),
+                'cached_requests' => (int) Arr::get($row, 'sum.cachedRequests', 0),
+                'cached_bytes' => (int) Arr::get($row, 'sum.cachedBytes', 0),
+                'threats' => (int) Arr::get($row, 'sum.threats', 0),
+                'unique_visitors' => (int) Arr::get($row, 'uniq.uniques', 0),
+            ])->values();
+        $requests = (int) $rows->sum('requests');
+        $bytes = (int) $rows->sum('bytes');
+
+        return [
+            'summary' => [
+                'requests' => $requests,
+                'page_views' => (int) $rows->sum('page_views'),
+                'bandwidth_bytes' => $bytes,
+                'cached_requests' => (int) $rows->sum('cached_requests'),
+                'cached_bytes' => (int) $rows->sum('cached_bytes'),
+                'cache_hit_rate' => $requests > 0 ? round(((int) $rows->sum('cached_requests') / $requests) * 100, 2) : 0,
+                'bandwidth_saved_rate' => $bytes > 0 ? round(((int) $rows->sum('cached_bytes') / $bytes) * 100, 2) : 0,
+                'threats' => (int) $rows->sum('threats'),
+                'unique_visitors' => (int) $rows->max('unique_visitors'),
+            ],
+            'rows' => $rows->all(),
+        ];
     }
 
     private function client(string $apiToken): PendingRequest
@@ -90,5 +179,4 @@ class CloudflareApiService
 
         return is_array($result) ? $result : [];
     }
-
 }
