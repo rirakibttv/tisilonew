@@ -133,6 +133,8 @@ class AdminPanelProvider extends PanelProvider
 
                 ...$this->landingPageNavigationItems(),
 
+                ...$this->marketingNavigationItems(),
+
                 ...$this->apiIntegrationNavigationItems(),
 
                 ...$this->userNavigationItems(),
@@ -310,8 +312,6 @@ class AdminPanelProvider extends PanelProvider
             ['general', 'General Setting', Heroicon::OutlinedCog6Tooth],
             ['seo', 'SEO Settings', Heroicon::OutlinedMagnifyingGlass],
             ['social', 'Social Media', Heroicon::OutlinedShare],
-            ['contact', 'Contact', Heroicon::OutlinedPhone],
-            ['pages', 'Create Page', Heroicon::OutlinedDocumentPlus],
             ['order_restriction', 'Order Restriction', Heroicon::OutlinedAdjustmentsHorizontal],
             ['email', 'Email Settings', Heroicon::OutlinedEnvelope],
             ['cronjob', 'Cronjob', Heroicon::OutlinedClock],
@@ -336,6 +336,7 @@ class AdminPanelProvider extends PanelProvider
     private function contentPageNavigationItems(): array
     {
         $items = [
+            ['create', 'Create Page', Heroicon::OutlinedDocumentPlus],
             [null, 'All Pages', Heroicon::OutlinedDocumentText],
             ['contact-us', 'Contact Us', Heroicon::OutlinedPhone],
             ['blog', 'Blog', Heroicon::OutlinedBookOpen],
@@ -358,6 +359,21 @@ class AdminPanelProvider extends PanelProvider
             $items,
             array_keys($items),
         );
+    }
+
+    /** @return array<NavigationItem> */
+    private function marketingNavigationItems(): array
+    {
+        return [
+            NavigationItem::make('Contact')
+                ->key('marketing-contact')
+                ->group(AdminNavigationGroup::Marketing)
+                ->icon(Heroicon::OutlinedPhone)
+                ->sort(0)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.general-settings')
+                    && request()->string('section')->toString() === 'contact')
+                ->url(fn (): string => GeneralSettings::getUrl(['section' => 'contact'])),
+        ];
     }
 
     /** @return array<NavigationItem> */

@@ -34,6 +34,37 @@ class GeneralSettingsModuleTest extends TestCase
         $this->assertArrayNotHasKey('shipping', GeneralSettings::SECTIONS);
     }
 
+    public function test_create_page_and_contact_are_owned_by_pages_and_marketing_navigation(): void
+    {
+        $admin = User::factory()->create([
+            'role' => UserRole::Admin,
+            'status' => UserStatus::Active,
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin');
+
+        $response->assertOk()
+            ->assertSee('/admin/general-settings?section=contact', false)
+            ->assertSee('/admin/general-settings?section=pages&amp;page=create', false)
+            ->assertSeeInOrder([
+                'Marketing',
+                '/admin/general-settings?section=contact',
+                'Pages',
+                '/admin/general-settings?section=pages&amp;page=create',
+                'General Settings',
+            ], false);
+
+        $this->actingAs($admin)
+            ->get('/admin/general-settings?section=pages&page=create')
+            ->assertOk()
+            ->assertSee('Create Page');
+
+        $this->actingAs($admin)
+            ->get('/admin/general-settings?section=contact')
+            ->assertOk()
+            ->assertSee('Contact Information');
+    }
+
     public function test_fraud_configuration_only_exists_in_api_integration_master_settings(): void
     {
         $admin = User::factory()->create([
