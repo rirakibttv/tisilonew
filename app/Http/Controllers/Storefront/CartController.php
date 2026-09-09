@@ -7,8 +7,8 @@ use App\Enums\VendorListingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\LandingPage;
 use App\Models\Product;
-use App\Models\ProductVariation;
 use App\Models\VendorListingItem;
+use App\Services\CatalogCartLineService;
 use App\Services\VisitorAnalyticsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -28,8 +28,11 @@ class CartController extends Controller
         ]);
     }
 
-    public function store(Request $request, VisitorAnalyticsService $analytics): RedirectResponse
-    {
+    public function store(
+        Request $request,
+        VisitorAnalyticsService $analytics,
+        CatalogCartLineService $catalogCart,
+    ): RedirectResponse {
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'product_variation_id' => ['nullable', 'integer'],
@@ -42,7 +45,7 @@ class CartController extends Controller
         $product = Product::query()->where('status', 'published')->findOrFail($validated['product_id']);
         $line = isset($validated['vendor_listing_item_id'])
             ? $this->marketplaceLine($product, (int) $validated['vendor_listing_item_id'])
-            : $this->catalogLine($product, isset($validated['product_variation_id']) ? (int) $validated['product_variation_id'] : null);
+            : $catalogCart->make($product, isset($validated['product_variation_id']) ? (int) $validated['product_variation_id'] : null);
 
         $landingPageId = $validated['landing_page_id'] ?? null;
         $landingPage = $landingPageId
@@ -141,52 +144,6 @@ class CartController extends Controller
             'price' => (float) ($item->sale_price ?? $item->regular_price),
             'available' => $item->available_quantity,
             'backorders_allowed' => $item->backorders_allowed,
-        ];
-    }
-
-    /** @return array<string, mixed> */
-    private function catalogLine(Product $product, ?int $variationId): array
-    {
-        $variation = null;
-        if ($product->product_type === 'variable') {
-            $variation = ProductVariation::query()
-                ->where('product_id', $product->getKey())
-                ->where('status', true)
-                ->when($variationId, fn ($query) => $query->whereKey($variationId))
-                ->when(! $variationId, fn ($query) => $query->orderByDesc('is_default')->orderBy('sort_order'))
-                ->with('attributeValues.attribute:id,name')
-                ->first();
-
-            if ($variationId && ! $variation) {
-                throw ValidationException::withMessages([
-                    'product_variation_id' => 'নির্বাচিত ভ্যারিয়েশনটি পাওয়া যায়নি।',
-                ]);
-            }
-
-            if (! $variation && (float) ($product->sale_price ?? $product->regular_price) <= 0) {
-                throw ValidationException::withMessages([
-                    'product_variation_id' => 'এই পণ্যের মূল্য বা ভ্যারিয়েশন এখনো প্রস্তুত নয়।',
-                ]);
-            }
-        }
-
-        return [
-            'key' => 'catalog-'.$product->getKey().'-'.($variation?->getKey() ?? 'base'),
-            'product_id' => $product->getKey(),
-            'product_variation_id' => $variation?->getKey(),
-            'vendor_listing_item_id' => null,
-            'vendor_id' => null,
-            'name' => $product->name,
-            'slug' => $product->slug,
-            'option' => $variation?->attributeValues->map(fn ($value) => $value->attribute->name.': '.$value->value)->join(', '),
-            'vendor' => 'Tisilo',
-            'sku' => $variation?->sku ?? $product->sku,
-            'image' => $this->imageFor($product),
-            'price' => (float) ($variation?->sale_price ?? $variation?->regular_price ?? $product->sale_price ?? $product->regular_price),
-            'available' => $variation
-                ? (int) $variation->stock_quantity
-                : ($product->manage_stock ? (int) $product->stock_quantity : PHP_INT_MAX),
-            'backorders_allowed' => ! $variation && ! $product->manage_stock,
         ];
     }
 

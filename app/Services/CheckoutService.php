@@ -36,7 +36,7 @@ class CheckoutService
             $shippingAmount = round((float) ($shippingQuote['amount'] ?? 0), 2);
             $order = Order::query()->create([
                 'checkout_reference' => $customer['checkout_reference'] ?? null,
-                'user_id' => auth()->id(),
+                'user_id' => array_key_exists('user_id', $customer) ? $customer['user_id'] : auth()->id(),
                 'landing_page_id' => $customer['landing_page_id'] ?? null,
                 'customer_name' => $customer['customer_name'],
                 'customer_email' => $customer['customer_email'] ?? null,
@@ -44,7 +44,7 @@ class CheckoutService
                 'status' => OrderStatus::Pending,
                 'payment_status' => PaymentStatus::Unpaid,
                 'payment_method' => $customer['payment_method'],
-                'channel' => 'website',
+                'channel' => $customer['channel'] ?? 'website',
                 'shipping_zone' => $shippingQuote['name'],
                 'shipping_region_id' => $shippingQuote['region_id'],
                 'shipping_partner_id' => $shippingQuote['partner_id'],

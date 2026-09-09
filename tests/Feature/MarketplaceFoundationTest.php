@@ -131,8 +131,8 @@ class MarketplaceFoundationTest extends TestCase
                 AdminNavigationGroup::cases(),
             ));
 
-        $this->get('/admin/module-overview?module=pos-system')
+        $this->get('/admin/pos')
             ->assertOk()
-            ->assertSee('POS System workspace');
+            ->assertSee('Point of Sale');
     }
 }

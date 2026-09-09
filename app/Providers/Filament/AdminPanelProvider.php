@@ -8,6 +8,7 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\FraudChecker;
 use App\Filament\Pages\GeneralSettings;
 use App\Filament\Pages\ModuleOverview;
+use App\Filament\Pages\PosSystem;
 use App\Filament\Pages\SeoOverview;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
 use App\Filament\Resources\IncompleteOrders\Pages\ListIncompleteOrders;
@@ -114,9 +115,9 @@ class AdminPanelProvider extends PanelProvider
                     ->key('pos-system-direct')
                     ->icon(Heroicon::OutlinedCalculator)
                     ->sort(-1)
-                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.module-overview')
-                        && request()->string('module')->toString() === AdminNavigationGroup::PosSystem->slug())
-                    ->url(fn (): string => ModuleOverview::getUrl(['module' => AdminNavigationGroup::PosSystem->slug()])),
+                    ->visible(fn (): bool => PosSystem::canAccess())
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.pos'))
+                    ->url(fn (): string => PosSystem::getUrl()),
 
                 NavigationItem::make('Fraud Checker API')
                     ->key('fraud-checker-direct')
