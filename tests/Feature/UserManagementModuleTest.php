@@ -42,7 +42,7 @@ class UserManagementModuleTest extends TestCase
             'role' => UserRole::Customer,
             'status' => UserStatus::Active,
         ]);
-        User::factory()->create([
+        $operationsUser = User::factory()->create([
             'name' => 'Hidden Operations Account',
             'role' => UserRole::OperationsManager,
             'status' => UserStatus::Active,
@@ -53,6 +53,16 @@ class UserManagementModuleTest extends TestCase
             ->assertOk()
             ->assertSee($customer->name)
             ->assertDontSee('Hidden Operations Account');
+
+        $this->actingAs($admin)
+            ->get('/admin/users')
+            ->assertOk()
+            ->assertSee($operationsUser->name)
+            ->assertDontSee($customer->name);
+
+        $this->actingAs($admin)
+            ->get('/admin/users/'.$customer->getRouteKey().'/edit')
+            ->assertNotFound();
     }
 
     public function test_roles_can_receive_permissions_and_be_assigned_to_users(): void

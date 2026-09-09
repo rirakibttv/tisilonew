@@ -40,8 +40,8 @@ class UserForm
                         ->dehydrated(fn ($state): bool => filled($state)),
 
                     Select::make('role')
-                        ->options(UserRole::options())
-                        ->default(UserRole::Customer->value)
+                        ->options(collect(UserRole::options())->except([UserRole::Customer->value])->all())
+                        ->default(UserRole::OperationsManager->value)
                         ->required(),
 
                     Select::make('rbac_role_id')
