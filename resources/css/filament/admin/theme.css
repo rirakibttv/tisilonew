@@ -3,3 +3,19 @@
 
 @source '../../../../app/Filament/**/*';
 @source '../../../views/filament/**/*';
+
+/* Use the complete workspace on every authenticated admin page. */
+@layer components {
+    .fi-main {
+        max-width: 100% !important;
+        padding-inline: 10px !important;
+    }
+
+    .fi-page-header-main-ctn {
+        padding-block: 10px !important;
+    }
+
+    .fi-page {
+        padding-bottom: 10px;
+    }
+}

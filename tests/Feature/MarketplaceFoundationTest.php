@@ -122,6 +122,7 @@ class MarketplaceFoundationTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin')
             ->assertOk()
+            ->assertSee('fi-width-full', false)
             ->assertSee('Congratulations')
             ->assertSee('Marketplace Activity')
             ->assertSee('Recent Products')
@@ -134,5 +135,24 @@ class MarketplaceFoundationTest extends TestCase
         $this->get('/admin/pos')
             ->assertOk()
             ->assertSee('Point of Sale');
+    }
+
+    public function test_every_admin_and_submenu_page_uses_the_full_workspace_with_ten_pixel_edges(): void
+    {
+        $admin = User::factory()->create([
+            'role' => UserRole::Admin,
+            'status' => UserStatus::Active,
+        ]);
+
+        foreach (['/admin', '/admin/products', '/admin/orders', '/admin/pos'] as $path) {
+            $this->actingAs($admin)
+                ->get($path)
+                ->assertOk()
+                ->assertSee('fi-width-full', false);
+        }
+
+        $theme = file_get_contents(resource_path('css/filament/admin/theme.css'));
+        $this->assertStringContainsString('padding-inline: 10px !important;', $theme);
+        $this->assertStringContainsString('padding-block: 10px !important;', $theme);
     }
 }

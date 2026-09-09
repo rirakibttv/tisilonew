@@ -31,6 +31,7 @@ use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
@@ -54,6 +55,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('Tisilo')
             ->sidebarCollapsibleOnDesktop()
             ->sidebarWidth('15.5rem')
+            ->maxContentWidth(Width::Full)
             ->darkMode(false)
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->renderHook(
