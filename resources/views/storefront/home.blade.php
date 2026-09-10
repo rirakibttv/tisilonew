@@ -1,7 +1,15 @@
 @extends('layouts.storefront')
 
-@section('title', $seoSettings['meta_title'] ?? 'Tisilo Supermarket | Shopping Zone In Bangladesh')
-@section('meta_description', $seoSettings['meta_description'] ?? 'Biggest Online Shopping Zone with Million Of Products at Special Discounts in All Across Bangladesh with Cash on Delivery (COD)')
+@php
+    $homePageTitle = ($generalSettings['site_name'] ?? 'Tisilo').' — আপনার প্রয়োজনের সবকিছু, এক সুপারমার্কেটে';
+    $homeMetaDescription = \App\Support\SeoMetadata::description(
+        $generalSettings['footer_about_text'] ?? null,
+        $generalSettings['top_headline'] ?? null,
+        'বিশ্বস্ত বিক্রেতা, মানসম্মত পণ্য, নিরাপদ পেমেন্ট এবং সারাদেশে দ্রুত ডেলিভারির আধুনিক অনলাইন মার্কেটপ্লেস।',
+    );
+@endphp
+@section('title', $homePageTitle)
+@section('meta_description', $homeMetaDescription)
 
 @section('content')
 <div class="bg-slate-50 pb-12">

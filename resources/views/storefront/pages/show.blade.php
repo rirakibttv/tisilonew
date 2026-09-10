@@ -1,6 +1,14 @@
 @extends('layouts.storefront')
 
-@section('title', $page['title'].' — '.($generalSettings['site_name'] ?? 'Tisilo'))
+@php
+    $contentPageTitle = $page['title'].' — '.($generalSettings['site_name'] ?? 'Tisilo');
+    $contentMetaDescription = \App\Support\SeoMetadata::description(
+        $page['description'] ?? null,
+        $page['title'],
+    );
+@endphp
+@section('title', $contentPageTitle)
+@section('meta_description', $contentMetaDescription)
 
 @section('content')
     <section class="bg-slate-50 py-10 sm:py-14">

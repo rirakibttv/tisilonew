@@ -587,29 +587,6 @@ class ProductForm
                             ->minValue(0),
                     ]),
 
-                /*
-                |--------------------------------------------------------------------------
-                | SEO
-                |--------------------------------------------------------------------------
-                */
-
-                Section::make('SEO')
-                    ->schema([
-                        TextInput::make('seo_title')
-                            ->label('SEO Title')
-                            ->maxLength(255),
-
-                        Textarea::make('meta_description')
-                            ->label('Meta Description')
-                            ->rows(3),
-
-                        TextInput::make('meta_keywords')
-                            ->label('Meta Keywords')
-                            ->placeholder(
-                                'keyword 1, keyword 2, keyword 3'
-                            )
-                            ->maxLength(255),
-                    ]),
             ]);
     }
 }

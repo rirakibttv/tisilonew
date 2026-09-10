@@ -144,12 +144,6 @@ class LandingPageForm
                         ->collapsible(),
                 ]),
 
-            Section::make('SEO')
-                ->columns(2)
-                ->schema([
-                    TextInput::make('meta_title')->maxLength(255),
-                    Textarea::make('meta_description')->rows(3)->maxLength(500)->columnSpanFull(),
-                ]),
         ]);
     }
 }

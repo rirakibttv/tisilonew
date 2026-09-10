@@ -4,10 +4,10 @@ namespace App\Filament\Resources\Products\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
@@ -21,6 +21,10 @@ class ProductsTable
                     ->label('Image')
                     ->disk('public')
                     ->square(),
+
+                ViewColumn::make('product_actions')
+                    ->label('Action')
+                    ->view('filament.tables.columns.product-actions'),
 
                 TextColumn::make('name')
                     ->label('Product')
@@ -146,9 +150,6 @@ class ProductsTable
                 SelectFilter::make('shipping_class_id')
                     ->label('Shipping Class')
                     ->relationship('shippingClass', 'name'),
-            ])
-            ->recordActions([
-                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

@@ -556,6 +556,22 @@
     ],
     "users": [
         {
+            "name": "Most Juthi Khatun",
+            "email": "rijuthi@gmail.com",
+            "role": "customer",
+            "access_role_slug": null,
+            "status": "active",
+            "email_verified_at": null
+        },
+        {
+            "name": "Saimon",
+            "email": "saimonhossains99@gmail.com",
+            "role": "super_admin",
+            "access_role_slug": "super_admin",
+            "status": "active",
+            "email_verified_at": null
+        },
+        {
             "name": "Md Rakibul Islam",
             "email": "tisiloint@gmail.com",
             "role": "super_admin",
@@ -591,9 +607,20 @@
         {
             "key": "courier",
             "values": {
-                "steadfast_enabled": false,
+                "steadfast_enabled": true,
                 "pathao_enabled": false,
-                "redx_enabled": false
+                "redx_enabled": false,
+                "steadfast_environment": "production",
+                "steadfast_endpoint": "https://portal.packzy.com/api/v1",
+                "pathao_environment": null,
+                "pathao_endpoint": null,
+                "pathao_client_id": null,
+                "pathao_username": null,
+                "pathao_store_id": null,
+                "redx_environment": null,
+                "redx_endpoint": null,
+                "redx_store_id": null,
+                "webhook_url": null
             }
         },
         {
@@ -914,12 +941,30 @@
             "sort_order": 1,
             "rates": [
                 {
-                    "base_charge": "80.00",
+                    "base_charge": "115.00",
                     "additional_item_charge": "0.00",
                     "estimated_min_days": 1,
-                    "estimated_max_days": 2,
+                    "estimated_max_days": 5,
                     "is_active": true,
                     "shipping_class_code": "dhaka-seller-under-1kg",
+                    "shipping_partner_code": "steadfast-currier"
+                },
+                {
+                    "base_charge": "135.00",
+                    "additional_item_charge": "0.00",
+                    "estimated_min_days": 1,
+                    "estimated_max_days": 5,
+                    "is_active": true,
+                    "shipping_class_code": "dhaka-seller-1kg",
+                    "shipping_partner_code": "steadfast-currier"
+                },
+                {
+                    "base_charge": "155.00",
+                    "additional_item_charge": "0.00",
+                    "estimated_min_days": 1,
+                    "estimated_max_days": 5,
+                    "is_active": true,
+                    "shipping_class_code": "dhaka-seller-2kg",
                     "shipping_partner_code": "steadfast-currier"
                 }
             ]
@@ -932,7 +977,35 @@
             "location_key": "bandarban-bandarban-bandarban",
             "is_active": true,
             "sort_order": 2,
-            "rates": []
+            "rates": [
+                {
+                    "base_charge": "115.00",
+                    "additional_item_charge": "0.00",
+                    "estimated_min_days": 1,
+                    "estimated_max_days": 5,
+                    "is_active": true,
+                    "shipping_class_code": "dhaka-seller-under-1kg",
+                    "shipping_partner_code": "steadfast-currier"
+                },
+                {
+                    "base_charge": "135.00",
+                    "additional_item_charge": "0.00",
+                    "estimated_min_days": 1,
+                    "estimated_max_days": 5,
+                    "is_active": true,
+                    "shipping_class_code": "dhaka-seller-1kg",
+                    "shipping_partner_code": "steadfast-currier"
+                },
+                {
+                    "base_charge": "155.00",
+                    "additional_item_charge": "0.00",
+                    "estimated_min_days": 1,
+                    "estimated_max_days": 5,
+                    "is_active": true,
+                    "shipping_class_code": "dhaka-seller-2kg",
+                    "shipping_partner_code": "steadfast-currier"
+                }
+            ]
         },
         {
             "division": "Barguna",
@@ -1608,7 +1681,7 @@
                     "purchase_price": "720.00",
                     "regular_price": "1400.00",
                     "sale_price": "1050.00",
-                    "stock_quantity": 2,
+                    "stock_quantity": 1,
                     "low_stock_threshold": 5,
                     "stock_status": "in_stock",
                     "image": "products/variations/01M1MTAEWD37AXXMBQRH2QHX8X.jpg",

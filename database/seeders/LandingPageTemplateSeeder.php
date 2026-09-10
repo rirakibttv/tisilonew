@@ -51,8 +51,6 @@ class LandingPageTemplateSeeder extends Seeder
                 ['question' => 'কত দিনে ডেলিভারি পাব?', 'answer' => 'এলাকাভেদে সাধারণত ২–৫ কর্মদিবসের মধ্যে ডেলিভারি সম্পন্ন হয়।'],
                 ['question' => 'ক্যাশ অন ডেলিভারি আছে?', 'answer' => 'চেকআউটে উপলভ্য পেমেন্ট পদ্ধতি থেকে ক্যাশ অন ডেলিভারি নির্বাচন করতে পারবেন।'],
             ],
-            'meta_title' => $product->name.' | Tisilo Special Offer',
-            'meta_description' => $product->short_description ?: 'Tisilo-এর বিশেষ অফারে মানসম্মত পণ্য অর্ডার করুন।',
         ]);
 
         $landingPage->products()->attach($product->getKey(), ['sort_order' => 0]);

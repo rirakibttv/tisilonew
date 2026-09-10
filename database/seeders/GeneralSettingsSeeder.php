@@ -51,9 +51,7 @@ class GeneralSettingsSeeder extends Seeder
                 'reseller_wallet_min_balance' => 0,
             ],
             'seo' => [
-                'meta_title' => 'Tisilo — আপনার বিশ্বস্ত অনলাইন মার্কেটপ্লেস',
                 'meta_tags' => 'tisilo, marketplace, ecommerce, bangladesh',
-                'meta_description' => 'Tisilo—বিশ্বস্ত মাল্টি-ভেন্ডর অনলাইন মার্কেটপ্লেস। সেরা পণ্য, সেরা দাম ও নিরাপদ কেনাকাটা।',
             ],
             'social' => ['links' => []],
             'contact' => ['status' => true],

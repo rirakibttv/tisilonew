@@ -107,6 +107,8 @@ class StorefrontTest extends TestCase
             'featured_image' => 'products/master.jpg', 'stock_quantity' => 10,
             'stock_status' => 'in_stock', 'status' => 'published',
             'description' => '<p><strong>Rich product details</strong></p>',
+            'seo_title' => 'Legacy Product SEO Title',
+            'meta_description' => 'Legacy product meta description.',
         ]);
         $masterOnly = ProductVariation::query()->create([
             'product_id' => $product->id, 'sku' => 'MASTER-ONLY', 'regular_price' => 1500,
@@ -129,6 +131,10 @@ class StorefrontTest extends TestCase
             ->assertSee(asset('storage/products/master.jpg'), false)
             ->assertSee(asset('storage/products/variations/own.jpg'), false)
             ->assertSee('<p><strong>Rich product details</strong></p>', false)
+            ->assertSee('<title>Visual Variation Product — ', false)
+            ->assertSee('<meta name="description" content="Rich product details">', false)
+            ->assertDontSee('Legacy Product SEO Title')
+            ->assertDontSee('Legacy product meta description.')
             ->assertDontSee('&lt;p&gt;&lt;strong&gt;Rich product details', false);
 
         $this->post(route('store.cart.store'), [

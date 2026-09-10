@@ -72,18 +72,6 @@ class CategoryForm
                             ->columnSpanFull(),
                     ]),
 
-                Section::make('SEO')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('seo_title')
-                            ->label('SEO Title')
-                            ->maxLength(255),
-
-                        TextInput::make('meta_description')
-                            ->label('Meta Description')
-                            ->maxLength(500)
-                            ->columnSpanFull(),
-                    ]),
             ]);
     }
 }

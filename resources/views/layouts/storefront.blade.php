@@ -2,8 +2,12 @@
 <html lang="bn">
 <head>
     @php
-        $pageTitle = html_entity_decode(trim($__env->yieldContent('title', $seoSettings['meta_title'] ?? 'Tisilo — আপনার বিশ্বস্ত অনলাইন মার্কেটপ্লেস')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        $pageDescription = html_entity_decode(trim($__env->yieldContent('meta_description', $seoSettings['meta_description'] ?? 'Tisilo—বিশ্বস্ত মাল্টি-ভেন্ডর অনলাইন মার্কেটপ্লেস।')), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $siteName = \App\Support\SeoMetadata::title($generalSettings['site_name'] ?? null, 'Tisilo');
+        $pageTitle = \App\Support\SeoMetadata::title($__env->yieldContent('title'), $siteName);
+        $pageDescription = \App\Support\SeoMetadata::description(
+            $__env->yieldContent('meta_description'),
+            $pageTitle,
+        );
         $canonicalUrl = trim($__env->yieldContent('canonical', url()->current()));
         $faviconPath = $generalSettings['favicon'] ?? null;
         $faviconUrl = filled($faviconPath)

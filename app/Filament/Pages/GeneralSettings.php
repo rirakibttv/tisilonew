@@ -246,12 +246,12 @@ class GeneralSettings extends Page
     private function seoComponents(): array
     {
         return [
-            Section::make('Search Engine Metadata')->columns(2)->schema([
-                TextInput::make('meta_title')->maxLength(255)->columnSpanFull(),
-                Textarea::make('meta_description')->rows(4)->maxLength(500)->columnSpanFull(),
-                TextInput::make('meta_tags')->helperText('Comma-separated keywords'),
-                TextInput::make('search_console_verification'),
-            ]),
+            Section::make('Search Visibility')
+                ->description('SEO title comes from each page title, and meta descriptions are generated automatically from page content.')
+                ->columns(2)->schema([
+                    TextInput::make('meta_tags')->helperText('Comma-separated keywords'),
+                    TextInput::make('search_console_verification'),
+                ]),
         ];
     }
 

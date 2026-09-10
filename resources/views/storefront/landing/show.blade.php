@@ -2,8 +2,14 @@
 <html lang="bn">
 <head>
     @php
-        $title = $landingPage->meta_title ?: $landingPage->headline;
-        $description = $landingPage->meta_description ?: ($landingPage->subheadline ?: $seoSettings['meta_description'] ?? 'Tisilo special offer');
+        $title = \App\Support\SeoMetadata::title($landingPage->headline, $landingPage->header_title ?: $landingPage->name);
+        $description = \App\Support\SeoMetadata::description(
+            $landingPage->subheadline,
+            $landingPage->offer_body,
+            $primaryProduct->short_description,
+            $primaryProduct->description,
+            $title,
+        );
         $heroPath = $landingPage->hero_image ?: $primaryProduct->featured_image;
         $heroUrl = $heroPath ? asset('storage/'.ltrim($heroPath, '/')) : null;
         $ogPath = $landingPage->og_image ?: $heroPath;

@@ -107,6 +107,8 @@ class GeneralSettingsModuleTest extends TestCase
 
         $this->get('/page/about-tisilo')
             ->assertOk()
+            ->assertSee('<title>About Tisilo — ', false)
+            ->assertSee('<meta name="description" content="Enterprise marketplace content.">', false)
             ->assertSee('About Tisilo')
             ->assertSee('Enterprise marketplace content.');
     }
@@ -157,6 +159,7 @@ class GeneralSettingsModuleTest extends TestCase
         SiteSetting::put('general', [
             'site_name' => 'Tisilo Enterprise',
             'top_headline' => 'Enterprise Marketplace Headline',
+            'footer_about_text' => '<p>Automatic enterprise marketplace description.</p>',
             'primary_color' => '#123456',
             'dark_logo' => 'settings/logos/store-logo.png',
             'favicon' => 'settings/icons/store-favicon.png',
@@ -172,8 +175,10 @@ class GeneralSettingsModuleTest extends TestCase
         $response = $this->get('/');
 
         $response->assertOk()
-            ->assertSee('<title>Tisilo SEO Title</title>', false)
-            ->assertSee('content="Tisilo SEO Description"', false)
+            ->assertSee('<title>Tisilo Enterprise — আপনার প্রয়োজনের সবকিছু, এক সুপারমার্কেটে</title>', false)
+            ->assertSee('<meta name="description" content="Automatic enterprise marketplace description.">', false)
+            ->assertDontSee('<title>Tisilo SEO Title</title>', false)
+            ->assertDontSee('content="Tisilo SEO Description"', false)
             ->assertSee('content="verification-token"', false)
             ->assertSee('Enterprise Marketplace Headline')
             ->assertSee('storage/settings/logos/store-logo.png?v=', false)

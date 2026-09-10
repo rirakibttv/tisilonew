@@ -38,6 +38,10 @@ class LandingPageTest extends TestCase
     {
         $product = $this->product();
         $published = $this->landingPage('published-campaign', 'published');
+        $published->forceFill([
+            'meta_title' => 'Legacy Campaign SEO Title',
+            'meta_description' => 'Legacy campaign meta description.',
+        ])->save();
         $published->products()->attach($product);
         $draft = $this->landingPage('draft-campaign', 'draft');
         $draft->products()->attach($product);
@@ -47,6 +51,10 @@ class LandingPageTest extends TestCase
             ->assertSee($published->header_title)
             ->assertDontSee($published->name)
             ->assertSee($published->headline)
+            ->assertSee('<title>'.$published->headline.'</title>', false)
+            ->assertSee('<meta name="description" content="'.$published->subheadline.'">', false)
+            ->assertDontSee('Legacy Campaign SEO Title')
+            ->assertDontSee('Legacy campaign meta description.')
             ->assertSee($product->name)
             ->assertSee('class="storefront-shell grid items-stretch', false)
             ->assertSee('id="order-now" class="storefront-shell', false)
@@ -94,7 +102,10 @@ class LandingPageTest extends TestCase
             ->post(route('store.checkout.store'), $this->checkoutData())
             ->assertRedirect();
 
-        $order = Order::query()->sole();
+        $order = Order::query()
+            ->where('landing_page_id', $landingPage->id)
+            ->latest('id')
+            ->firstOrFail();
         $this->assertSame($landingPage->id, $order->landing_page_id);
         $this->assertSame('facebook', $order->marketing_attribution['source']);
         $this->assertSame('summer-sale', $order->marketing_attribution['campaign']);
@@ -120,7 +131,9 @@ class LandingPageTest extends TestCase
             ->assertSee('Campaign Basics')
             ->assertSee('Header Title')
             ->assertDontSee('Publish At')
-            ->assertDontSee('Meta Pixel ID');
+            ->assertDontSee('Meta Pixel ID')
+            ->assertDontSee('SEO Title')
+            ->assertDontSee('Meta Description');
 
         $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tisilo-landing-'.Str::random(8).'.json';
         try {

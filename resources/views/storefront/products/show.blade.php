@@ -1,6 +1,15 @@
 @extends('layouts.storefront')
 
-@section('title', ($product->seo_title ?: $product->name).' — Tisilo')
+@php
+    $productPageTitle = $product->name.' — '.($generalSettings['site_name'] ?? 'Tisilo');
+    $productMetaDescription = \App\Support\SeoMetadata::description(
+        $product->short_description,
+        $product->description,
+        $product->name,
+    );
+@endphp
+@section('title', $productPageTitle)
+@section('meta_description', $productMetaDescription)
 
 @push('scripts')
     <script>
