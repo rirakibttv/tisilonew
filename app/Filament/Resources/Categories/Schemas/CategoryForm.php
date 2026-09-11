@@ -5,12 +5,12 @@ namespace App\Filament\Resources\Categories\Schemas;
 use App\Models\Category;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Unique;
 
 class CategoryForm
 {
@@ -33,18 +33,15 @@ class CategoryForm
                         TextInput::make('slug')
                             ->required()
                             ->maxLength(255)
-                            ->unique(ignoreRecord: true),
-
-                        Select::make('parent_id')
-                            ->label('Parent Category')
-                            ->options(
-                                fn () => Category::query()
-                                    ->orderBy('name')
-                                    ->pluck('name', 'id')
+                            ->unique(
+                                table: Category::class,
+                                column: 'slug',
+                                ignoreRecord: true,
+                                modifyRuleUsing: fn (Unique $rule): Unique => $rule->whereNull('parent_id'),
                             )
-                            ->searchable()
-                            ->preload()
-                            ->nullable(),
+                            ->validationMessages([
+                                'unique' => 'এই Main Category slug ইতোমধ্যে ব্যবহার হয়েছে। অন্য slug দিন।',
+                            ]),
 
                         TextInput::make('sort_order')
                             ->label('Sort Order')

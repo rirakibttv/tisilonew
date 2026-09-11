@@ -27,10 +27,9 @@ class CategoriesTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('parent.name')
-                    ->label('Parent')
-                    ->placeholder('Main Category')
-                    ->searchable()
+                TextColumn::make('children_count')
+                    ->label('Subcategories')
+                    ->counts('children')
                     ->sortable(),
 
                 TextColumn::make('slug')

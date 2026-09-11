@@ -13,11 +13,11 @@ use App\Models\Product;
 use App\Models\ProductTag;
 use App\Models\ProductVariation;
 use App\Models\Role;
-use App\Models\SiteSetting;
 use App\Models\ShippingClass;
 use App\Models\ShippingPartner;
 use App\Models\ShippingRegion;
 use App\Models\ShippingRegionRate;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorListing;
@@ -43,13 +43,18 @@ class DeploymentDataSnapshot
                 $brand->toArray(),
                 ['name', 'slug', 'logo', 'description', 'website', 'status', 'sort_order', 'seo_title', 'meta_description'],
             ))->all(),
-            'categories' => Category::query()->with('parent:id,slug')->orderBy('slug')->get()->map(fn (Category $category): array => [
-                ...Arr::only(
-                    $category->toArray(),
-                    ['name', 'slug', 'image', 'description', 'status', 'sort_order', 'seo_title', 'meta_description'],
-                ),
-                'parent_slug' => $category->parent?->slug,
-            ])->all(),
+            'categories' => Category::query()->with('parent.parent')->orderBy('slug')->get()
+                ->sortBy(fn (Category $category): int => substr_count($category->hierarchicalPath(), '/'))
+                ->values()
+                ->map(fn (Category $category): array => [
+                    ...Arr::only(
+                        $category->toArray(),
+                        ['name', 'slug', 'image', 'description', 'status', 'sort_order', 'seo_title', 'meta_description'],
+                    ),
+                    'path' => $category->hierarchicalPath(),
+                    'parent_path' => $category->parent?->hierarchicalPath(),
+                    'parent_slug' => $category->parent?->slug,
+                ])->all(),
             'attributes' => Attribute::query()->with(['values' => fn ($query) => $query->orderBy('slug')])->orderBy('slug')->get()
                 ->map(fn (Attribute $attribute): array => [
                     ...Arr::only($attribute->toArray(), ['name', 'slug', 'type', 'sort_order', 'status']),
@@ -175,7 +180,8 @@ class DeploymentDataSnapshot
             'products' => Product::query()
                 ->with([
                     'brand:id,slug',
-                    'category:id,slug',
+                    'category:id,parent_id,slug',
+                    'category.parent.parent',
                     'shippingClass:id,code',
                     'tags:id,slug',
                     'attributes:id,slug',
@@ -194,6 +200,7 @@ class DeploymentDataSnapshot
                     ]),
                     'brand_slug' => $product->brand?->slug,
                     'category_slug' => $product->category?->slug,
+                    'category_path' => $product->category?->hierarchicalPath(),
                     'shipping_class_code' => $product->shippingClass?->code,
                     'tag_slugs' => $product->tags->pluck('slug')->sort()->values()->all(),
                     'attribute_slugs' => $product->attributes->pluck('slug')->sort()->values()->all(),
@@ -271,15 +278,31 @@ class DeploymentDataSnapshot
                 $counts['brands']++;
             }
 
-            foreach ($snapshot['categories'] ?? [] as $data) {
-                Category::query()->updateOrCreate(['slug' => $data['slug']], Arr::except($data, ['parent_slug']));
+            $categoryRows = collect($snapshot['categories'] ?? [])
+                ->sortBy(fn (array $data): int => filled($data['path'] ?? null)
+                    ? substr_count((string) $data['path'], '/')
+                    : (filled($data['parent_slug'] ?? null) ? 1 : 0));
+            $importedCategoryIds = [];
+
+            foreach ($categoryRows as $data) {
+                $path = Arr::pull($data, 'path');
+                $parentPath = Arr::pull($data, 'parent_path');
+                $parentSlug = Arr::pull($data, 'parent_slug');
+                $parentId = null;
+
+                if (filled($parentPath)) {
+                    $parentId = $importedCategoryIds[$parentPath]
+                        ?? $this->findCategoryByPath((string) $parentPath)?->getKey();
+                } elseif (filled($parentSlug)) {
+                    $parentId = Category::query()->where('slug', $parentSlug)->value('id');
+                }
+
+                $category = Category::query()->updateOrCreate(
+                    ['parent_id' => $parentId, 'slug' => $data['slug']],
+                    $data,
+                );
+                $importedCategoryIds[$path ?: $category->hierarchicalPath()] = $category->getKey();
                 $counts['categories']++;
-            }
-            foreach ($snapshot['categories'] ?? [] as $data) {
-                $parentId = filled($data['parent_slug'] ?? null)
-                    ? Category::query()->where('slug', $data['parent_slug'])->value('id')
-                    : null;
-                Category::query()->where('slug', $data['slug'])->update(['parent_id' => $parentId]);
             }
 
             foreach ($snapshot['attributes'] ?? [] as $data) {
@@ -380,13 +403,15 @@ class DeploymentDataSnapshot
             }
 
             foreach ($snapshot['products'] ?? [] as $data) {
-                $productData = Arr::except($data, ['brand_slug', 'category_slug', 'shipping_class_code', 'tag_slugs', 'attribute_slugs', 'variations']);
+                $productData = Arr::except($data, ['brand_slug', 'category_slug', 'category_path', 'shipping_class_code', 'tag_slugs', 'attribute_slugs', 'variations']);
                 $productData['brand_id'] = filled($data['brand_slug'] ?? null)
                     ? Brand::query()->where('slug', $data['brand_slug'])->value('id')
                     : null;
-                $productData['category_id'] = filled($data['category_slug'] ?? null)
-                    ? Category::query()->where('slug', $data['category_slug'])->value('id')
-                    : null;
+                $productData['category_id'] = filled($data['category_path'] ?? null)
+                    ? $this->findCategoryByPath((string) $data['category_path'])?->getKey()
+                    : (filled($data['category_slug'] ?? null)
+                        ? Category::query()->where('slug', $data['category_slug'])->value('id')
+                        : null);
                 if (array_key_exists('shipping_class_code', $data)) {
                     $productData['shipping_class_id'] = filled($data['shipping_class_code'])
                         ? ShippingClass::query()->where('code', $data['shipping_class_code'])->value('id')
@@ -595,6 +620,28 @@ class DeploymentDataSnapshot
         return str_starts_with($path, DIRECTORY_SEPARATOR) || preg_match('/^[A-Za-z]:[\\\\\/]/', $path)
             ? $path
             : base_path($path);
+    }
+
+    private function findCategoryByPath(string $path): ?Category
+    {
+        $category = null;
+
+        foreach (array_values(array_filter(explode('/', trim($path, '/')))) as $index => $slug) {
+            $category = Category::query()
+                ->where('slug', $slug)
+                ->when(
+                    $index === 0,
+                    fn ($query) => $query->whereNull('parent_id'),
+                    fn ($query) => $query->where('parent_id', $category?->getKey()),
+                )
+                ->first();
+
+            if (! $category) {
+                return null;
+            }
+        }
+
+        return $category;
     }
 
     /** @return array<string, mixed> */

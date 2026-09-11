@@ -33,7 +33,7 @@ class HomeController extends Controller
 
         $productEagerLoads = [
             'brand:id,name,slug',
-            'category:id,name,slug',
+            'category:id,parent_id,name,slug',
             'variations:id,product_id,regular_price,sale_price,stock_quantity,status',
             'vendorListings' => fn ($query) => $query->where('status', VendorListingStatus::Approved->value),
             'vendorListings.items' => fn ($query) => $query->where('status', VendorListingItemStatus::Active->value),

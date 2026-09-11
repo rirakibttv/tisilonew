@@ -35,9 +35,45 @@ class Category extends Model
      */
     protected function permalink(): Attribute
     {
-        return Attribute::get(
-            fn (): string => rtrim(route('store.categories.show', ['category' => $this->slug]), '/').'/',
-        );
+        return Attribute::get(function (): string {
+            $segments = explode('/', $this->hierarchicalPath());
+            $categorySlug = array_shift($segments);
+
+            return rtrim(route('store.categories.show', [
+                'categorySlug' => $categorySlug,
+                'categoryPath' => $segments === [] ? null : implode('/', $segments),
+            ]), '/').'/';
+        });
+    }
+
+    public function hierarchicalPath(): string
+    {
+        return collect($this->hierarchy())
+            ->pluck('slug')
+            ->implode('/');
+    }
+
+    public function hierarchicalName(): string
+    {
+        return collect($this->hierarchy())
+            ->pluck('name')
+            ->implode(' › ');
+    }
+
+    /** @return array<int, self> */
+    private function hierarchy(): array
+    {
+        $hierarchy = [];
+        $visited = [];
+        $category = $this;
+
+        while ($category instanceof self && ! isset($visited[$category->getKey()])) {
+            $visited[$category->getKey()] = true;
+            array_unshift($hierarchy, $category);
+            $category = $category->parent;
+        }
+
+        return $hierarchy;
     }
 
     public function parent(): BelongsTo

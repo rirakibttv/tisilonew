@@ -18,10 +18,7 @@ class ProductController extends Controller
     public function index(Request $request): View|RedirectResponse
     {
         if ($request->filled('category')) {
-            $category = Category::query()
-                ->where('status', true)
-                ->where('slug', $request->string('category')->toString())
-                ->first();
+            $category = $this->resolveCategoryPath($request->string('category')->toString());
 
             if ($category) {
                 $query = $request->except(['category', 'page']);
@@ -34,10 +31,27 @@ class ProductController extends Controller
         return $this->catalog($request);
     }
 
-    public function category(Request $request, Category $category, ?string $categoryPath = null): View|RedirectResponse
+    public function category(Request $request, string $categorySlug, ?string $categoryPath = null): View|RedirectResponse
     {
-        abort_unless($category->status, 404);
-        abort_if(filled($categoryPath), 404);
+        $category = $this->resolveCategoryPath(
+            $categorySlug.(filled($categoryPath) ? '/'.$categoryPath : ''),
+        );
+
+        if (! $category && blank($categoryPath)) {
+            $legacyMatches = Category::query()
+                ->where('status', true)
+                ->where('slug', $categorySlug)
+                ->limit(2)
+                ->get();
+
+            if ($legacyMatches->count() === 1) {
+                $query = $request->getQueryString();
+
+                return redirect()->to($legacyMatches->first()->permalink.($query ? '?'.$query : ''), 301);
+            }
+        }
+
+        abort_unless($category, 404);
 
         $requestedPath = (string) (parse_url($request->getRequestUri(), PHP_URL_PATH) ?: '');
 
@@ -85,7 +99,11 @@ class ProductController extends Controller
 
         return view('storefront.products.index', [
             'products' => $products,
-            'categories' => Category::query()->where('status', true)->orderBy('name')->get(['id', 'name', 'slug']),
+            'categories' => Category::query()
+                ->where('status', true)
+                ->with('parent.parent')
+                ->orderBy('name')
+                ->get(['id', 'parent_id', 'name', 'slug']),
             'sort' => $sort,
             'selectedCategory' => $selectedCategory,
         ]);
@@ -110,6 +128,38 @@ class ProductController extends Controller
         }
 
         return $ids;
+    }
+
+    private function resolveCategoryPath(string $path): ?Category
+    {
+        $segments = array_values(array_filter(
+            explode('/', trim(urldecode($path), '/')),
+            static fn (string $segment): bool => $segment !== '',
+        ));
+
+        if ($segments === []) {
+            return null;
+        }
+
+        $category = null;
+
+        foreach ($segments as $index => $slug) {
+            $category = Category::query()
+                ->where('status', true)
+                ->where('slug', $slug)
+                ->when(
+                    $index === 0,
+                    fn (Builder $query) => $query->whereNull('parent_id'),
+                    fn (Builder $query) => $query->where('parent_id', $category?->getKey()),
+                )
+                ->first();
+
+            if (! $category) {
+                return null;
+            }
+        }
+
+        return $category;
     }
 
     public function show(Product $product): View
@@ -140,7 +190,7 @@ class ProductController extends Controller
     {
         return [
             'brand:id,name,slug',
-            'category:id,name,slug',
+            'category:id,parent_id,name,slug',
             'variations:id,product_id,sku,regular_price,sale_price,stock_quantity,stock_status,image,status,is_default,sort_order',
             'vendorListings' => fn ($query) => $query->where('status', VendorListingStatus::Approved->value),
             'vendorListings.items' => fn ($query) => $query->where('status', VendorListingItemStatus::Active->value),

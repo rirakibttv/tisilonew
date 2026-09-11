@@ -45,7 +45,7 @@
             <select id="category-filter" name="category" class="h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-orange-400">
                 <option value="">সব ক্যাটাগরি</option>
                 @foreach ($categories as $category)
-                    <option value="{{ $category->slug }}" @selected(($selectedCategory?->slug ?? request('category')) === $category->slug)>{{ $category->name }}</option>
+                    <option value="{{ $category->hierarchicalPath() }}" @selected(($selectedCategory?->hierarchicalPath() ?? request('category')) === $category->hierarchicalPath())>{{ $category->hierarchicalName() }}</option>
                 @endforeach
             </select>
 

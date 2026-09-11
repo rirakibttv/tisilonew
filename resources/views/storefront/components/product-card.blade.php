@@ -14,13 +14,13 @@
                 <div class="grid size-full place-items-center p-6 text-center">
                     <div>
                         <span class="mx-auto grid size-16 place-items-center rounded-2xl bg-purple-50 text-2xl font-black text-purple-700 shadow-xs">{{ mb_strtoupper(mb_substr($product->name, 0, 1)) }}</span>
-                        <p class="mt-3 line-clamp-1 text-xs font-bold text-slate-500">{{ $product->brand?->name ?? 'Tisilo' }}</p>
+                        <p class="mt-3 line-clamp-1 text-sm font-bold text-slate-500">{{ $product->brand?->name ?? 'Tisilo' }}</p>
                     </div>
                 </div>
             @endif
 
             @if ($item['discount'] > 0)
-                <span class="absolute left-2.5 top-2.5 rounded-md bg-rose-600 px-2 py-0.5 text-[11px] font-black text-white shadow-xs">-{{ $item['discount'] }}%</span>
+                <span class="absolute left-2.5 top-2.5 rounded-md bg-rose-600 px-2 py-0.5 text-xs font-black text-white shadow-xs">-{{ $item['discount'] }}%</span>
             @endif
         </a>
 
@@ -35,8 +35,8 @@
 
     <div class="p-3.5 flex flex-col flex-1 justify-between">
         <div>
-            <p class="text-[11px] font-bold text-purple-700 uppercase tracking-wider">{{ $product->category?->name ?? 'Tisilo' }}</p>
-            <h3 class="mt-1 line-clamp-2 min-h-[2.5rem] text-xs sm:text-sm font-bold leading-snug text-slate-800 group-hover:text-purple-700 transition">
+            <p class="text-xs font-bold uppercase tracking-wider text-purple-700">{{ $product->category?->name ?? 'Tisilo' }}</p>
+            <h3 class="mt-1 line-clamp-2 min-h-[2.75rem] text-sm font-bold leading-snug text-slate-800 transition group-hover:text-purple-700 sm:text-base">
                 <a href="{{ route('store.products.show', $product->slug) }}">
                     {{ $product->name }}
                 </a>
@@ -47,13 +47,13 @@
             <div class="flex items-baseline gap-2">
                 <span class="text-base sm:text-lg font-black text-slate-900">৳{{ number_format($item['price'], 0) }}</span>
                 @if ($item['regular_price'] > $item['price'])
-                    <span class="text-xs text-slate-400 line-through">৳{{ number_format($item['regular_price'], 0) }}</span>
+                    <span class="text-sm text-slate-400 line-through">৳{{ number_format($item['regular_price'], 0) }}</span>
                 @endif
             </div>
 
             <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
-                <span class="text-[11px] font-medium text-slate-400">{{ $item['available'] > 0 ? $item['available'].'টি স্টকে' : 'স্টকে আছে' }}</span>
-                <a href="{{ route('store.products.show', $product->slug) }}" class="rounded-lg bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-700 transition hover:bg-purple-700 hover:text-white">
+                <span class="text-xs font-medium text-slate-500 sm:text-sm">{{ $item['available'] > 0 ? $item['available'].'টি স্টকে' : 'স্টকে আছে' }}</span>
+                <a href="{{ route('store.products.show', $product->slug) }}" class="rounded-lg bg-purple-50 px-2.5 py-1 text-sm font-bold text-purple-700 transition hover:bg-purple-700 hover:text-white">
                     অর্ডার করুন
                 </a>
             </div>

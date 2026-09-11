@@ -9,7 +9,7 @@
 @endphp
 
 <!-- Top Info Bar -->
-<div class="hidden border-b border-blue-500 bg-blue-600 py-1.5 text-xs text-white md:block">
+<div class="hidden border-b border-blue-500 bg-blue-600 py-1.5 text-sm text-white md:block">
     <div class="storefront-shell grid grid-cols-3 items-center gap-4">
         <div class="flex items-center gap-3">
             @forelse($activeSocialLinks as $social)
@@ -70,9 +70,9 @@
 
         <!-- Right Header Items -->
         <div class="ml-auto flex items-center gap-2 sm:gap-3">
-            <a href="{{ $whatsappLink }}" target="_blank" rel="noopener" class="hidden items-center gap-2 px-2 text-xs font-bold leading-tight text-slate-700 transition hover:text-green-600 lg:flex">
+            <a href="{{ $whatsappLink }}" target="_blank" rel="noopener" class="hidden items-center gap-2 px-2 text-sm font-bold leading-tight text-slate-700 transition hover:text-green-600 lg:flex">
                 <span class="grid size-9 place-items-center rounded-full bg-green-50 text-green-600">@svg('heroicon-o-chat-bubble-left-right', 'size-5')</span>
-                <span><span class="block text-[10px] text-slate-400">WhatsApp</span>{{ $whatsapp }}</span>
+                <span><span class="block text-xs text-slate-400">WhatsApp</span>{{ $whatsapp }}</span>
             </a>
 
             <!-- Cart Dialog with Live Preview -->
@@ -84,8 +84,8 @@
                             <span class="absolute -right-2 -top-2 grid size-5 place-items-center rounded-full bg-purple-700 text-[10px] font-black text-white shadow-xs">{{ $cartCount }}</span>
                         @endif
                     </span>
-                    <div class="hidden text-left text-xs leading-tight xl:block">
-                        <span class="block text-[10px] font-semibold text-slate-400">আপনার কার্ট</span>
+                    <div class="hidden text-left text-sm leading-tight xl:block">
+                        <span class="block text-xs font-semibold text-slate-400">আপনার কার্ট</span>
                         <span class="font-black text-slate-900">৳{{ number_format($cartSubtotal, 2) }}</span>
                     </div>
                 </a>
@@ -93,15 +93,15 @@
                 <!-- Hover Cart Popup -->
                 <div class="invisible absolute right-0 top-full mt-2 w-72 rounded-2xl border border-slate-100 bg-white p-4 shadow-xl opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100 z-50">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">অর্ডার সামারি</span>
-                        <span class="text-xs font-bold text-purple-700">{{ $cartCount }} টি পণ্য</span>
+                        <span class="text-sm font-bold uppercase tracking-wider text-slate-500">অর্ডার সামারি</span>
+                        <span class="text-sm font-bold text-purple-700">{{ $cartCount }} টি পণ্য</span>
                     </div>
                     <div class="py-4 text-center">
                         <p class="text-base font-black text-slate-900">সর্বমোট : ৳{{ number_format($cartSubtotal, 2) }}</p>
                     </div>
                     <div class="grid grid-cols-2 gap-2 pt-2">
-                        <a href="{{ route('store.cart.index') }}" class="rounded-xl border border-slate-200 py-2.5 text-center text-xs font-bold text-slate-700 hover:bg-slate-50 transition">কার্ট দেখুন</a>
-                        <a href="{{ route('store.checkout.index') }}" class="rounded-xl bg-purple-700 py-2.5 text-center text-xs font-bold text-white hover:bg-purple-800 shadow-sm transition">অর্ডার করুন</a>
+                        <a href="{{ route('store.cart.index') }}" class="rounded-xl border border-slate-200 py-2.5 text-center text-sm font-bold text-slate-700 transition hover:bg-slate-50">কার্ট দেখুন</a>
+                        <a href="{{ route('store.checkout.index') }}" class="rounded-xl bg-purple-700 py-2.5 text-center text-sm font-bold text-white shadow-sm transition hover:bg-purple-800">অর্ডার করুন</a>
                     </div>
                 </div>
             </div>
@@ -134,7 +134,7 @@
 <!-- Supermarket Navigation Menu Bar -->
 <nav class="hidden border-b border-slate-200 bg-white md:block" aria-label="Store navigation">
     <div class="storefront-shell grid grid-cols-[270px_minmax(0,1fr)] gap-4">
-        <a href="{{ route('store.home') }}#categories" class="flex h-12 items-center gap-3 rounded-t-xl bg-gradient-to-r from-purple-800 to-fuchsia-600 px-5 text-xs font-black uppercase tracking-wide text-white transition hover:from-purple-900 hover:to-fuchsia-700" id="all-categories-button">
+        <a href="{{ route('store.home') }}#categories" class="flex h-12 items-center gap-3 rounded-t-xl bg-gradient-to-r from-purple-800 to-fuchsia-600 px-5 text-sm font-black uppercase tracking-wide text-white transition hover:from-purple-900 hover:to-fuchsia-700" id="all-categories-button">
             @svg('heroicon-o-bars-3', 'size-4')
             <span>Categories</span>
         </a>
@@ -169,7 +169,7 @@
     </div>
 
     <!-- Quick Tabs / Links -->
-    <div class="flex border-b border-slate-100 bg-slate-50 text-xs font-bold text-slate-600">
+    <div class="flex border-b border-slate-100 bg-slate-50 text-sm font-bold text-slate-600">
         <a href="{{ route('store.home') }}" class="flex-1 py-3 text-center border-r border-slate-200 hover:text-purple-700">Home</a>
         <a href="{{ route('store.shop.index') }}" class="flex-1 py-3 text-center border-r border-slate-200 hover:text-purple-700">Shop</a>
         <a href="{{ route('store.contact') }}" class="flex-1 py-3 text-center hover:text-purple-700">Contact</a>
@@ -177,11 +177,11 @@
 
     <!-- Multi-level Categories in Drawer -->
     <div class="flex-1 overflow-y-auto p-4 space-y-1" id="mobile-drawer-categories">
-        <p class="px-2 py-1.5 text-[11px] font-black uppercase tracking-wider text-purple-700">Categories</p>
+        <p class="px-2 py-1.5 text-xs font-black uppercase tracking-wider text-purple-700">Categories</p>
         @foreach($categories ?? [] as $category)
             <div class="rounded-xl border border-slate-100 overflow-hidden bg-white" data-drawer-parent>
                 <div class="flex items-center justify-between p-3 hover:bg-purple-50/50 transition">
-                    <a href="{{ $category->permalink }}" class="flex items-center gap-2.5 text-xs font-bold text-slate-800 hover:text-purple-700">
+                    <a href="{{ $category->permalink }}" class="flex items-center gap-2.5 text-sm font-bold text-slate-800 hover:text-purple-700">
                         @if($category->image)
                             <img src="{{ asset('storage/'.ltrim($category->image, '/')) }}" alt="{{ $category->name }}" class="size-6 rounded-md object-cover">
                         @else
@@ -197,7 +197,7 @@
                 </div>
 
                 @if($category->children && $category->children->count() > 0)
-                    <div class="hidden border-t border-slate-100 bg-slate-50/70 px-4 py-2 space-y-1.5 text-xs font-medium text-slate-600" data-drawer-children>
+                    <div class="hidden space-y-1.5 border-t border-slate-100 bg-slate-50/70 px-4 py-2 text-sm font-medium text-slate-600" data-drawer-children>
                         @foreach($category->children as $subcat)
                             <div>
                                 <a href="{{ $subcat->permalink }}" class="block py-1 text-slate-700 hover:text-purple-700 font-semibold">
@@ -206,7 +206,7 @@
                                 @if($subcat->children && $subcat->children->count() > 0)
                                     <div class="pl-4 py-1 space-y-1 border-l border-purple-200">
                                         @foreach($subcat->children as $child)
-                                            <a href="{{ $child->permalink }}" class="block text-[11px] text-slate-500 hover:text-purple-700">
+                                            <a href="{{ $child->permalink }}" class="block text-xs text-slate-500 hover:text-purple-700">
                                                 - {{ $child->name }}
                                             </a>
                                         @endforeach
@@ -222,7 +222,7 @@
 
     <!-- Drawer Footer -->
     <div class="border-t border-slate-200 p-4 bg-slate-50">
-        <a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="flex items-center justify-center gap-2 rounded-xl bg-purple-700 py-3 text-xs font-bold text-white shadow-sm hover:bg-purple-800 transition">
+        <a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="flex items-center justify-center gap-2 rounded-xl bg-purple-700 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-purple-800">
             @svg('heroicon-o-user', 'size-4')
             <span>{{ auth()->check() ? 'আমার প্রোফাইল' : 'লগইন / সাইন আপ' }}</span>
         </a>

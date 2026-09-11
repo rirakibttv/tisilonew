@@ -19,7 +19,7 @@
             <!-- Desktop Vertical Category Sidebar -->
             <div id="categories" class="relative z-30 hidden lg:block">
                 <div class="overflow-visible rounded-b-2xl border-x border-b border-slate-200 bg-white shadow-sm">
-                    <ul class="relative divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+                    <ul class="relative divide-y divide-slate-100 text-sm font-semibold text-slate-700">
                         @forelse($categories->take(11) as $category)
                             <li class="group/cat relative">
                                 <a href="{{ $category->permalink }}" class="flex min-h-[45px] items-center justify-between px-4 py-2 transition hover:bg-purple-50 hover:text-purple-700">
@@ -27,7 +27,7 @@
                                         @if($category->image)
                                             <img src="{{ asset('storage/'.ltrim($category->image, '/')) }}" alt="{{ $category->name }}" class="size-6 shrink-0 rounded-md object-cover" loading="lazy">
                                         @else
-                                            <span class="grid size-6 shrink-0 place-items-center rounded-md bg-purple-100 text-[11px] font-black uppercase text-purple-700">{{ mb_substr($category->name, 0, 1) }}</span>
+                                            <span class="grid size-6 shrink-0 place-items-center rounded-md bg-purple-100 text-xs font-black uppercase text-purple-700">{{ mb_substr($category->name, 0, 1) }}</span>
                                         @endif
                                         <span class="truncate">{{ $category->name }}</span>
                                     </div>
@@ -39,17 +39,17 @@
                                 <!-- Flyout Multi-Level Submenu -->
                                 @if($category->children && $category->children->count() > 0)
                                     <div class="invisible absolute left-full top-0 ml-1.5 hidden w-72 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl opacity-0 transition-all duration-200 group-hover/cat:visible group-hover/cat:block group-hover/cat:opacity-100 z-50">
-                                        <p class="px-2 pb-2 text-[11px] font-black uppercase tracking-wider text-purple-700 border-b border-slate-100">{{ $category->name }}</p>
+                                        <p class="border-b border-slate-100 px-2 pb-2 text-xs font-black uppercase tracking-wider text-purple-700">{{ $category->name }}</p>
                                         <div class="mt-2 space-y-2 max-h-[360px] overflow-y-auto pr-1">
                                             @foreach($category->children as $subcat)
                                                 <div class="rounded-lg p-2 hover:bg-purple-50/50 transition">
-                                                    <a href="{{ $subcat->permalink }}" class="block text-xs font-bold text-slate-800 hover:text-purple-700">
+                                                    <a href="{{ $subcat->permalink }}" class="block text-sm font-bold text-slate-800 hover:text-purple-700">
                                                         {{ $subcat->name }}
                                                     </a>
                                                     @if($subcat->children && $subcat->children->count() > 0)
                                                         <div class="mt-1 flex flex-wrap gap-1.5 pl-2 border-l border-purple-200">
                                                             @foreach($subcat->children as $child)
-                                                                <a href="{{ $child->permalink }}" class="text-[11px] text-slate-500 hover:text-purple-700 hover:underline">
+                                                                <a href="{{ $child->permalink }}" class="text-xs text-slate-500 hover:text-purple-700 hover:underline">
                                                                     {{ $child->name }}
                                                                 </a>
                                                             @endforeach
@@ -62,7 +62,7 @@
                                 @endif
                             </li>
                         @empty
-                            <li class="px-4 py-3 text-xs text-slate-400 text-center">কোনো ক্যাটাগরি নেই</li>
+                            <li class="px-4 py-3 text-center text-sm text-slate-400">কোনো ক্যাটাগরি নেই</li>
                         @endforelse
                     </ul>
                 </div>
@@ -144,8 +144,8 @@
                 <div class="flex items-center gap-3.5 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
                     <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-purple-50 text-purple-700">@svg($icon, 'size-6')</span>
                     <div>
-                        <p class="text-xs font-bold text-slate-900 sm:text-sm">{{ $title }}</p>
-                        <p class="mt-0.5 line-clamp-1 text-[11px] text-slate-400">{{ $description }}</p>
+                        <p class="text-sm font-bold text-slate-900 sm:text-base">{{ $title }}</p>
+                        <p class="mt-0.5 line-clamp-1 text-xs text-slate-500 sm:text-sm">{{ $description }}</p>
                     </div>
                 </div>
             @endforeach
@@ -156,17 +156,17 @@
     <section class="storefront-shell pt-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <a href="{{ route('store.products.index') }}" class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-purple-800 to-indigo-900 p-6 sm:p-8 text-white shadow-xs transition hover:shadow-md">
-                <span class="rounded-full bg-white/20 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-purple-100">Special Promo</span>
+                <span class="rounded-full bg-white/20 px-3 py-1 text-xs font-black uppercase tracking-wider text-purple-100">Special Promo</span>
                 <h3 class="mt-3 text-xl sm:text-2xl font-black">সুপার ডিসকাউন্ট ডিল</h3>
-                <p class="mt-1 text-xs sm:text-sm text-purple-200">সারাদেশে ক্যাশ অন ডেলিভারি সুবিধা</p>
-                <span class="mt-4 inline-flex items-center gap-1 text-xs font-black text-amber-300 group-hover:underline">শপ করুন →</span>
+                <p class="mt-1 text-sm text-purple-200 sm:text-base">সারাদেশে ক্যাশ অন ডেলিভারি সুবিধা</p>
+                <span class="mt-4 inline-flex items-center gap-1 text-sm font-black text-amber-300 group-hover:underline">শপ করুন →</span>
             </a>
 
             <a href="{{ route('store.products.index') }}" class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-900 to-slate-800 p-6 sm:p-8 text-white shadow-xs transition hover:shadow-md">
-                <span class="rounded-full bg-amber-400/20 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-amber-300">New Arrivals</span>
+                <span class="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-black uppercase tracking-wider text-amber-300">New Arrivals</span>
                 <h3 class="mt-3 text-xl sm:text-2xl font-black">নতুন ট্রেন্ডি কালেকশন</h3>
-                <p class="mt-1 text-xs sm:text-sm text-slate-300">শতভাগ কোয়ালিটি ও কালার গ্যারান্টি</p>
-                <span class="mt-4 inline-flex items-center gap-1 text-xs font-black text-amber-300 group-hover:underline">সব কালেকশন →</span>
+                <p class="mt-1 text-sm text-slate-300 sm:text-base">শতভাগ কোয়ালিটি ও কালার গ্যারান্টি</p>
+                <span class="mt-4 inline-flex items-center gap-1 text-sm font-black text-amber-300 group-hover:underline">সব কালেকশন →</span>
             </a>
         </div>
     </section>
@@ -178,7 +178,7 @@
                 <span class="grid size-6 place-items-center rounded-md bg-purple-700 text-white text-xs">@svg('heroicon-o-squares-2x2', 'size-3.5')</span>
                 <h2 class="text-lg sm:text-xl font-black text-slate-900">Categories</h2>
             </div>
-            <a href="{{ route('store.products.index') }}" class="text-xs font-bold text-purple-700 hover:text-purple-800">সব ক্যাটাগরি দেখুন →</a>
+            <a href="{{ route('store.products.index') }}" class="text-sm font-bold text-purple-700 hover:text-purple-800">সব ক্যাটাগরি দেখুন →</a>
         </div>
 
         <div class="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-11">
@@ -191,7 +191,7 @@
                             <span class="grid size-full place-items-center rounded-xl bg-purple-50 text-xl font-black text-purple-700">{{ mb_substr($cat->name, 0, 1) }}</span>
                         @endif
                     </div>
-                    <span class="mt-2 text-xs font-bold text-slate-800 group-hover:text-purple-700 line-clamp-2 leading-tight">
+                    <span class="mt-2 line-clamp-2 text-sm font-bold leading-snug text-slate-800 group-hover:text-purple-700">
                         {{ $cat->name }}
                     </span>
                 </a>
@@ -203,11 +203,11 @@
     <section class="storefront-shell pt-10">
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-900 p-6 sm:p-10 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
             <div class="max-w-xl">
-                <span class="rounded-full bg-amber-400 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-slate-950">Special Deals</span>
+                <span class="rounded-full bg-amber-400 px-3 py-1 text-xs font-black uppercase tracking-wider text-slate-950">Special Deals</span>
                 <h3 class="mt-3 text-2xl sm:text-3xl font-black">উৎসবের বিশেষ ডিসকাউন্ট অফার</h3>
                 <p class="mt-1 text-sm text-purple-100">সেরা পণ্য সেরা মূল্যে আপনার হাতের মুঠোয়। স্টক সীমিত!</p>
             </div>
-            <a href="{{ route('store.products.index') }}" class="shrink-0 rounded-xl bg-amber-400 px-6 py-3.5 text-xs sm:text-sm font-black text-slate-950 shadow-md transition hover:bg-amber-300">
+            <a href="{{ route('store.products.index') }}" class="shrink-0 rounded-xl bg-amber-400 px-6 py-3.5 text-sm font-black text-slate-950 shadow-md transition hover:bg-amber-300 sm:text-base">
                 অর্ডার করতে ক্লিক করুন
             </a>
         </div>
@@ -226,8 +226,8 @@
 
                 <!-- Live Countdown Timer -->
                 <div class="flex items-center gap-2" id="hot-deal-timer" data-end-time="{{ $hotDealEndDate }}">
-                    <span class="text-xs font-bold text-slate-500 hidden sm:inline">অফার শেষ হতে বাকি:</span>
-                    <div class="flex items-center gap-1 text-xs font-black text-white">
+                    <span class="hidden text-sm font-bold text-slate-500 sm:inline">অফার শেষ হতে বাকি:</span>
+                    <div class="flex items-center gap-1 text-sm font-black text-white">
                         <span class="grid min-w-8 place-items-center rounded-lg bg-purple-700 px-2 py-1 shadow-xs" id="timer-days">00</span>
                         <span class="text-purple-700 font-bold">:</span>
                         <span class="grid min-w-8 place-items-center rounded-lg bg-purple-700 px-2 py-1 shadow-xs" id="timer-hours">00</span>
@@ -265,7 +265,7 @@
                         <span class="grid size-6 place-items-center rounded-md bg-purple-700 text-white text-xs">@svg('heroicon-o-shopping-bag', 'size-3.5')</span>
                         <h2 class="text-lg sm:text-xl font-black text-slate-900">{{ $cat->name }}</h2>
                     </div>
-                    <a href="{{ $cat->permalink }}" class="inline-flex items-center gap-1 rounded-lg bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 transition">
+                    <a href="{{ $cat->permalink }}" class="inline-flex items-center gap-1 rounded-lg bg-purple-50 px-3 py-1.5 text-sm font-bold text-purple-700 transition hover:bg-purple-100">
                         View More →
                     </a>
                 </div>
@@ -287,7 +287,7 @@
                     <span class="grid size-6 place-items-center rounded-md bg-purple-700 text-white text-xs">@svg('heroicon-o-sparkles', 'size-3.5')</span>
                     <h2 class="text-lg sm:text-xl font-black text-slate-900">আপনার জন্য নির্বাচিত পণ্য</h2>
                 </div>
-                <a href="{{ route('store.products.index') }}" class="text-xs font-bold text-purple-700 hover:text-purple-800">সব পণ্য দেখুন →</a>
+                <a href="{{ route('store.products.index') }}" class="text-sm font-bold text-purple-700 hover:text-purple-800">সব পণ্য দেখুন →</a>
             </div>
 
             <div class="mt-6 grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">

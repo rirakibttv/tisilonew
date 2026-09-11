@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
 use App\Models\InventoryStock;
 use App\Models\Product;
 use App\Models\ProductVariation;
@@ -283,6 +284,75 @@ class DeploymentDataSnapshotTest extends TestCase
                 'user_id' => $user->id,
                 'product_id' => $product->id,
             ]);
+        } finally {
+            File::delete($path);
+        }
+    }
+
+    public function test_snapshot_preserves_duplicate_subcategory_slugs_by_hierarchical_path(): void
+    {
+        $token = Str::lower(Str::random(10));
+        $firstParent = Category::query()->create([
+            'name' => 'Snapshot Men '.$token,
+            'slug' => 'snapshot-men-'.$token,
+            'status' => true,
+        ]);
+        $secondParent = Category::query()->create([
+            'name' => 'Snapshot Women '.$token,
+            'slug' => 'snapshot-women-'.$token,
+            'status' => true,
+        ]);
+        $sharedSlug = 'inner-wear-'.$token;
+        $firstChild = $firstParent->children()->create([
+            'name' => 'Men Inner Wear',
+            'slug' => $sharedSlug,
+            'status' => true,
+        ]);
+        $secondChild = $secondParent->children()->create([
+            'name' => 'Women Inner Wear',
+            'slug' => $sharedSlug,
+            'status' => true,
+        ]);
+        $firstProduct = Product::query()->create([
+            'category_id' => $firstChild->id,
+            'name' => 'Snapshot Men Product '.$token,
+            'slug' => 'snapshot-men-product-'.$token,
+            'product_type' => 'simple',
+            'regular_price' => 500,
+            'stock_quantity' => 1,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+        $secondProduct = Product::query()->create([
+            'category_id' => $secondChild->id,
+            'name' => 'Snapshot Women Product '.$token,
+            'slug' => 'snapshot-women-product-'.$token,
+            'product_type' => 'simple',
+            'regular_price' => 600,
+            'stock_quantity' => 1,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+        $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tisilo-category-path-'.$token.'.json';
+
+        try {
+            $service = app(DeploymentDataSnapshot::class);
+            $service->export($path);
+            $snapshot = json_decode(File::get($path), true, 512, JSON_THROW_ON_ERROR);
+
+            $this->assertTrue(collect($snapshot['categories'])->contains(
+                fn (array $category): bool => $category['path'] === $firstParent->slug.'/'.$sharedSlug,
+            ));
+            $this->assertTrue(collect($snapshot['categories'])->contains(
+                fn (array $category): bool => $category['path'] === $secondParent->slug.'/'.$sharedSlug,
+            ));
+
+            $firstProduct->update(['category_id' => $secondChild->id]);
+            $secondProduct->update(['category_id' => $firstChild->id]);
+            $service->import($path);
+
+            $this->assertSame($firstChild->id, $firstProduct->fresh()->category_id);
+            $this->assertSame($secondChild->id, $secondProduct->fresh()->category_id);
         } finally {
             File::delete($path);
         }

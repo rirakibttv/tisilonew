@@ -8,6 +8,7 @@ use App\Models\ProductVariation;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class StorefrontTest extends TestCase
@@ -63,7 +64,7 @@ class StorefrontTest extends TestCase
     public function test_category_uses_the_canonical_product_category_permalink(): void
     {
         $category = Category::query()->updateOrCreate(
-            ['slug' => 'electronics-electrical'],
+            ['parent_id' => null, 'slug' => 'electronics-electrical'],
             ['name' => 'Electronics & Electrical', 'status' => true],
         );
         Product::query()->create([
@@ -96,6 +97,88 @@ class StorefrontTest extends TestCase
 
         $this->get('/shop?category=electronics-electrical&sort=name')
             ->assertRedirect($canonicalUrl.'?sort=name')
+            ->assertStatus(301);
+    }
+
+    public function test_subcategory_permalink_and_slug_are_scoped_to_the_parent_category(): void
+    {
+        $token = Str::lower(Str::random(8));
+        $sharedSlug = 'inner-wear-'.$token;
+        $mens = Category::query()->create([
+            'name' => 'Men’s Fashion '.$token,
+            'slug' => 'mens-fashion-'.$token,
+            'status' => true,
+        ]);
+        $womens = Category::query()->create([
+            'name' => 'Women’s Fashion '.$token,
+            'slug' => 'womens-fashion-'.$token,
+            'status' => true,
+        ]);
+        $mensInnerWear = $mens->children()->create([
+            'name' => 'Men’s Inner Wear',
+            'slug' => $sharedSlug,
+            'status' => true,
+        ]);
+        $womensInnerWear = $womens->children()->create([
+            'name' => 'Women’s Inner Wear',
+            'slug' => $sharedSlug,
+            'status' => true,
+        ]);
+        $uniqueChild = $mens->children()->create([
+            'name' => 'Full Sleeve Shirt',
+            'slug' => 'full-sleeve-shirt-'.$token,
+            'status' => true,
+        ]);
+        Product::query()->create([
+            'category_id' => $mensInnerWear->id,
+            'name' => 'Men Inner Wear Product '.$token,
+            'slug' => 'men-inner-wear-product-'.$token,
+            'product_type' => 'simple',
+            'regular_price' => 500,
+            'stock_quantity' => 1,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+        Product::query()->create([
+            'category_id' => $womensInnerWear->id,
+            'name' => 'Women Inner Wear Product '.$token,
+            'slug' => 'women-inner-wear-product-'.$token,
+            'product_type' => 'simple',
+            'regular_price' => 600,
+            'stock_quantity' => 1,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+
+        $mensUrl = url('/product-category/'.$mens->slug.'/'.$sharedSlug).'/';
+        $womensUrl = url('/product-category/'.$womens->slug.'/'.$sharedSlug).'/';
+
+        $this->assertSame($mensUrl, $mensInnerWear->permalink);
+        $this->assertSame($womensUrl, $womensInnerWear->permalink);
+        $kernel = $this->app->make(Kernel::class);
+        $mensRequest = Request::create($mensUrl, 'GET');
+        $mensResponse = $kernel->handle($mensRequest);
+        $kernel->terminate($mensRequest, $mensResponse);
+        $this->assertSame(200, $mensResponse->getStatusCode());
+        $this->assertStringContainsString('Men Inner Wear Product '.$token, (string) $mensResponse->getContent());
+        $this->assertStringNotContainsString('Women Inner Wear Product '.$token, (string) $mensResponse->getContent());
+
+        $womensRequest = Request::create($womensUrl, 'GET');
+        $womensResponse = $kernel->handle($womensRequest);
+        $kernel->terminate($womensRequest, $womensResponse);
+        $this->assertSame(200, $womensResponse->getStatusCode());
+        $this->assertStringContainsString('Women Inner Wear Product '.$token, (string) $womensResponse->getContent());
+        $this->assertStringNotContainsString('Men Inner Wear Product '.$token, (string) $womensResponse->getContent());
+
+        $this->get('/product-category/'.$sharedSlug.'/')->assertNotFound();
+        $this->get('/product-category/'.$uniqueChild->slug.'/')
+            ->assertRedirect($uniqueChild->permalink)
+            ->assertStatus(301);
+        $this->get('/product-category/'.$mens->slug.'/'.$sharedSlug)
+            ->assertRedirect($mensUrl)
+            ->assertStatus(301);
+        $this->get('/shop?category='.$mens->slug.'/'.$sharedSlug)
+            ->assertRedirect($mensUrl)
             ->assertStatus(301);
     }
 
