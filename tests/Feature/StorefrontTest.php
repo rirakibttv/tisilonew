@@ -182,6 +182,21 @@ class StorefrontTest extends TestCase
             ->assertStatus(301);
     }
 
+    public function test_apache_preserves_trailing_slashes_for_nested_category_permalinks(): void
+    {
+        $htaccess = file_get_contents(public_path('.htaccess'));
+
+        $this->assertIsString($htaccess);
+        $this->assertStringContainsString(
+            'RewriteCond %{REQUEST_URI} !^/product-category(?:/.+)?/$ [NC]',
+            $htaccess,
+        );
+        $this->assertStringNotContainsString(
+            'RewriteCond %{REQUEST_URI} !^/product-category/[^/]+/$ [NC]',
+            $htaccess,
+        );
+    }
+
     public function test_variable_product_uses_visual_options_and_only_switches_to_a_variation_image_when_present(): void
     {
         $product = Product::query()->create([
