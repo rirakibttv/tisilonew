@@ -40,6 +40,7 @@ class FraudCheckerTest extends TestCase
             ->get('/admin/fraud-checker')
             ->assertOk()
             ->assertSee('মোবাইল নম্বর দিয়ে customer যাচাই করুন')
+            ->assertSee('Whitelisted IP: 162.0.209.109')
             ->assertSee('সাম্প্রতিক Check History');
     }
 
@@ -120,6 +121,7 @@ class FraudCheckerTest extends TestCase
         $history = FraudCheckHistory::query()->latest()->firstOrFail();
         $this->assertSame('blocked', $history->status);
         $this->assertStringContainsString('allowlist/whitelist', $history->message);
+        $this->assertStringContainsString('162.0.209.109', $history->message);
     }
 
     private function enableFraudProvider(): void
@@ -133,6 +135,7 @@ class FraudCheckerTest extends TestCase
             'phone_field' => 'phone',
             'timeout_seconds' => 8,
             'risk_threshold' => 70,
+            'whitelisted_server_ip' => '162.0.209.109',
         ], [
             'fraud_api_key' => 'provider-secret',
         ]);

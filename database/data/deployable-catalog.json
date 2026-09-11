@@ -6581,7 +6581,8 @@
             "values": {
                 "enabled": true,
                 "provider": "BD Courier",
-                "endpoint": "https://api.bdcourier.com/courier-check"
+                "endpoint": "https://api.bdcourier.com/courier-check",
+                "whitelisted_server_ip": "162.0.209.109"
             }
         },
         {

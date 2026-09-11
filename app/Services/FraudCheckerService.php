@@ -68,7 +68,13 @@ class FraudCheckerService
             throw new FraudCheckerApiException('Fraud provider-এর সাথে সংযোগ করা যায়নি: '.$exception->getMessage());
         }
 
-        return $this->normalizeResponse($response, $phone, $provider, (float) ($settings['risk_threshold'] ?? 70));
+        return $this->normalizeResponse(
+            $response,
+            $phone,
+            $provider,
+            (float) ($settings['risk_threshold'] ?? 70),
+            $this->whitelistedServerIp($settings),
+        );
     }
 
     public function normalizeBangladeshMobile(string $mobile): string
@@ -103,7 +109,7 @@ class FraudCheckerService
     }
 
     /** @return array{phone: string, provider: string, summary: array<string, int|float|string>, couriers: array<int, array<string, int|float|string>>, reports: array<int, array<string, mixed>>} */
-    private function normalizeResponse(Response $response, string $phone, string $provider, float $riskThreshold): array
+    private function normalizeResponse(Response $response, string $phone, string $provider, float $riskThreshold, string $whitelistedServerIp): array
     {
         $body = trim($response->body());
         $bodyLower = strtolower($body);
@@ -114,7 +120,7 @@ class FraudCheckerService
 
         if ($providerBlocked) {
             throw new FraudCheckerApiException(
-                'Provider request বন্ধ করেছে। Hosting server IP-টি provider-এর allowlist/whitelist-এ যোগ করুন।',
+                "Provider request বন্ধ করেছে। {$whitelistedServerIp} IP provider-এর allowlist/whitelist-এ আছে এবং hosting request সত্যিই এই outbound IP থেকে যাচ্ছে কি না নিশ্চিত করুন।",
                 true,
                 $response->status(),
             );
@@ -234,5 +240,17 @@ class FraudCheckerService
         $secret = preg_replace('/^Authorization\s*:\s*/i', '', $secret) ?? $secret;
 
         return preg_replace('/^Bearer\s+/i', '', trim($secret)) ?? $secret;
+    }
+
+    /** @param array<string, mixed> $settings */
+    private function whitelistedServerIp(array $settings): string
+    {
+        $configuredIp = trim((string) ($settings['whitelisted_server_ip'] ?? config('services.fraud_checker.outbound_ip')));
+
+        if (filter_var($configuredIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return $configuredIp;
+        }
+
+        return (string) config('services.fraud_checker.outbound_ip', '162.0.209.109');
     }
 }

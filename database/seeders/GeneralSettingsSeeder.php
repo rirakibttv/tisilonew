@@ -90,6 +90,7 @@ class GeneralSettingsSeeder extends Seeder
                 'api_key_parameter' => 'api_key',
                 'timeout_seconds' => 8,
                 'risk_threshold' => 70,
+                'whitelisted_server_ip' => '162.0.209.109',
             ],
             'payment' => ['cod_enabled' => true, 'default_gateway' => 'cod', 'currency' => 'BDT'],
             'sms' => ['enabled' => false, 'provider' => 'bulksmsbd', 'order_confirmation' => true, 'password_reset' => true, 'admin_new_order_alert' => true],

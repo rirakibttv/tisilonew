@@ -50,16 +50,20 @@ class FraudChecker extends Page
         return 'Courier delivery history দিয়ে customer risk যাচাই করুন';
     }
 
-    /** @return array{enabled: bool, provider: string, endpoint_ready: bool, api_key_ready: bool} */
+    /** @return array{enabled: bool, provider: string, endpoint_ready: bool, api_key_ready: bool, whitelisted_server_ip: string} */
     public function configuration(): array
     {
         $values = SiteSetting::valuesFor('fraud');
+        $configuredIp = trim((string) ($values['whitelisted_server_ip'] ?? config('services.fraud_checker.outbound_ip')));
 
         return [
             'enabled' => filter_var($values['enabled'] ?? false, FILTER_VALIDATE_BOOL),
             'provider' => trim((string) ($values['provider'] ?? 'BD Courier')) ?: 'BD Courier',
             'endpoint_ready' => filter_var($values['endpoint'] ?? null, FILTER_VALIDATE_URL) !== false,
             'api_key_ready' => filled(SiteSetting::secretsFor('fraud')['fraud_api_key'] ?? null),
+            'whitelisted_server_ip' => filter_var($configuredIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)
+                ? $configuredIp
+                : (string) config('services.fraud_checker.outbound_ip'),
         ];
     }
 

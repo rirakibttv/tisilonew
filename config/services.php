@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'fraud_checker' => [
+        'outbound_ip' => env('FRAUD_CHECKER_OUTBOUND_IP', '162.0.209.109'),
+    ],
+
 ];

@@ -566,6 +566,12 @@ class ApiIntegrationSettings extends Page
                     TextInput::make('api_key_parameter')->label('API Key Query Parameter')->default('api_key')->regex('/^[A-Za-z0-9_.-]+$/')->maxLength(120),
                     TextInput::make('timeout_seconds')->numeric()->minValue(1)->maxValue(30)->default(8),
                     TextInput::make('risk_threshold')->label('Minimum Safe Delivery Rate (%)')->numeric()->minValue(1)->maxValue(100)->default(70),
+                    TextInput::make('whitelisted_server_ip')
+                        ->label('Provider-whitelisted Server IP')
+                        ->default(fn (): string => (string) config('services.fraud_checker.outbound_ip'))
+                        ->rule('ipv4')
+                        ->required()
+                        ->helperText('Fraud provider-এ এই cPanel outbound IP allowlist করা আছে। এটি request header spoof করে না; provider আসল network source IP যাচাই করে।'),
                     $this->secretInput('fraud_api_key', 'Fraud API Key'),
                     $this->secretInput('duplicate_order_api_key', 'Duplicate Order API Key'),
                 ]),

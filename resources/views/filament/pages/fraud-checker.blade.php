@@ -26,6 +26,7 @@
                     </div>
                     <div class="flex flex-wrap gap-2 text-xs font-bold">
                         <span class="rounded-full bg-white/10 px-3 py-2">{{ $configuration['provider'] }}</span>
+                        <span class="rounded-full bg-white/10 px-3 py-2">Whitelisted IP: {{ $configuration['whitelisted_server_ip'] }}</span>
                         <span class="rounded-full px-3 py-2 {{ $configuration['enabled'] && $configuration['endpoint_ready'] && $configuration['api_key_ready'] ? 'bg-emerald-400/20 text-emerald-100' : 'bg-amber-400/20 text-amber-100' }}">
                             {{ $configuration['enabled'] && $configuration['endpoint_ready'] && $configuration['api_key_ready'] ? 'API প্রস্তুত' : 'Setup অসম্পূর্ণ' }}
                         </span>
@@ -59,7 +60,7 @@
                         <h3 class="font-black">{{ $errorType === 'blocked' ? 'Provider protection request বন্ধ করেছে' : 'Fraud check সম্পন্ন হয়নি' }}</h3>
                         <p class="mt-1 text-sm leading-6">{{ $errorMessage }}</p>
                         @if ($errorType === 'blocked')
-                            <p class="mt-2 text-xs font-semibold">API provider-এর support-কে production hosting IP allowlist করতে বলুন। Browser protection bypass করার চেষ্টা করা হবে না।</p>
+                            <p class="mt-2 text-xs font-semibold">Provider-এ {{ $configuration['whitelisted_server_ip'] }} allowlist করা আছে কি না এবং এটিই hosting-এর আসল outbound IP কি না নিশ্চিত করুন। Browser protection bypass করার চেষ্টা করা হবে না।</p>
                         @endif
                     </div>
                 </div>
