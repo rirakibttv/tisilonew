@@ -41,7 +41,12 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            // Keep media URLs on the host that served the current request by
+            // default. This avoids broken Filament previews when local
+            // development uses 127.0.0.1:8000 while APP_URL uses localhost.
+            // An absolute Cloudflare/CDN origin can still be configured when
+            // required without changing application code.
+            'url' => rtrim((string) env('PUBLIC_STORAGE_URL', '/storage'), '/'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
