@@ -69,7 +69,7 @@
             </div>
         @endif
 
-        <div class="mt-8 grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div data-product-grid class="storefront-product-grid mt-8 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             @forelse ($products as $card)
                 @include('storefront.components.product-card', ['card' => $card])
             @empty

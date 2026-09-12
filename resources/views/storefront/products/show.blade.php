@@ -209,7 +209,7 @@
     @if ($related->isNotEmpty())
         <section class="storefront-shell py-14">
             <h2 class="text-2xl font-black text-slate-950">সম্পর্কিত পণ্য</h2>
-            <div class="mt-7 grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-5">
+            <div data-product-grid class="storefront-product-grid mt-7 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                 @foreach ($related as $card)
                     @include('storefront.components.product-card', ['card' => $card])
                 @endforeach

@@ -20,15 +20,27 @@ class StorefrontTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('TISILO')
-            ->assertSee('আপনার প্রয়োজনের সবকিছু');
+            ->assertSee('আপনার প্রয়োজনের সবকিছু')
+            ->assertSee('data-product-grid', false);
 
         $this->get('/products')
             ->assertOk()
-            ->assertSee('Tisilo Shop');
+            ->assertSee('Tisilo Shop')
+            ->assertSee('data-product-grid', false);
 
         $this->get('/shop')
             ->assertOk()
             ->assertSee('Tisilo Shop');
+    }
+
+    public function test_product_grids_have_five_pixel_gap_and_no_padding(): void
+    {
+        $css = file_get_contents(resource_path('css/app.css'));
+
+        $this->assertIsString($css);
+        $this->assertStringContainsString('.storefront-product-grid', $css);
+        $this->assertStringContainsString('gap: 5px;', $css);
+        $this->assertStringContainsString('padding: 0;', $css);
     }
 
     public function test_customer_can_view_a_product_and_add_it_to_cart(): void

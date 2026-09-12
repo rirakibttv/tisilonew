@@ -29,6 +29,12 @@
         @apply flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-bold text-slate-700 transition hover:bg-orange-50 hover:text-orange-600;
     }
 
+    .storefront-product-grid {
+        display: grid;
+        gap: 5px;
+        padding: 0;
+    }
+
     .product-variation-option[aria-pressed='true'] {
         @apply border-orange-500 ring-2 ring-orange-100;
     }

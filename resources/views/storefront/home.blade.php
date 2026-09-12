@@ -240,7 +240,7 @@
             </div>
 
             <!-- Hot Deal Products Grid -->
-            <div class="mt-6 grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div data-product-grid class="storefront-product-grid mt-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 @forelse($hotDealProducts as $card)
                     @include('storefront.components.product-card', ['card' => $card])
                 @empty
@@ -270,7 +270,7 @@
                     </a>
                 </div>
 
-                <div class="mt-6 grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div data-product-grid class="storefront-product-grid mt-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                     @foreach($prods as $card)
                         @include('storefront.components.product-card', ['card' => $card])
                     @endforeach
@@ -290,7 +290,7 @@
                 <a href="{{ route('store.products.index') }}" class="text-sm font-bold text-purple-700 hover:text-purple-800">সব পণ্য দেখুন →</a>
             </div>
 
-            <div class="mt-6 grid grid-cols-2 gap-3 sm:gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div data-product-grid class="storefront-product-grid mt-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 @forelse($products as $card)
                     @include('storefront.components.product-card', ['card' => $card])
                 @empty
