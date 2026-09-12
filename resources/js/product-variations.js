@@ -20,6 +20,15 @@ if (variationForm && variationData) {
     const money = value => `৳${Number(value).toLocaleString('bn-BD', {maximumFractionDigits: 0})}`;
     const selected = () => data.variations.find(item => String(item.id) === select.value);
 
+    const setGallerySelection = (type, variationId = null) => {
+        gallery?.querySelector('[data-product-gallery-master]')?.setAttribute('aria-pressed', String(type === 'master'));
+        gallery?.querySelectorAll('[data-product-gallery-variation]').forEach(card => {
+            const isSelectedVariation = type === 'variation'
+                && card.dataset.productGalleryVariation === String(variationId);
+            card.setAttribute('aria-pressed', String(isSelectedVariation));
+        });
+    };
+
     const showImage = source => {
         if (source) {
             mainImage.src = source;
@@ -38,9 +47,6 @@ if (variationForm && variationData) {
         if (!option) return;
         cards?.querySelectorAll('[data-product-variation-option]').forEach(card => {
             card.setAttribute('aria-pressed', String(card.dataset.productVariationOption === String(option.id)));
-        });
-        gallery?.querySelectorAll('[data-product-gallery-variation]').forEach(card => {
-            card.setAttribute('aria-pressed', String(card.dataset.productGalleryVariation === String(option.id)));
         });
         if (label) label.textContent = option.label;
         if (price) price.textContent = money(option.price);
@@ -65,7 +71,10 @@ if (variationForm && variationData) {
         quantity.value = String(Math.min(Number(quantity.value || 1), Number(quantity.max)));
         if (stockLeft) stockLeft.textContent = `Only ${Number(option.available)} left`;
         cartButtons.forEach(button => { button.disabled = Number(option.available) < 1; });
-        if (changeImage) showImage(option.image || data.masterImage);
+        if (changeImage) {
+            showImage(option.image || data.masterImage);
+            setGallerySelection(option.image ? 'variation' : (data.masterImage ? 'master' : null), option.id);
+        }
     };
 
     const chooseVariation = card => {
@@ -77,6 +86,13 @@ if (variationForm && variationData) {
         chooseVariation(event.target.closest('[data-product-variation-option]'));
     });
     gallery?.addEventListener('click', event => {
+        if (event.target.closest('[data-product-gallery-master]')) {
+            showImage(data.masterImage);
+            setGallerySelection('master');
+
+            return;
+        }
+
         chooseVariation(event.target.closest('[data-product-gallery-variation]'));
     });
     select.addEventListener('change', () => apply(selected(), true));
@@ -86,7 +102,12 @@ if (variationForm && variationData) {
         });
     });
     mainImage?.addEventListener('error', () => {
-        if (mainImage.src !== data.masterImage && data.masterImage) showImage(data.masterImage);
+        if (mainImage.getAttribute('src') !== data.masterImage && data.masterImage) {
+            showImage(data.masterImage);
+            setGallerySelection('master');
+        }
     });
-    apply(selected());
+    const initialVariation = selected();
+    apply(initialVariation);
+    setGallerySelection(data.masterImage ? 'master' : (initialVariation?.image ? 'variation' : null), initialVariation?.id);
 }

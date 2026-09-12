@@ -197,7 +197,7 @@ class StorefrontTest extends TestCase
         );
     }
 
-    public function test_variable_product_uses_visual_options_and_only_switches_to_a_variation_image_when_present(): void
+    public function test_variable_product_keeps_main_image_primary_and_lists_main_and_variation_thumbnails(): void
     {
         $product = Product::query()->create([
             'name' => 'Visual Variation Product', 'slug' => 'visual-variation-product',
@@ -211,17 +211,21 @@ class StorefrontTest extends TestCase
         $masterOnly = ProductVariation::query()->create([
             'product_id' => $product->id, 'sku' => 'MASTER-ONLY', 'regular_price' => 1500,
             'sale_price' => 1200, 'stock_quantity' => 5, 'stock_status' => 'in_stock',
-            'status' => true, 'is_default' => true,
+            'status' => true,
         ]);
         $ownImage = ProductVariation::query()->create([
             'product_id' => $product->id, 'sku' => 'OWN-IMAGE', 'regular_price' => 1700,
             'sale_price' => 1400, 'stock_quantity' => 3, 'stock_status' => 'in_stock',
-            'image' => 'products/variations/own.jpg', 'status' => true,
+            'image' => 'products/variations/own.jpg', 'status' => true, 'is_default' => true,
         ]);
 
-        $this->get(route('store.products.show', $product))->assertOk()
+        $response = $this->get(route('store.products.show', $product));
+
+        $response->assertOk()
             ->assertSee('data-product-variation-options', false)
+            ->assertSee('data-product-gallery-master', false)
             ->assertSee('data-product-gallery-variation="'.$ownImage->id.'"', false)
+            ->assertSee('data-product-main-image src="'.asset('storage/products/master.jpg').'"', false)
             ->assertSee('data-product-quantity-step="-1"', false)
             ->assertSee('data-product-variation-option="'.$masterOnly->id.'"', false)
             ->assertSee('data-product-variation-option="'.$ownImage->id.'"', false)
@@ -234,6 +238,22 @@ class StorefrontTest extends TestCase
             ->assertDontSee('Legacy Product SEO Title')
             ->assertDontSee('Legacy product meta description.')
             ->assertDontSee('&lt;p&gt;&lt;strong&gt;Rich product details', false);
+
+        $content = (string) $response->getContent();
+        $masterThumbnailPosition = strpos($content, 'data-product-gallery-master');
+        $variationThumbnailPosition = strpos($content, 'data-product-gallery-variation="'.$ownImage->id.'"');
+
+        $this->assertNotFalse($masterThumbnailPosition);
+        $this->assertNotFalse($variationThumbnailPosition);
+        $this->assertLessThan($variationThumbnailPosition, $masterThumbnailPosition);
+        $this->assertGreaterThanOrEqual(2, substr_count($content, asset('storage/products/master.jpg')));
+        $this->assertMatchesRegularExpression('/data-product-gallery-master[^>]+aria-pressed="true"/', $content);
+        $this->assertMatchesRegularExpression('/data-product-gallery-variation="'.$ownImage->id.'"[^>]+aria-pressed="false"/', $content);
+
+        $variationScript = file_get_contents(resource_path('js/product-variations.js'));
+        $this->assertIsString($variationScript);
+        $this->assertStringContainsString('[data-product-gallery-master]', $variationScript);
+        $this->assertStringContainsString("setGallerySelection('master')", $variationScript);
 
         $this->post(route('store.cart.store'), [
             'product_id' => $product->id,

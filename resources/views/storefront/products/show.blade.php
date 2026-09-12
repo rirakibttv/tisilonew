@@ -44,6 +44,9 @@
                 'sku' => $variation->sku,
             ];
         })->values();
+        $masterImage = $summary['image'];
+        $selectedVariationImage = data_get($variationOptions->firstWhere('id', $selectedVariation?->id), 'image');
+        $initialImage = $masterImage ?: $selectedVariationImage;
     @endphp
 
     <section class="storefront-shell grid items-start gap-7 py-6 lg:grid-cols-[minmax(0,.86fr)_minmax(0,1.04fr)] lg:gap-8">
@@ -60,18 +63,23 @@
                 <span class="text-slate-800">{{ $product->name }}</span>
             </nav>
             <div class="aspect-square overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-100 via-white to-orange-50" data-product-image-frame>
-                <img data-product-main-image src="{{ $summary['image'] ?: '' }}" alt="{{ $product->name }}" @class(['size-full object-cover transition-opacity duration-200', 'hidden' => ! $summary['image']])>
-                <div data-product-image-placeholder @class(['size-full place-items-center p-8 text-center', 'grid' => ! $summary['image'], 'hidden' => $summary['image']])>
+                <img data-product-main-image src="{{ $initialImage ?: '' }}" alt="{{ $product->name }}" @class(['size-full object-cover transition-opacity duration-200', 'hidden' => ! $initialImage])>
+                <div data-product-image-placeholder @class(['size-full place-items-center p-8 text-center', 'grid' => ! $initialImage, 'hidden' => $initialImage])>
                     <div>
                         <span class="mx-auto grid size-32 place-items-center rounded-[2rem] bg-white text-6xl font-black text-orange-500 shadow-lg">{{ mb_strtoupper(mb_substr($product->name, 0, 1)) }}</span>
                         <p class="mt-6 font-bold text-slate-500">{{ $product->brand?->name ?? 'Tisilo Choice' }}</p>
                     </div>
                 </div>
             </div>
-            @if($variationOptions->whereNotNull('image')->isNotEmpty())
+            @if($masterImage || $variationOptions->whereNotNull('image')->isNotEmpty())
                 <div data-product-gallery-options class="mt-3 flex flex-wrap gap-2" role="group" aria-label="পণ্যের ছবিগুলো">
+                    @if($masterImage)
+                        <button type="button" data-product-gallery-master aria-label="{{ $product->name }} — মূল ছবি" aria-pressed="true" class="product-gallery-option size-16 overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-1 transition hover:border-orange-300">
+                            <img src="{{ $masterImage }}" alt="" loading="lazy" class="size-full rounded-lg object-cover">
+                        </button>
+                    @endif
                     @foreach($variationOptions->whereNotNull('image') as $option)
-                        <button type="button" data-product-gallery-variation="{{ $option['id'] }}" aria-label="{{ $option['label'] }}" aria-pressed="{{ $selectedVariation?->id === $option['id'] ? 'true' : 'false' }}" class="product-gallery-option size-16 overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-1 transition hover:border-orange-300">
+                        <button type="button" data-product-gallery-variation="{{ $option['id'] }}" aria-label="{{ $option['label'] }}" aria-pressed="{{ ! $masterImage && $selectedVariation?->id === $option['id'] ? 'true' : 'false' }}" class="product-gallery-option size-16 overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-1 transition hover:border-orange-300">
                             <img src="{{ $option['image'] }}" alt="" loading="lazy" class="size-full rounded-lg object-cover">
                         </button>
                     @endforeach
@@ -174,7 +182,7 @@
                     @error('quantity')<p class="mt-3 text-sm font-bold text-rose-600">{{ $message }}</p>@enderror
                 </form>
                 @if($variationOptions->isNotEmpty())
-                    <script type="application/json" id="product-variation-data">@json(['masterImage' => $summary['image'], 'productName' => $product->name, 'variations' => $variationOptions])</script>
+                    <script type="application/json" id="product-variation-data">@json(['masterImage' => $masterImage, 'productName' => $product->name, 'variations' => $variationOptions])</script>
                 @endif
             @endif
 
