@@ -22,6 +22,7 @@ class MarketplaceProductPresenter
                 );
 
                 return [
+                    'id' => $item->getKey(),
                     'price' => (float) ($item->sale_price ?? $item->regular_price),
                     'regular_price' => (float) $item->regular_price,
                     'available' => $available,
@@ -40,13 +41,21 @@ class MarketplaceProductPresenter
             $regularPrice = $lowestOffer['regular_price'];
             $available = $marketplaceItems->sum('available');
             $vendorCount = $marketplaceItems->pluck('vendor_id')->unique()->count();
+            $productVariationId = null;
+            $vendorListingItemId = $lowestOffer['id'];
+            $canPurchase = true;
+            $stockLabel = $available > 0 ? $available.'টি স্টকে' : 'অর্ডারযোগ্য';
         } else {
             $activeVariations = $product->variations->where('status', true);
             $pricedVariations = $activeVariations->filter(
                 fn ($variation): bool => (float) $variation->regular_price > 0,
             );
+            $purchasableVariations = $pricedVariations->filter(
+                fn ($variation): bool => $variation->stock_status === 'on_backorder'
+                    || (int) $variation->stock_quantity > 0,
+            );
 
-            $lowestVariation = $pricedVariations
+            $lowestVariation = ($purchasableVariations->isNotEmpty() ? $purchasableVariations : $pricedVariations)
                 ->sortBy(fn ($variation): float => (float) ($variation->sale_price ?? $variation->regular_price))
                 ->first();
 
@@ -60,10 +69,36 @@ class MarketplaceProductPresenter
                 $lowestVariation?->regular_price
                 ?? $product->regular_price
             );
-            $available = $product->product_type === 'variable'
-                ? $activeVariations->sum('stock_quantity')
-                : $product->stock_quantity;
             $vendorCount = 0;
+            $vendorListingItemId = null;
+
+            if ($product->product_type === 'variable') {
+                $available = $activeVariations->sum('stock_quantity');
+                $hasBackorder = $activeVariations->contains(
+                    fn ($variation): bool => $variation->stock_status === 'on_backorder',
+                );
+                $canPurchase = $lowestVariation !== null
+                    && ((int) $lowestVariation->stock_quantity > 0 || $lowestVariation->stock_status === 'on_backorder')
+                    && $price > 0;
+                $productVariationId = $canPurchase ? $lowestVariation->getKey() : null;
+                $stockLabel = $available > 0
+                    ? $available.'টি স্টকে'
+                    : ($hasBackorder ? 'প্রি-অর্ডার' : 'স্টক নেই');
+            } else {
+                $available = max(0, (int) $product->stock_quantity);
+                $hasUnlimitedStock = ! $product->manage_stock && $product->stock_status !== 'out_of_stock';
+                $isBackorder = $product->stock_status === 'on_backorder';
+                $canPurchase = $price > 0
+                    && $product->stock_status !== 'out_of_stock'
+                    && ($hasUnlimitedStock || $available > 0 || $isBackorder);
+                $productVariationId = null;
+                $stockLabel = match (true) {
+                    $product->manage_stock && $available > 0 => $available.'টি স্টকে',
+                    $isBackorder => 'প্রি-অর্ডার',
+                    $hasUnlimitedStock => 'স্টকে আছে',
+                    default => 'স্টক নেই',
+                };
+            }
         }
 
         $discount = $regularPrice > $price && $regularPrice > 0
@@ -77,6 +112,12 @@ class MarketplaceProductPresenter
             'discount' => $discount,
             'available' => $available,
             'vendor_count' => $vendorCount,
+            'review_rating' => round((float) ($product->getAttribute('review_rating') ?? 0), 1),
+            'review_count' => (int) ($product->getAttribute('review_count') ?? 0),
+            'stock_label' => $stockLabel,
+            'can_purchase' => $canPurchase,
+            'product_variation_id' => $productVariationId,
+            'vendor_listing_item_id' => $vendorListingItemId,
             'image' => filled($product->featured_image)
                 ? asset('storage/'.ltrim($product->featured_image, '/'))
                 : null,

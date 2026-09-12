@@ -5,7 +5,7 @@
     $isWishlisted = collect(session('store_wishlist', []))->contains(fn ($id) => (int) $id === $product->id);
 @endphp
 
-<article class="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-100/50 flex flex-col justify-between">
+<article data-product-card="{{ $product->id }}" class="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-100/50 flex flex-col justify-between">
     <div class="relative aspect-square overflow-hidden bg-slate-50">
         <a href="{{ route('store.products.show', $product->slug) }}" class="block size-full">
             @if ($item['image'])
@@ -35,8 +35,7 @@
 
     <div class="p-3.5 flex flex-col flex-1 justify-between">
         <div>
-            <p class="text-xs font-bold uppercase tracking-wider text-purple-700">{{ $product->category?->name ?? 'Tisilo' }}</p>
-            <h3 class="mt-1 line-clamp-2 min-h-[2.75rem] text-sm font-bold leading-snug text-slate-800 transition group-hover:text-purple-700 sm:text-base">
+            <h3 data-product-card-name class="line-clamp-2 min-h-[2.75rem] text-sm font-bold leading-snug text-slate-800 transition group-hover:text-purple-700 sm:text-base">
                 <a href="{{ route('store.products.show', $product->slug) }}">
                     {{ $product->name }}
                 </a>
@@ -51,12 +50,32 @@
                 @endif
             </div>
 
-            <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
-                <span class="text-xs font-medium text-slate-500 sm:text-sm">{{ $item['available'] > 0 ? $item['available'].'টি স্টকে' : 'স্টকে আছে' }}</span>
-                <a href="{{ route('store.products.show', $product->slug) }}" class="rounded-lg bg-purple-50 px-2.5 py-1 text-sm font-bold text-purple-700 transition hover:bg-purple-700 hover:text-white">
-                    অর্ডার করুন
-                </a>
+            <div data-product-card-trust class="mt-2 flex min-w-0 items-center justify-between gap-2 border-t border-slate-100 pt-2 text-[11px] sm:text-xs">
+                <span data-product-card-rating class="flex min-w-0 items-center gap-1 font-bold text-slate-600" aria-label="{{ number_format($item['review_rating'], 1) }} out of 5 from {{ $item['review_count'] }} reviews">
+                    <span class="text-sm leading-none text-amber-500" aria-hidden="true">★</span>
+                    <span>{{ number_format($item['review_rating'], 1) }}</span>
+                    <span class="truncate font-medium text-slate-400">({{ $item['review_count'] }} রিভিউ)</span>
+                </span>
+                <span data-product-card-stock class="shrink-0 font-bold {{ $item['can_purchase'] ? 'text-emerald-600' : 'text-rose-600' }}">{{ $item['stock_label'] }}</span>
             </div>
+
+            <form method="POST" action="{{ route('store.cart.store') }}" data-product-card-actions class="mt-2 grid grid-cols-2 gap-1.5">
+                @csrf
+                <input type="hidden" name="product_id" value="{{ $product->id }}">
+                <input type="hidden" name="quantity" value="1">
+                @if($item['product_variation_id'])
+                    <input type="hidden" name="product_variation_id" value="{{ $item['product_variation_id'] }}">
+                @endif
+                @if($item['vendor_listing_item_id'])
+                    <input type="hidden" name="vendor_listing_item_id" value="{{ $item['vendor_listing_item_id'] }}">
+                @endif
+                <button type="submit" name="redirect_to" value="cart" @disabled(! $item['can_purchase']) class="min-h-9 rounded-lg border border-purple-200 bg-purple-50 px-1.5 py-2 text-[10px] font-black leading-tight text-purple-700 transition hover:border-purple-700 hover:bg-purple-700 hover:text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 sm:text-xs">
+                    Add to Cart
+                </button>
+                <button type="submit" name="redirect_to" value="checkout" @disabled(! $item['can_purchase']) class="min-h-9 rounded-lg bg-orange-500 px-1.5 py-2 text-[10px] font-black leading-tight text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-slate-300 sm:text-xs">
+                    Order Now
+                </button>
+            </form>
         </div>
     </div>
 </article>

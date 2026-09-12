@@ -53,7 +53,10 @@ class CatalogCartLineService
             'available' => $variation
                 ? (int) $variation->stock_quantity
                 : ($product->manage_stock ? (int) $product->stock_quantity : PHP_INT_MAX),
-            'backorders_allowed' => ! $variation && ! $product->manage_stock,
+            'backorders_allowed' => $variation
+                ? $variation->stock_status === 'on_backorder'
+                : ((! $product->manage_stock && $product->stock_status !== 'out_of_stock')
+                    || $product->stock_status === 'on_backorder'),
         ];
     }
 

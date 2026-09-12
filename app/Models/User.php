@@ -85,7 +85,7 @@ class User extends Authenticatable implements FilamentUser
             return true;
         }
 
-            return $this->accessRole?->status === true
+        return $this->accessRole?->status === true
             && $this->accessRole->permissions()
                 ->where('rbac_permissions.status', true)
                 ->where('rbac_permissions.slug', $permission)
@@ -117,5 +117,10 @@ class User extends Authenticatable implements FilamentUser
     public function incompleteOrders(): HasMany
     {
         return $this->hasMany(IncompleteOrder::class);
+    }
+
+    public function productReviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
     }
 }

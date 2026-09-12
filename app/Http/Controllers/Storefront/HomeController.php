@@ -42,6 +42,7 @@ class HomeController extends Controller
 
         // All latest products or searched products
         $allProducts = Product::query()
+            ->withReviewSummary()
             ->where('status', 'published')
             ->when(
                 $request->filled('q'),
@@ -77,6 +78,7 @@ class HomeController extends Controller
                     ->push($category->id);
 
                 $categoryProducts = Product::query()
+                    ->withReviewSummary()
                     ->where('status', 'published')
                     ->whereIn('category_id', $descendantIds)
                     ->with($productEagerLoads)

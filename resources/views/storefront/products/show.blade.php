@@ -95,7 +95,7 @@
         <div class="lg:pt-1">
             <h1 class="text-3xl font-black leading-tight text-slate-950 sm:text-4xl">{{ $product->name }}</h1>
             <div class="mt-4 flex flex-wrap items-center gap-3 text-sm">
-                <span class="font-bold text-amber-500">★ 4.8 <span class="font-medium text-slate-400">(0 রিভিউ)</span></span>
+                <span class="font-bold text-amber-500">★ {{ number_format($summary['review_rating'], 1) }} <span class="font-medium text-slate-400">({{ $summary['review_count'] }} রিভিউ)</span></span>
                 <span class="text-slate-300">|</span>
                 <span class="text-slate-500">SKU: <span data-product-sku>{{ $selectedVariation?->sku ?: ($product->sku ?: 'N/A') }}</span></span>
                 <span data-product-stock class="{{ ($selectedVariation ? $selectedVariation->stock_quantity > 0 : $summary['available'] > 0) ? 'text-emerald-600' : 'text-amber-600' }} font-bold">{{ ($selectedVariation ? $selectedVariation->stock_quantity > 0 : $summary['available'] > 0) ? 'স্টকে আছে' : 'স্টক নেই' }}</span>

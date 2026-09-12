@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductReview;
 use App\Models\ProductVariation;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -41,6 +42,83 @@ class StorefrontTest extends TestCase
         $this->assertStringContainsString('.storefront-product-grid', $css);
         $this->assertStringContainsString('gap: 5px;', $css);
         $this->assertStringContainsString('padding: 0;', $css);
+    }
+
+    public function test_product_cards_hide_category_and_show_real_review_stock_and_purchase_actions(): void
+    {
+        $token = Str::lower(Str::random(8));
+        $category = Category::query()->create([
+            'name' => 'Hidden Card Category '.$token,
+            'slug' => 'hidden-card-category-'.$token,
+            'status' => true,
+        ]);
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Trusted Card Product '.$token,
+            'slug' => 'trusted-card-product-'.$token,
+            'product_type' => 'simple',
+            'regular_price' => 1200,
+            'sale_price' => 1000,
+            'manage_stock' => true,
+            'stock_quantity' => 7,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+
+        foreach ([5, 4] as $rating) {
+            ProductReview::query()->create([
+                'product_id' => $product->id,
+                'reviewer_name' => 'Verified Customer',
+                'rating' => $rating,
+                'review' => 'A genuine approved product review.',
+                'status' => 'approved',
+                'is_verified_purchase' => true,
+            ]);
+        }
+        ProductReview::query()->create([
+            'product_id' => $product->id,
+            'reviewer_name' => 'Pending Customer',
+            'rating' => 1,
+            'review' => 'This pending review must not affect the public rating.',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->get(route('store.shop.index', ['q' => 'Trusted Card Product '.$token]));
+
+        $response->assertOk()
+            ->assertSee('data-product-card="'.$product->id.'"', false)
+            ->assertSee('data-product-card-name', false)
+            ->assertDontSee('data-product-card-category', false)
+            ->assertSee('data-product-card-rating', false)
+            ->assertSee('4.5')
+            ->assertSee('(2 রিভিউ)')
+            ->assertSee('data-product-card-stock', false)
+            ->assertSee('7টি স্টকে')
+            ->assertSee('data-product-card-actions', false)
+            ->assertSee('Add to Cart')
+            ->assertSee('Order Now')
+            ->assertSee('name="redirect_to" value="cart"', false)
+            ->assertSee('name="redirect_to" value="checkout"', false);
+
+        $this->get(route('store.products.show', $product))
+            ->assertOk()
+            ->assertSee('★ 4.5')
+            ->assertSee('(2 রিভিউ)');
+    }
+
+    public function test_every_storefront_product_collection_uses_the_shared_product_card(): void
+    {
+        foreach ([
+            resource_path('views/storefront/home.blade.php'),
+            resource_path('views/storefront/products/index.blade.php'),
+            resource_path('views/storefront/products/show.blade.php'),
+            resource_path('views/storefront/wishlist/index.blade.php'),
+        ] as $view) {
+            $contents = file_get_contents($view);
+
+            $this->assertIsString($contents);
+            $this->assertStringContainsString('storefront.components.product-card', $contents);
+        }
     }
 
     public function test_customer_can_view_a_product_and_add_it_to_cart(): void

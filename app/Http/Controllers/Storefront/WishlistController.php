@@ -29,6 +29,7 @@ class WishlistController extends Controller
         }
 
         $products = Product::query()
+            ->withReviewSummary()
             ->whereIn('id', $ids)
             ->where('status', 'published')
             ->with([

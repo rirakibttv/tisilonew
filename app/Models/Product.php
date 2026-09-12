@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -112,6 +113,23 @@ class Product extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->reviews()->published();
+    }
+
+    public function scopeWithReviewSummary(Builder $query): Builder
+    {
+        return $query
+            ->withAvg('approvedReviews as review_rating', 'rating')
+            ->withCount('approvedReviews as review_count');
     }
 
     public function landingPages(): BelongsToMany

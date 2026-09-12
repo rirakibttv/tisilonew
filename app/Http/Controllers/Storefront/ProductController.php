@@ -71,6 +71,7 @@ class ProductController extends Controller
             : 'latest';
 
         $query = Product::query()
+            ->withReviewSummary()
             ->where('status', 'published')
             ->when($request->filled('q'), function (Builder $query) use ($request): void {
                 $search = $request->string('q')->toString();
@@ -166,6 +167,9 @@ class ProductController extends Controller
     {
         abort_unless($product->status === 'published', 404);
 
+        $product
+            ->loadAvg('approvedReviews as review_rating', 'rating')
+            ->loadCount('approvedReviews as review_count');
         $product->load(array_merge($this->storefrontRelations(), [
             'variations.attributeValues.attribute:id,name',
             'vendorListings.vendor:id,name,slug,logo',
@@ -174,6 +178,7 @@ class ProductController extends Controller
 
         $summary = MarketplaceProductPresenter::summarize($product);
         $related = Product::query()
+            ->withReviewSummary()
             ->where('status', 'published')
             ->whereKeyNot($product->getKey())
             ->when($product->category_id, fn (Builder $query) => $query->where('category_id', $product->category_id))
