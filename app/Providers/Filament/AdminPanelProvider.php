@@ -23,6 +23,7 @@ use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\Pages\PendingProducts;
 use App\Filament\Resources\Roles\Pages\ListRoles;
 use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Support\SiteBranding;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -53,6 +54,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->passwordReset()
             ->brandName('Tisilo')
+            ->favicon(fn (): string => SiteBranding::faviconUrl())
             ->sidebarCollapsibleOnDesktop()
             ->sidebarWidth('15.5rem')
             ->maxContentWidth(Width::Full)

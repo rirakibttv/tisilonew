@@ -8,6 +8,7 @@ use App\Filament\Pages\GeneralSettings;
 use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class GeneralSettingsModuleTest extends TestCase
@@ -156,6 +157,9 @@ class GeneralSettingsModuleTest extends TestCase
 
     public function test_storefront_uses_saved_logo_favicon_and_head_settings(): void
     {
+        Storage::fake('public');
+        Storage::disk('public')->put('settings/icons/store-favicon.png', 'favicon');
+
         SiteSetting::put('general', [
             'site_name' => 'Tisilo Enterprise',
             'top_headline' => 'Enterprise Marketplace Headline',
@@ -184,5 +188,25 @@ class GeneralSettingsModuleTest extends TestCase
             ->assertSee('storage/settings/logos/store-logo.png?v=', false)
             ->assertSee('storage/settings/icons/store-favicon.png?v=', false)
             ->assertSee('storage/settings/social/store-banner.png?v=', false);
+
+        $this->get('/admin/login')
+            ->assertOk()
+            ->assertSee('storage/settings/icons/store-favicon.png?v=', false);
+
+        $this->get('/seller/login')
+            ->assertOk()
+            ->assertSee('storage/settings/icons/store-favicon.png?v=', false);
+    }
+
+    public function test_admin_panel_uses_bundled_favicon_when_saved_file_is_unavailable(): void
+    {
+        Storage::fake('public');
+        SiteSetting::put('general', [
+            'favicon' => 'settings/icons/missing-favicon.png',
+        ]);
+
+        $this->get('/admin/login')
+            ->assertOk()
+            ->assertSee('favicon.svg', false);
     }
 }
