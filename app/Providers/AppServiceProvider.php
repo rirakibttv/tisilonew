@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Order;
+use App\Models\PopupOffer;
 use App\Models\SiteSetting;
 use App\Observers\OrderObserver;
 use Illuminate\Support\Facades\Schema;
@@ -45,6 +46,13 @@ class AppServiceProvider extends ServiceProvider
                         ->values()
                         ->all(),
                 ]);
+            });
+
+            View::composer('layouts.storefront', function (IlluminateView $view): void {
+                $view->with(
+                    'activePopupOffer',
+                    Schema::hasTable('popup_offers') ? PopupOffer::activeForStorefront() : null,
+                );
             });
 
             $mail = SiteSetting::valuesFor('email');

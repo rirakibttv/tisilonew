@@ -18,12 +18,13 @@ use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\ListPendingOrders;
 use App\Filament\Resources\Orders\Pages\ListVendorOrders;
 use App\Filament\Resources\Permissions\Pages\ListPermissions;
-use App\Filament\Resources\Products\Pages\CreateProduct;
-use App\Filament\Resources\Products\Pages\ListProducts;
-use App\Filament\Resources\Products\Pages\PendingProducts;
+use App\Filament\Resources\PopupOffers\Pages\ListPopupOffers;
 use App\Filament\Resources\ProductReviews\Pages\CreateProductReview;
 use App\Filament\Resources\ProductReviews\Pages\ListPendingProductReviews;
 use App\Filament\Resources\ProductReviews\Pages\ListProductReviews;
+use App\Filament\Resources\Products\Pages\CreateProduct;
+use App\Filament\Resources\Products\Pages\ListProducts;
+use App\Filament\Resources\Products\Pages\PendingProducts;
 use App\Filament\Resources\Roles\Pages\ListRoles;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Support\SiteBranding;
@@ -108,6 +109,7 @@ class AdminPanelProvider extends PanelProvider
                             AdminNavigationGroup::FraudCheckerApi,
                             AdminNavigationGroup::OrderPanel,
                             AdminNavigationGroup::Shipping,
+                            AdminNavigationGroup::OfferPanel,
                             AdminNavigationGroup::LandingPage,
                             AdminNavigationGroup::Reviews,
                             AdminNavigationGroup::SeoOverview,
@@ -136,6 +138,8 @@ class AdminPanelProvider extends PanelProvider
                     ->url(fn (): string => FraudChecker::getUrl()),
 
                 ...$this->orderPanelNavigationItems(),
+
+                ...$this->offerPanelNavigationItems(),
 
                 ...$this->landingPageNavigationItems(),
 
@@ -242,6 +246,29 @@ class AdminPanelProvider extends PanelProvider
                 ->sort(1)
                 ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.landing-pages.index'))
                 ->url(fn (): string => ListLandingPages::getUrl()),
+        ];
+    }
+
+    /** @return array<NavigationItem> */
+    private function offerPanelNavigationItems(): array
+    {
+        return [
+            NavigationItem::make('Overview')
+                ->key('offer-panel-overview')
+                ->group(AdminNavigationGroup::OfferPanel)
+                ->icon(Heroicon::OutlinedMegaphone)
+                ->sort(0)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.module-overview')
+                    && request()->string('module')->toString() === AdminNavigationGroup::OfferPanel->slug())
+                ->url(fn (): string => ModuleOverview::getUrl(['module' => AdminNavigationGroup::OfferPanel->slug()])),
+
+            NavigationItem::make('PopUp Offer')
+                ->key('offer-panel-popup')
+                ->group(AdminNavigationGroup::OfferPanel)
+                ->icon(Heroicon::OutlinedChatBubbleBottomCenterText)
+                ->sort(1)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.popup-offers.*'))
+                ->url(fn (): string => ListPopupOffers::getUrl()),
         ];
     }
 

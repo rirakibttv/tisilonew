@@ -129,7 +129,7 @@
             "image": null,
             "description": "<p></p>",
             "status": true,
-            "show_on_homepage": false,
+            "show_on_homepage": true,
             "sort_order": 7,
             "seo_title": null,
             "meta_description": null,
@@ -14884,5 +14884,6 @@
                 "premium-quality-panel-cotton-bed-sheets-pp-001"
             ]
         }
-    ]
+    ],
+    "popup_offers": []
 }

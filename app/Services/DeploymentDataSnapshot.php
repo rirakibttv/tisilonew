@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\InventoryStock;
 use App\Models\LandingPage;
 use App\Models\Permission;
+use App\Models\PopupOffer;
 use App\Models\Product;
 use App\Models\ProductTag;
 use App\Models\ProductVariation;
@@ -239,6 +240,14 @@ class DeploymentDataSnapshot
                     ]),
                     'product_slugs' => $landingPage->products->pluck('slug')->values()->all(),
                 ])->all(),
+            'popup_offers' => PopupOffer::query()
+                ->orderBy('uuid')
+                ->get()
+                ->map(fn (PopupOffer $popupOffer): array => Arr::only($popupOffer->toArray(), [
+                    'uuid', 'title', 'description', 'image', 'link_url', 'button_text', 'footer_text',
+                    'is_active', 'display_delay_seconds', 'starts_at', 'ends_at',
+                ]))
+                ->all(),
         ];
     }
 
@@ -271,7 +280,7 @@ class DeploymentDataSnapshot
         }
 
         return DB::transaction(function () use ($snapshot): array {
-            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'permissions' => 0, 'roles' => 0, 'users' => 0, 'site_settings' => 0, 'shipping_classes' => 0, 'shipping_partners' => 0, 'shipping_regions' => 0, 'shipping_region_rates' => 0, 'products' => 0, 'product_variations' => 0, 'wishlists' => 0, 'landing_pages' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
+            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'permissions' => 0, 'roles' => 0, 'users' => 0, 'site_settings' => 0, 'shipping_classes' => 0, 'shipping_partners' => 0, 'shipping_regions' => 0, 'shipping_region_rates' => 0, 'products' => 0, 'product_variations' => 0, 'wishlists' => 0, 'landing_pages' => 0, 'popup_offers' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
 
             foreach ($snapshot['brands'] ?? [] as $data) {
                 Brand::query()->updateOrCreate(['slug' => $data['slug']], $data);
@@ -515,6 +524,11 @@ class DeploymentDataSnapshot
                 $productIds = Product::query()->whereIn('slug', $productSlugs)->pluck('id');
                 $landingPage->products()->sync($productIds);
                 $counts['landing_pages']++;
+            }
+
+            foreach ($snapshot['popup_offers'] ?? [] as $data) {
+                PopupOffer::query()->updateOrCreate(['uuid' => $data['uuid']], $data);
+                $counts['popup_offers']++;
             }
 
             foreach ($snapshot['vendors'] ?? [] as $data) {

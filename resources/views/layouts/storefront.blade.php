@@ -60,6 +60,7 @@
     </main>
 
     @include('storefront.partials.footer')
+    @include('storefront.partials.popup-offer')
     @include('storefront.partials.visitor-analytics')
     @stack('scripts')
 </body>

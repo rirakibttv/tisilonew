@@ -685,3 +685,133 @@
     .tisilo-stat-icon { width: 2.45rem; height: 2.45rem; }
     .tisilo-stat-card strong { font-size: 1.15rem; }
 }
+
+body.tisilo-popup-open {
+    overflow: hidden;
+}
+
+.tisilo-popup-offer {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+}
+
+.tisilo-popup-offer[hidden] {
+    display: none;
+}
+
+.tisilo-popup-offer__backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgb(15 23 42 / 0.62);
+    cursor: pointer;
+}
+
+.tisilo-popup-offer__dialog {
+    position: relative;
+    z-index: 1;
+    width: min(800px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 30px 80px rgb(15 23 42 / 0.35);
+}
+
+.tisilo-popup-offer__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border: 1px solid rgb(226 232 240 / 0.9);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.94);
+    color: #0f172a;
+    font-size: 30px;
+    line-height: 1;
+    box-shadow: 0 8px 24px rgb(15 23 42 / 0.16);
+    cursor: pointer;
+}
+
+.tisilo-popup-offer__close:hover,
+.tisilo-popup-offer__close:focus-visible {
+    color: #e11d48;
+    outline: 3px solid rgb(225 29 72 / 0.25);
+}
+
+.tisilo-popup-offer__artwork-link {
+    display: block;
+}
+
+.tisilo-popup-offer__artwork {
+    display: block;
+    width: 100%;
+    max-height: calc(100vh - 32px);
+    object-fit: contain;
+    background: #f8fafc;
+}
+
+.tisilo-popup-offer__content {
+    display: grid;
+    gap: 10px;
+    padding: 20px 24px 24px;
+    text-align: center;
+}
+
+.tisilo-popup-offer__content h2,
+.tisilo-popup-offer__content p {
+    margin: 0;
+}
+
+.tisilo-popup-offer__content h2 {
+    color: #111827;
+    font-size: clamp(1.25rem, 3vw, 2rem);
+    font-weight: 800;
+}
+
+.tisilo-popup-offer__content p,
+.tisilo-popup-offer__content small {
+    color: #64748b;
+}
+
+.tisilo-popup-offer__button {
+    justify-self: center;
+    border-radius: 10px;
+    background: #7c3aed;
+    padding: 11px 22px;
+    color: #fff;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+@media (max-width: 639px) {
+    .tisilo-popup-offer {
+        padding: 10px;
+    }
+
+    .tisilo-popup-offer__dialog {
+        width: min(100%, calc(100vw - 20px));
+        max-height: calc(100vh - 20px);
+        border-radius: 12px;
+    }
+
+    .tisilo-popup-offer__close {
+        top: 8px;
+        right: 8px;
+        width: 36px;
+        height: 36px;
+        font-size: 26px;
+    }
+
+    .tisilo-popup-offer__content {
+        padding: 16px;
+    }
+}
