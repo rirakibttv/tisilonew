@@ -49,7 +49,7 @@ class DeploymentDataSnapshot
                 ->map(fn (Category $category): array => [
                     ...Arr::only(
                         $category->toArray(),
-                        ['name', 'slug', 'image', 'description', 'status', 'sort_order', 'seo_title', 'meta_description'],
+                        ['name', 'slug', 'image', 'description', 'status', 'show_on_homepage', 'sort_order', 'seo_title', 'meta_description'],
                     ),
                     'path' => $category->hierarchicalPath(),
                     'parent_path' => $category->parent?->hierarchicalPath(),

@@ -45,6 +45,11 @@ class CategoriesTable
                     ->boolean()
                     ->sortable(),
 
+                IconColumn::make('show_on_homepage')
+                    ->label('Homepage')
+                    ->boolean()
+                    ->sortable(),
+
                 TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime('d M Y, h:i A')

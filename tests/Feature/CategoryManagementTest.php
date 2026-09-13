@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Resources\Categories\CategoryResource;
 use App\Filament\Resources\Categories\RelationManagers\SubcategoriesRelationManager;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Str;
@@ -73,5 +74,64 @@ class CategoryManagementTest extends TestCase
             'slug' => $sharedSlug,
             'status' => true,
         ]);
+    }
+
+    public function test_homepage_only_builds_flows_for_enabled_active_main_categories(): void
+    {
+        $suffix = Str::lower(Str::random(8));
+        $enabled = Category::query()->create([
+            'name' => 'Homepage Enabled '.$suffix,
+            'slug' => 'homepage-enabled-'.$suffix,
+            'status' => true,
+            'show_on_homepage' => true,
+        ]);
+        $enabledChild = $enabled->children()->create([
+            'name' => 'Homepage Child '.$suffix,
+            'slug' => 'homepage-child-'.$suffix,
+            'status' => true,
+        ]);
+        $enabledGrandchild = $enabledChild->children()->create([
+            'name' => 'Homepage Grandchild '.$suffix,
+            'slug' => 'homepage-grandchild-'.$suffix,
+            'status' => true,
+        ]);
+        $categoryProduct = Product::query()->create([
+            'category_id' => $enabledGrandchild->id,
+            'name' => 'Homepage Category Product '.$suffix,
+            'slug' => 'homepage-category-product-'.$suffix,
+            'product_type' => 'simple',
+            'regular_price' => 1200,
+            'sale_price' => 1000,
+            'manage_stock' => true,
+            'stock_quantity' => 5,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+        $disabled = Category::query()->create([
+            'name' => 'Homepage Disabled '.$suffix,
+            'slug' => 'homepage-disabled-'.$suffix,
+            'status' => true,
+            'show_on_homepage' => false,
+        ]);
+        $inactive = Category::query()->create([
+            'name' => 'Homepage Inactive '.$suffix,
+            'slug' => 'homepage-inactive-'.$suffix,
+            'status' => false,
+            'show_on_homepage' => true,
+        ]);
+
+        $response = $this->get(route('store.home'));
+
+        $response->assertOk()
+            ->assertViewHas('categorySections', function ($sections) use ($disabled, $enabled, $inactive): bool {
+                $categoryIds = $sections->pluck('category.id');
+
+                return $categoryIds->contains($enabled->id)
+                    && ! $categoryIds->contains($disabled->id)
+                    && ! $categoryIds->contains($inactive->id);
+            })
+            ->assertSee('Homepage Enabled '.$suffix)
+            ->assertSee('data-product-card="'.$categoryProduct->id.'"', false)
+            ->assertDontSee('আপনার জন্য নির্বাচিত পণ্য');
     }
 }

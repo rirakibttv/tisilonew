@@ -53,6 +53,11 @@ class CategoryForm
                             ->label('Active')
                             ->default(true),
 
+                        Toggle::make('show_on_homepage')
+                            ->label('Homepage')
+                            ->helperText('Enable this category to show its own product flow on the homepage.')
+                            ->default(false),
+
                         FileUpload::make('image')
                             ->label('Category Image')
                             ->image()

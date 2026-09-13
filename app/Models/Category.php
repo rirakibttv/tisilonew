@@ -16,6 +16,7 @@ class Category extends Model
         'image',
         'description',
         'status',
+        'show_on_homepage',
         'sort_order',
         'seo_title',
         'meta_description',
@@ -25,6 +26,7 @@ class Category extends Model
     {
         return [
             'status' => 'boolean',
+            'show_on_homepage' => 'boolean',
             'sort_order' => 'integer',
         ];
     }

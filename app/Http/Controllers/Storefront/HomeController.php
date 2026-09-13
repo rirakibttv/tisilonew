@@ -12,6 +12,7 @@ use App\Models\SiteSetting;
 use App\Support\Storefront\MarketplaceProductPresenter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class HomeController extends Controller
 {
@@ -26,7 +27,6 @@ class HomeController extends Controller
                 'children' => fn ($query) => $query->where('status', true)->orderBy('sort_order')->orderBy('name'),
                 'children.children' => fn ($query) => $query->where('status', true)->orderBy('sort_order')->orderBy('name'),
             ])
-            ->withCount(['products' => fn ($query) => $query->where('status', 'published')])
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
@@ -69,18 +69,20 @@ class HomeController extends Controller
             $hotDealProducts = $hotDealProducts->take(12);
         }
 
-        // Category-wise product blocks (matching tisilo.net sections)
-        $categorySections = $categories
-            ->filter(fn (Category $cat): bool => $cat->products_count > 0)
-            ->map(function (Category $category) use ($productEagerLoads): array {
-                $descendantIds = $category->children->pluck('id')
-                    ->merge($category->children->flatMap->children->pluck('id'))
-                    ->push($category->id);
+        $activeCategoryChildren = Category::query()
+            ->where('status', true)
+            ->get(['id', 'parent_id'])
+            ->groupBy(fn (Category $category): int => (int) ($category->parent_id ?? 0));
 
+        // Admin-controlled main-category product flows. Every enabled category
+        // remains visible even when it does not yet have published products.
+        $categorySections = $categories
+            ->where('show_on_homepage', true)
+            ->map(function (Category $category) use ($activeCategoryChildren, $productEagerLoads): array {
                 $categoryProducts = Product::query()
                     ->withReviewSummary()
                     ->where('status', 'published')
-                    ->whereIn('category_id', $descendantIds)
+                    ->whereIn('category_id', $this->categoryTreeIds($category, $activeCategoryChildren))
                     ->with($productEagerLoads)
                     ->latest()
                     ->limit(10)
@@ -91,9 +93,7 @@ class HomeController extends Controller
                     'category' => $category,
                     'products' => $categoryProducts,
                 ];
-            })
-            ->filter(fn (array $section): bool => $section['products']->isNotEmpty())
-            ->values();
+            })->values();
 
         // Brands for showcase slider
         $brands = Brand::query()
@@ -112,12 +112,37 @@ class HomeController extends Controller
 
         return view('storefront.home', [
             'categories' => $categories,
-            'products' => $summarizedProducts,
             'hotDealProducts' => $hotDealProducts,
             'categorySections' => $categorySections,
             'brands' => $brands,
             'hotDealEndDate' => $hotDealEndDate,
             'search' => $search,
         ]);
+    }
+
+    /**
+     * @param  Collection<int, Collection<int, Category>>  $childrenByParent
+     * @return array<int, int>
+     */
+    private function categoryTreeIds(Category $root, Collection $childrenByParent): array
+    {
+        $ids = [];
+        $queue = [$root->getKey()];
+
+        while ($queue !== []) {
+            $categoryId = (int) array_shift($queue);
+
+            if (isset($ids[$categoryId])) {
+                continue;
+            }
+
+            $ids[$categoryId] = $categoryId;
+
+            foreach ($childrenByParent->get($categoryId, collect()) as $child) {
+                $queue[] = $child->getKey();
+            }
+        }
+
+        return array_values($ids);
     }
 }

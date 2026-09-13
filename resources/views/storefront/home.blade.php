@@ -279,30 +279,7 @@
         </section>
     @endforeach
 
-    <!-- 7. All Products / General Showcase -->
-    <section class="storefront-shell pt-12">
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-xs">
-            <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="grid size-6 place-items-center rounded-md bg-purple-700 text-white text-xs">@svg('heroicon-o-sparkles', 'size-3.5')</span>
-                    <h2 class="text-lg sm:text-xl font-black text-slate-900">আপনার জন্য নির্বাচিত পণ্য</h2>
-                </div>
-                <a href="{{ route('store.products.index') }}" class="text-sm font-bold text-purple-700 hover:text-purple-800">সব পণ্য দেখুন →</a>
-            </div>
-
-            <div data-product-grid class="storefront-product-grid mt-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                @forelse($products as $card)
-                    @include('storefront.components.product-card', ['card' => $card])
-                @empty
-                    <div class="col-span-full py-12 text-center text-slate-400">
-                        কোনো পণ্য পাওয়া যায়নি।
-                    </div>
-                @endforelse
-            </div>
-        </div>
-    </section>
-
-    <!-- 8. Brands Showcase -->
+    <!-- 7. Brands Showcase -->
     @if($brands->isNotEmpty())
         <section class="storefront-shell pt-12">
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
