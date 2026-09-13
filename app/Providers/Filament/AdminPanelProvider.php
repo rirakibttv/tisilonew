@@ -107,6 +107,7 @@ class AdminPanelProvider extends PanelProvider
                         fn (AdminNavigationGroup $group): bool => ! in_array($group, [
                             AdminNavigationGroup::PosSystem,
                             AdminNavigationGroup::FraudCheckerApi,
+                            AdminNavigationGroup::ProductsInfo,
                             AdminNavigationGroup::OrderPanel,
                             AdminNavigationGroup::Shipping,
                             AdminNavigationGroup::OfferPanel,
@@ -253,20 +254,11 @@ class AdminPanelProvider extends PanelProvider
     private function offerPanelNavigationItems(): array
     {
         return [
-            NavigationItem::make('Overview')
-                ->key('offer-panel-overview')
-                ->group(AdminNavigationGroup::OfferPanel)
-                ->icon(Heroicon::OutlinedMegaphone)
-                ->sort(0)
-                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.module-overview')
-                    && request()->string('module')->toString() === AdminNavigationGroup::OfferPanel->slug())
-                ->url(fn (): string => ModuleOverview::getUrl(['module' => AdminNavigationGroup::OfferPanel->slug()])),
-
             NavigationItem::make('PopUp Offer')
                 ->key('offer-panel-popup')
                 ->group(AdminNavigationGroup::OfferPanel)
                 ->icon(Heroicon::OutlinedChatBubbleBottomCenterText)
-                ->sort(1)
+                ->sort(0)
                 ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.popup-offers.*'))
                 ->url(fn (): string => ListPopupOffers::getUrl()),
         ];
