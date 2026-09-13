@@ -206,6 +206,113 @@
         </div>
     </section>
 
+    <section id="product-reviews" class="storefront-shell scroll-mt-24 py-12">
+        <div class="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,.65fr)]">
+            <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+                <div class="flex flex-wrap items-end justify-between gap-3 border-b border-slate-100 pb-5">
+                    <div>
+                        <p class="text-xs font-black uppercase tracking-[.18em] text-orange-500">Verified customer feedback</p>
+                        <h2 class="mt-2 text-2xl font-black text-slate-950">কাস্টমার রিভিউ</h2>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-3xl font-black text-slate-950">{{ number_format($summary['review_rating'], 1) }}<span class="text-base text-slate-400">/5</span></p>
+                        <p class="text-sm font-bold text-amber-500">★★★★★ <span class="font-medium text-slate-500">({{ $summary['review_count'] }} রিভিউ)</span></p>
+                    </div>
+                </div>
+
+                @if ($product->approvedReviews->isNotEmpty())
+                    <div class="divide-y divide-slate-100">
+                        @foreach ($product->approvedReviews as $review)
+                            <article class="py-5 first:pt-6 last:pb-0">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <div>
+                                        <p class="font-black text-slate-900">{{ $review->reviewer_name }}</p>
+                                        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                                            <span class="font-black text-amber-500">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
+                                            @if ($review->is_verified_purchase)
+                                                <span class="rounded-full bg-emerald-50 px-2 py-1 font-bold text-emerald-700">✓ যাচাইকৃত ক্রয়</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <time class="text-xs text-slate-400" datetime="{{ ($review->published_at ?? $review->created_at)->toAtomString() }}">{{ ($review->published_at ?? $review->created_at)->format('d M Y') }}</time>
+                                </div>
+                                @if ($review->title)
+                                    <h3 class="mt-3 font-black text-slate-900">{{ $review->title }}</h3>
+                                @endif
+                                <p class="mt-2 whitespace-pre-line text-sm leading-7 text-slate-600">{{ $review->review }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="py-12 text-center">
+                        <span class="mx-auto grid size-14 place-items-center rounded-2xl bg-orange-50 text-2xl text-orange-500">★</span>
+                        <p class="mt-4 font-black text-slate-900">এখনো কোনো প্রকাশিত রিভিউ নেই</p>
+                        <p class="mt-1 text-sm text-slate-500">পণ্যটি কিনে পাওয়া প্রথম অভিজ্ঞতাটি আপনি শেয়ার করতে পারেন।</p>
+                    </div>
+                @endif
+            </div>
+
+            <aside class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+                <h2 class="text-xl font-black text-slate-950">আপনার রিভিউ দিন</h2>
+                <p class="mt-2 text-sm leading-6 text-slate-500">শুধু এই পণ্যটি কিনে ডেলিভারি পাওয়া কাস্টমার রিভিউ জমা দিতে পারবেন।</p>
+
+                @if (session('review_submitted'))
+                    <div class="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{{ session('review_submitted') }}</div>
+                @endif
+
+                @guest
+                    <a href="{{ route('store.account.login') }}" class="mt-5 flex h-12 items-center justify-center rounded-xl bg-orange-500 px-5 text-sm font-black text-white hover:bg-orange-600">রিভিউ দিতে লগইন করুন</a>
+                @else
+                    @if (auth()->user()->role === \App\Enums\UserRole::Customer)
+                        @if ($viewerReview && $viewerReview->status !== \App\Models\ProductReview::STATUS_REJECTED)
+                            <div @class([
+                                'mt-5 rounded-2xl border p-4 text-sm font-bold',
+                                'border-emerald-200 bg-emerald-50 text-emerald-700' => $viewerReview->status === \App\Models\ProductReview::STATUS_APPROVED,
+                                'border-amber-200 bg-amber-50 text-amber-700' => $viewerReview->status === \App\Models\ProductReview::STATUS_PENDING,
+                            ])>
+                                {{ $viewerReview->status === \App\Models\ProductReview::STATUS_APPROVED
+                                    ? 'আপনার রিভিউটি প্রকাশিত হয়েছে।'
+                                    : 'আপনার রিভিউটি এখন অনুমোদনের অপেক্ষায় আছে।' }}
+                            </div>
+                        @elseif ($canSubmitReview)
+                            @if ($viewerReview?->status === \App\Models\ProductReview::STATUS_REJECTED)
+                                <div class="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700">রিভিউটি অনুমোদিত হয়নি। সংশোধন করে আবার পাঠাতে পারেন।</div>
+                            @endif
+                            <form method="POST" action="{{ route('store.products.reviews.store', $product) }}" class="mt-5 space-y-4">
+                                @csrf
+                                <div>
+                                    <label for="review-rating" class="text-sm font-black text-slate-800">রেটিং</label>
+                                    <select id="review-rating" name="rating" required class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm focus:border-orange-400 focus:ring-orange-400">
+                                        <option value="">রেটিং নির্বাচন করুন</option>
+                                        @foreach ([5 => '★★★★★ — চমৎকার', 4 => '★★★★☆ — খুব ভালো', 3 => '★★★☆☆ — ভালো', 2 => '★★☆☆☆ — মোটামুটি', 1 => '★☆☆☆☆ — খারাপ'] as $value => $label)
+                                            <option value="{{ $value }}" @selected((int) old('rating', $viewerReview?->rating) === $value)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('rating')<p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>@enderror
+                                </div>
+                                <div>
+                                    <label for="review-title" class="text-sm font-black text-slate-800">শিরোনাম <span class="font-medium text-slate-400">(ঐচ্ছিক)</span></label>
+                                    <input id="review-title" name="title" value="{{ old('title', $viewerReview?->title) }}" maxlength="150" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-3 text-sm focus:border-orange-400 focus:ring-orange-400" placeholder="এক কথায় আপনার অভিজ্ঞতা">
+                                    @error('title')<p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>@enderror
+                                </div>
+                                <div>
+                                    <label for="review-body" class="text-sm font-black text-slate-800">রিভিউ</label>
+                                    <textarea id="review-body" name="review" required minlength="10" maxlength="3000" rows="5" class="mt-2 w-full rounded-xl border border-slate-200 px-3 py-3 text-sm focus:border-orange-400 focus:ring-orange-400" placeholder="পণ্যটি ব্যবহার করে আপনার অভিজ্ঞতা লিখুন">{{ old('review', $viewerReview?->review) }}</textarea>
+                                    @error('review')<p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>@enderror
+                                </div>
+                                <button type="submit" class="h-12 w-full rounded-xl bg-orange-500 px-5 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600">রিভিউ জমা দিন</button>
+                            </form>
+                        @elseif (! $hasDeliveredPurchase)
+                            <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-bold leading-6 text-slate-600">এই পণ্যের delivered order আপনার account-এ পাওয়া যায়নি। ডেলিভারি সম্পন্ন হলে এখানে review form দেখা যাবে।</div>
+                        @endif
+                    @else
+                        <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-bold leading-6 text-slate-600">Customer account থেকেই কেবল product review জমা দেওয়া যায়।</div>
+                    @endif
+                @endguest
+            </aside>
+        </div>
+    </section>
+
     @if ($related->isNotEmpty())
         <section class="storefront-shell py-14">
             <h2 class="text-2xl font-black text-slate-950">সম্পর্কিত পণ্য</h2>

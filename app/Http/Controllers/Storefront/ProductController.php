@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Enums\OrderStatus;
+use App\Enums\UserRole;
 use App\Enums\VendorListingItemStatus;
 use App\Enums\VendorListingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\ProductReview;
 use App\Support\Storefront\MarketplaceProductPresenter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -163,7 +167,7 @@ class ProductController extends Controller
         return $category;
     }
 
-    public function show(Product $product): View
+    public function show(Request $request, Product $product): View
     {
         abort_unless($product->status === 'published', 404);
 
@@ -171,6 +175,7 @@ class ProductController extends Controller
             ->loadAvg('approvedReviews as review_rating', 'rating')
             ->loadCount('approvedReviews as review_count');
         $product->load(array_merge($this->storefrontRelations(), [
+            'approvedReviews' => fn ($query) => $query->latest('published_at')->limit(20),
             'variations.attributeValues.attribute:id,name',
             'vendorListings.vendor:id,name,slug,logo',
             'vendorListings.items.productVariation.attributeValues.attribute:id,name',
@@ -187,7 +192,32 @@ class ProductController extends Controller
             ->get()
             ->map(fn (Product $product): array => MarketplaceProductPresenter::summarize($product));
 
-        return view('storefront.products.show', compact('product', 'summary', 'related'));
+        $customer = $request->user()?->role === UserRole::Customer ? $request->user() : null;
+        $viewerReview = $customer
+            ? ProductReview::query()
+                ->where('product_id', $product->getKey())
+                ->where('user_id', $customer->getKey())
+                ->first()
+            : null;
+        $hasDeliveredPurchase = $customer
+            ? OrderItem::query()
+                ->where('product_id', $product->getKey())
+                ->whereHas('order', fn (Builder $query) => $query
+                    ->where('user_id', $customer->getKey())
+                    ->where('status', OrderStatus::Delivered->value))
+                ->exists()
+            : false;
+        $canSubmitReview = $hasDeliveredPurchase
+            && (! $viewerReview || $viewerReview->status === ProductReview::STATUS_REJECTED);
+
+        return view('storefront.products.show', compact(
+            'product',
+            'summary',
+            'related',
+            'viewerReview',
+            'hasDeliveredPurchase',
+            'canSubmitReview',
+        ));
     }
 
     /** @return array<int|string, mixed> */

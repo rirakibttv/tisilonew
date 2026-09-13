@@ -21,6 +21,9 @@ use App\Filament\Resources\Permissions\Pages\ListPermissions;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\Pages\PendingProducts;
+use App\Filament\Resources\ProductReviews\Pages\CreateProductReview;
+use App\Filament\Resources\ProductReviews\Pages\ListPendingProductReviews;
+use App\Filament\Resources\ProductReviews\Pages\ListProductReviews;
 use App\Filament\Resources\Roles\Pages\ListRoles;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Support\SiteBranding;
@@ -106,6 +109,7 @@ class AdminPanelProvider extends PanelProvider
                             AdminNavigationGroup::OrderPanel,
                             AdminNavigationGroup::Shipping,
                             AdminNavigationGroup::LandingPage,
+                            AdminNavigationGroup::Reviews,
                             AdminNavigationGroup::SeoOverview,
                             AdminNavigationGroup::ApiIntegration,
                             AdminNavigationGroup::User,
@@ -134,6 +138,8 @@ class AdminPanelProvider extends PanelProvider
                 ...$this->orderPanelNavigationItems(),
 
                 ...$this->landingPageNavigationItems(),
+
+                ...$this->reviewNavigationItems(),
 
                 ...$this->marketingNavigationItems(),
 
@@ -236,6 +242,36 @@ class AdminPanelProvider extends PanelProvider
                 ->sort(1)
                 ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.landing-pages.index'))
                 ->url(fn (): string => ListLandingPages::getUrl()),
+        ];
+    }
+
+    /** @return array<NavigationItem> */
+    private function reviewNavigationItems(): array
+    {
+        return [
+            NavigationItem::make('Create Review')
+                ->key('review-create')
+                ->group(AdminNavigationGroup::Reviews)
+                ->icon(Heroicon::OutlinedPlusCircle)
+                ->sort(0)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.product-reviews.create'))
+                ->url(fn (): string => CreateProductReview::getUrl()),
+
+            NavigationItem::make('Pending Review')
+                ->key('review-pending')
+                ->group(AdminNavigationGroup::Reviews)
+                ->icon(Heroicon::OutlinedClock)
+                ->sort(1)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.product-reviews.pending'))
+                ->url(fn (): string => ListPendingProductReviews::getUrl()),
+
+            NavigationItem::make('All Review')
+                ->key('review-all')
+                ->group(AdminNavigationGroup::Reviews)
+                ->icon(Heroicon::OutlinedStar)
+                ->sort(2)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.product-reviews.index'))
+                ->url(fn (): string => ListProductReviews::getUrl()),
         ];
     }
 

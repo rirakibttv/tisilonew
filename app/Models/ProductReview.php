@@ -9,11 +9,23 @@ use Illuminate\Support\Str;
 
 class ProductReview extends Model
 {
+    public const STATUS_PENDING = 'pending';
+
+    public const STATUS_APPROVED = 'approved';
+
+    public const STATUS_REJECTED = 'rejected';
+
+    public const SOURCE_CUSTOMER = 'customer';
+
+    public const SOURCE_ADMIN = 'admin';
+
     protected $fillable = [
         'uuid',
         'product_id',
         'user_id',
         'order_item_id',
+        'created_by',
+        'source',
         'reviewer_name',
         'reviewer_email',
         'rating',
@@ -40,7 +52,7 @@ class ProductReview extends Model
         });
 
         static::saving(function (ProductReview $review): void {
-            $review->published_at = $review->status === 'approved'
+            $review->published_at = $review->status === self::STATUS_APPROVED
                 ? ($review->published_at ?? now())
                 : null;
         });
@@ -49,7 +61,7 @@ class ProductReview extends Model
     public function scopePublished(Builder $query): Builder
     {
         return $query
-            ->where('status', 'approved')
+            ->where('status', self::STATUS_APPROVED)
             ->where(function (Builder $query): void {
                 $query->whereNull('published_at')->orWhere('published_at', '<=', now());
             });
@@ -68,5 +80,20 @@ class ProductReview extends Model
     public function orderItem(): BelongsTo
     {
         return $this->belongsTo(OrderItem::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** @return array<string, string> */
+    public static function statusOptions(): array
+    {
+        return [
+            self::STATUS_PENDING => 'Pending',
+            self::STATUS_APPROVED => 'Approved',
+            self::STATUS_REJECTED => 'Rejected',
+        ];
     }
 }
