@@ -25,7 +25,9 @@
                                 <a href="{{ $category->permalink }}" class="flex min-h-[45px] items-center justify-between px-4 py-2 transition hover:bg-purple-50 hover:text-purple-700">
                                     <div class="flex items-center gap-3 min-w-0">
                                         @if($category->image)
-                                            <img src="{{ asset('storage/'.ltrim($category->image, '/')) }}" alt="{{ $category->name }}" class="size-6 shrink-0 rounded-md object-cover" loading="lazy">
+                                            <span class="grid size-7 shrink-0 place-items-center overflow-hidden rounded-md p-0">
+                                                <img src="{{ asset('storage/'.ltrim($category->image, '/')) }}" alt="{{ $category->name }}" class="block size-full scale-125 object-cover" loading="lazy">
+                                            </span>
                                         @else
                                             <span class="grid size-6 shrink-0 place-items-center rounded-md bg-purple-100 text-xs font-black uppercase text-purple-700">{{ mb_substr($category->name, 0, 1) }}</span>
                                         @endif
