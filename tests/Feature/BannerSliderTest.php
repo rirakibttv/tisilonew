@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\BannerSlider;
+use App\Models\SliderGroup;
 use App\Models\User;
 use App\Services\DeploymentDataSnapshot;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -16,7 +17,7 @@ class BannerSliderTest extends TestCase
 {
     use DatabaseTransactions;
 
-    public function test_admin_has_one_banner_slider_list_without_placement_selection(): void
+    public function test_admin_manages_master_sliders_and_their_nested_slide_lists(): void
     {
         $admin = User::factory()->create([
             'role' => UserRole::Admin,
@@ -27,35 +28,55 @@ class BannerSliderTest extends TestCase
             ->assertOk()
             ->assertSeeInOrder(['Banner &amp; Slider', 'PopUp Offer'], false);
 
-        $this->actingAs($admin)->get('/admin/banner-sliders')
-            ->assertOk()
-            ->assertSee('Banner &amp; Slider', false)
-            ->assertSee('Create New Slider');
+        $mainSlider = SliderGroup::main();
 
-        $this->actingAs($admin)->get('/admin/banner-sliders/create')
+        $this->actingAs($admin)->get('/admin/slider-groups')
             ->assertOk()
-            ->assertSee('Slider Artwork')
-            ->assertSee('Destination URL')
-            ->assertSee('Active Mode')
+            ->assertSee('Slider Panel')
+            ->assertSee('Main Slider')
+            ->assertSee('Create Master Slider');
+
+        $this->actingAs($admin)->get('/admin/slider-groups/'.$mainSlider->getKey().'/edit')
+            ->assertOk()
+            ->assertSee('Homepage Placement')
+            ->assertSee('Slides')
+            ->assertSee('Add Slide')
             ->assertDontSee('Select Placement Category');
     }
 
-    public function test_sliders_receive_sequential_names_and_only_active_sliders_show_on_homepage(): void
+    public function test_slides_belong_to_master_sliders_and_render_at_their_homepage_positions(): void
     {
+        $mainSlider = SliderGroup::main();
         $first = BannerSlider::query()->create([
+            'slider_group_id' => $mainSlider->getKey(),
             'image' => 'banner-sliders/first.jpg',
             'destination_url' => '/shop',
             'is_active' => true,
             'sort_order' => 1,
         ]);
         $second = BannerSlider::query()->create([
+            'slider_group_id' => $mainSlider->getKey(),
             'image' => 'banner-sliders/second.jpg',
             'is_active' => false,
             'sort_order' => 2,
         ]);
 
-        $this->assertSame('Slider '.$first->id, $first->fresh()->name);
-        $this->assertSame('Slider '.$second->id, $second->fresh()->name);
+        $this->assertSame('Slider 1', $first->fresh()->name);
+        $this->assertSame('Slider 2', $second->fresh()->name);
+
+        $categorySlider = SliderGroup::query()->create([
+            'name' => 'Category Offers',
+            'slug' => 'category-offers',
+            'placement' => 'after_categories',
+            'is_active' => true,
+            'sort_order' => 2,
+        ]);
+        BannerSlider::query()->create([
+            'slider_group_id' => $categorySlider->getKey(),
+            'image' => 'banner-sliders/category-offer.jpg',
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
 
         $this->get('/')
             ->assertOk()
@@ -65,12 +86,23 @@ class BannerSliderTest extends TestCase
             ->assertSee('storage/banner-sliders/first.jpg', false)
             ->assertSee('href="/shop"', false)
             ->assertDontSee('storage/banner-sliders/second.jpg', false)
+            ->assertSee('data-managed-slider', false)
+            ->assertSee('data-slider-name="category-offers"', false)
+            ->assertSee('storage/banner-sliders/category-offer.jpg', false)
             ->assertDontSee('Biggest Online Supermarket');
     }
 
-    public function test_banner_slider_is_preserved_in_deployment_snapshot(): void
+    public function test_master_slider_and_its_slides_are_preserved_in_deployment_snapshot(): void
     {
+        $footerSlider = SliderGroup::query()->create([
+            'name' => 'Footer Offers',
+            'slug' => 'footer-offers',
+            'placement' => 'before_footer',
+            'is_active' => true,
+            'sort_order' => 5,
+        ]);
         $slider = BannerSlider::query()->create([
+            'slider_group_id' => $footerSlider->getKey(),
             'image' => 'banner-sliders/deployment.jpg',
             'destination_url' => 'https://www.tisilo.com/shop',
             'is_active' => true,
@@ -84,14 +116,22 @@ class BannerSliderTest extends TestCase
             $snapshot = json_decode(File::get($path), true, 512, JSON_THROW_ON_ERROR);
 
             $this->assertTrue(collect($snapshot['banner_sliders'])->contains(
-                fn (array $data): bool => $data['uuid'] === $slider->uuid,
+                fn (array $data): bool => $data['uuid'] === $slider->uuid
+                    && $data['slider_group_slug'] === 'footer-offers',
+            ));
+            $this->assertTrue(collect($snapshot['slider_groups'])->contains(
+                fn (array $data): bool => $data['uuid'] === $footerSlider->uuid,
             ));
 
+            $footerSlider->update(['name' => 'Changed', 'is_active' => false]);
             $slider->update(['destination_url' => null, 'is_active' => false]);
             $service->import($path);
 
+            $this->assertSame('Footer Offers', $footerSlider->fresh()->name);
+            $this->assertTrue($footerSlider->fresh()->is_active);
             $this->assertSame('https://www.tisilo.com/shop', $slider->fresh()->destination_url);
             $this->assertTrue($slider->fresh()->is_active);
+            $this->assertTrue($slider->fresh()->group->is($footerSlider));
         } finally {
             File::delete($path);
         }

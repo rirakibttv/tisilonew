@@ -20,6 +20,7 @@ use App\Models\ShippingPartner;
 use App\Models\ShippingRegion;
 use App\Models\ShippingRegionRate;
 use App\Models\SiteSetting;
+use App\Models\SliderGroup;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorListing;
@@ -241,13 +242,25 @@ class DeploymentDataSnapshot
                     ]),
                     'product_slugs' => $landingPage->products->pluck('slug')->values()->all(),
                 ])->all(),
-            'banner_sliders' => BannerSlider::query()
+            'slider_groups' => SliderGroup::query()
                 ->orderBy('sort_order')
                 ->orderBy('uuid')
                 ->get()
-                ->map(fn (BannerSlider $slider): array => Arr::only($slider->toArray(), [
-                    'uuid', 'name', 'image', 'destination_url', 'is_active', 'sort_order',
+                ->map(fn (SliderGroup $group): array => Arr::only($group->toArray(), [
+                    'uuid', 'name', 'slug', 'placement', 'is_active', 'sort_order',
                 ]))
+                ->all(),
+            'banner_sliders' => BannerSlider::query()
+                ->with('group')
+                ->orderBy('sort_order')
+                ->orderBy('uuid')
+                ->get()
+                ->map(fn (BannerSlider $slider): array => [
+                    ...Arr::only($slider->toArray(), [
+                        'uuid', 'name', 'image', 'destination_url', 'is_active', 'sort_order',
+                    ]),
+                    'slider_group_slug' => $slider->group?->slug ?? 'main-slider',
+                ])
                 ->all(),
             'popup_offers' => PopupOffer::query()
                 ->orderBy('uuid')
@@ -289,7 +302,7 @@ class DeploymentDataSnapshot
         }
 
         return DB::transaction(function () use ($snapshot): array {
-            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'permissions' => 0, 'roles' => 0, 'users' => 0, 'site_settings' => 0, 'shipping_classes' => 0, 'shipping_partners' => 0, 'shipping_regions' => 0, 'shipping_region_rates' => 0, 'products' => 0, 'product_variations' => 0, 'wishlists' => 0, 'landing_pages' => 0, 'banner_sliders' => 0, 'popup_offers' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
+            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'permissions' => 0, 'roles' => 0, 'users' => 0, 'site_settings' => 0, 'shipping_classes' => 0, 'shipping_partners' => 0, 'shipping_regions' => 0, 'shipping_region_rates' => 0, 'products' => 0, 'product_variations' => 0, 'wishlists' => 0, 'landing_pages' => 0, 'slider_groups' => 0, 'banner_sliders' => 0, 'popup_offers' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
 
             foreach ($snapshot['brands'] ?? [] as $data) {
                 Brand::query()->updateOrCreate(['slug' => $data['slug']], $data);
@@ -535,8 +548,22 @@ class DeploymentDataSnapshot
                 $counts['landing_pages']++;
             }
 
+            foreach ($snapshot['slider_groups'] ?? [] as $data) {
+                SliderGroup::query()->updateOrCreate(['placement' => $data['placement']], $data);
+                $counts['slider_groups']++;
+            }
+
+            $mainSliderGroup = SliderGroup::main();
+
             foreach ($snapshot['banner_sliders'] ?? [] as $data) {
-                BannerSlider::query()->updateOrCreate(['uuid' => $data['uuid']], $data);
+                $groupSlug = Arr::pull($data, 'slider_group_slug', 'main-slider');
+                $groupId = SliderGroup::query()->where('slug', $groupSlug)->value('id')
+                    ?? $mainSliderGroup->getKey();
+
+                BannerSlider::query()->updateOrCreate(
+                    ['uuid' => $data['uuid']],
+                    [...$data, 'slider_group_id' => $groupId],
+                );
                 $counts['banner_sliders']++;
             }
 

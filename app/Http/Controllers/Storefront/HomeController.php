@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Storefront;
 use App\Enums\VendorListingItemStatus;
 use App\Enums\VendorListingStatus;
 use App\Http\Controllers\Controller;
-use App\Models\BannerSlider;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\SiteSetting;
+use App\Models\SliderGroup;
 use App\Support\Storefront\MarketplaceProductPresenter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -104,11 +104,23 @@ class HomeController extends Controller
             ->limit(12)
             ->get();
 
-        $sliders = BannerSlider::query()
-            ->visible()
+        $mainSliderGroup = SliderGroup::query()
+            ->active()
+            ->where('placement', SliderGroup::MAIN_PLACEMENT)
+            ->with(['slides' => fn ($query) => $query->visible()])
+            ->first();
+
+        $sliders = $mainSliderGroup?->slides ?? collect();
+
+        $additionalSliderGroups = SliderGroup::query()
+            ->active()
+            ->where('placement', '!=', SliderGroup::MAIN_PLACEMENT)
+            ->with(['slides' => fn ($query) => $query->visible()])
             ->orderBy('sort_order')
             ->orderBy('id')
-            ->get();
+            ->get()
+            ->filter(fn (SliderGroup $group): bool => $group->slides->isNotEmpty())
+            ->groupBy('placement');
 
         // Hot Deal end date (from setting or fallback to 3 days from now)
         $generalSettings = SiteSetting::valuesFor('general');
@@ -123,6 +135,7 @@ class HomeController extends Controller
             'categorySections' => $categorySections,
             'brands' => $brands,
             'sliders' => $sliders,
+            'additionalSliderGroups' => $additionalSliderGroups,
             'hotDealEndDate' => $hotDealEndDate,
             'search' => $search,
         ]);

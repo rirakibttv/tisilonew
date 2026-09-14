@@ -10,7 +10,6 @@ use App\Filament\Pages\GeneralSettings;
 use App\Filament\Pages\ModuleOverview;
 use App\Filament\Pages\PosSystem;
 use App\Filament\Pages\SeoOverview;
-use App\Filament\Resources\BannerSliders\Pages\ListBannerSliders;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
 use App\Filament\Resources\IncompleteOrders\Pages\ListIncompleteOrders;
 use App\Filament\Resources\LandingPages\Pages\CreateLandingPage;
@@ -27,6 +26,7 @@ use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\Pages\PendingProducts;
 use App\Filament\Resources\Roles\Pages\ListRoles;
+use App\Filament\Resources\SliderGroups\Pages\ListSliderGroups;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Support\SiteBranding;
 use Filament\Http\Middleware\Authenticate;
@@ -260,8 +260,8 @@ class AdminPanelProvider extends PanelProvider
                 ->group(AdminNavigationGroup::OfferPanel)
                 ->icon(Heroicon::OutlinedPhoto)
                 ->sort(0)
-                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.banner-sliders.*'))
-                ->url(fn (): string => ListBannerSliders::getUrl()),
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.slider-groups.*'))
+                ->url(fn (): string => ListSliderGroups::getUrl()),
 
             NavigationItem::make('PopUp Offer')
                 ->key('offer-panel-popup')

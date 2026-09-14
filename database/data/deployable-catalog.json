@@ -14885,22 +14885,34 @@
             ]
         }
     ],
+    "slider_groups": [
+        {
+            "uuid": "26a00785-93fe-4546-bccb-758252e6c7d8",
+            "name": "Main Slider",
+            "slug": "main-slider",
+            "placement": "main",
+            "is_active": true,
+            "sort_order": 1
+        }
+    ],
     "banner_sliders": [
         {
             "uuid": "917cec22-16eb-4751-b5ad-5770e27f2ec0",
-            "name": "Slider 10",
+            "name": "Slider 1",
             "image": "banner-sliders/01M2E0MWM7J6EZQSBGG8DP0CAJ.png",
             "destination_url": null,
             "is_active": true,
-            "sort_order": 1
+            "sort_order": 1,
+            "slider_group_slug": "main-slider"
         },
         {
             "uuid": "756e4c4c-357a-4e0e-923c-ee1148c7ed89",
-            "name": "Slider 11",
+            "name": "Slider 2",
             "image": "banner-sliders/01M2E0QBXEDPKBCFC3KVYTYMS3.jpg",
             "destination_url": null,
             "is_active": true,
-            "sort_order": 2
+            "sort_order": 2,
+            "slider_group_slug": "main-slider"
         }
     ],
     "popup_offers": []

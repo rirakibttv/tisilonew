@@ -198,6 +198,10 @@
         </div>
     </section>
 
+    @foreach($additionalSliderGroups->get('after_services', collect()) as $sliderGroup)
+        @include('storefront.partials.managed-slider', ['sliderGroup' => $sliderGroup])
+    @endforeach
+
     <!-- 2. Bottom Ads Banner Area (Side-by-Side Promotional Banners) -->
     <section class="storefront-shell pt-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -245,6 +249,10 @@
         </div>
     </section>
 
+    @foreach($additionalSliderGroups->get('after_categories', collect()) as $sliderGroup)
+        @include('storefront.partials.managed-slider', ['sliderGroup' => $sliderGroup])
+    @endforeach
+
     <!-- 4. Full Width Mid Promo Banner -->
     <section class="storefront-shell pt-10">
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-900 p-6 sm:p-10 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -258,6 +266,10 @@
             </a>
         </div>
     </section>
+
+    @foreach($additionalSliderGroups->get('before_hot_deals', collect()) as $sliderGroup)
+        @include('storefront.partials.managed-slider', ['sliderGroup' => $sliderGroup])
+    @endforeach
 
     <!-- 5. Hot Deal Section with Live Countdown Timer -->
     <section id="hot-deal" class="storefront-shell pt-12">
@@ -297,6 +309,10 @@
             </div>
         </div>
     </section>
+
+    @foreach($additionalSliderGroups->get('after_hot_deals', collect()) as $sliderGroup)
+        @include('storefront.partials.managed-slider', ['sliderGroup' => $sliderGroup])
+    @endforeach
 
     <!-- 6. Category-wise Product Sections -->
     @foreach($categorySections as $section)
@@ -346,6 +362,10 @@
             </div>
         </section>
     @endif
+
+    @foreach($additionalSliderGroups->get('before_footer', collect()) as $sliderGroup)
+        @include('storefront.partials.managed-slider', ['sliderGroup' => $sliderGroup])
+    @endforeach
 
 </div>
 
@@ -425,6 +445,58 @@
                 });
             });
         }
+
+        // Additional homepage sliders managed from their master slider panels.
+        document.querySelectorAll('[data-managed-slider]').forEach((container) => {
+            const managedSlides = Array.from(container.querySelectorAll('[data-managed-slider-slide]'));
+            const managedIndicators = Array.from(container.querySelectorAll('[data-managed-slider-indicator]'));
+            const managedPrev = container.querySelector('[data-managed-slider-prev]');
+            const managedNext = container.querySelector('[data-managed-slider-next]');
+            let managedIndex = 0;
+            let managedInterval;
+
+            const showManagedSlide = (index) => {
+                managedSlides.forEach((slide, slideIndex) => {
+                    slide.classList.toggle('hidden', slideIndex !== index);
+                    slide.classList.toggle('block', slideIndex === index);
+                });
+
+                managedIndicators.forEach((indicator, indicatorIndex) => {
+                    indicator.classList.toggle('w-6', indicatorIndex === index);
+                    indicator.classList.toggle('bg-white', indicatorIndex === index);
+                    indicator.classList.toggle('bg-white/50', indicatorIndex !== index);
+                });
+
+                managedIndex = index;
+            };
+
+            const restartManagedInterval = () => {
+                if (managedSlides.length < 2) return;
+                clearInterval(managedInterval);
+                managedInterval = setInterval(() => {
+                    showManagedSlide((managedIndex + 1) % managedSlides.length);
+                }, 5000);
+            };
+
+            managedPrev?.addEventListener('click', () => {
+                showManagedSlide((managedIndex - 1 + managedSlides.length) % managedSlides.length);
+                restartManagedInterval();
+            });
+
+            managedNext?.addEventListener('click', () => {
+                showManagedSlide((managedIndex + 1) % managedSlides.length);
+                restartManagedInterval();
+            });
+
+            managedIndicators.forEach((indicator, index) => {
+                indicator.addEventListener('click', () => {
+                    showManagedSlide(index);
+                    restartManagedInterval();
+                });
+            });
+
+            restartManagedInterval();
+        });
 
         // Live Hot Deal Countdown Timer
         const timerContainer = document.getElementById('hot-deal-timer');

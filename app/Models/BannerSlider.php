@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 class BannerSlider extends Model
 {
     protected $fillable = [
         'uuid',
+        'slider_group_id',
         'name',
         'image',
         'destination_url',
@@ -29,17 +31,28 @@ class BannerSlider extends Model
     {
         static::creating(function (self $slider): void {
             $slider->uuid ??= (string) Str::uuid();
+            $slider->slider_group_id ??= SliderGroup::main()->getKey();
 
             if ($slider->sort_order === null) {
-                $slider->sort_order = ((int) static::query()->max('sort_order')) + 1;
+                $slider->sort_order = ((int) static::query()
+                    ->where('slider_group_id', $slider->slider_group_id)
+                    ->max('sort_order')) + 1;
             }
         });
 
         static::created(function (self $slider): void {
             if (blank($slider->name)) {
-                $slider->forceFill(['name' => 'Slider '.$slider->getKey()])->saveQuietly();
+                $slider->forceFill([
+                    'name' => 'Slider '.max(1, (int) $slider->sort_order),
+                ])->saveQuietly();
             }
         });
+    }
+
+    /** @return BelongsTo<SliderGroup, $this> */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(SliderGroup::class, 'slider_group_id');
     }
 
     public function scopeVisible(Builder $query): Builder
