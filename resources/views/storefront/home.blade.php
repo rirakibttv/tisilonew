@@ -70,7 +70,7 @@
 
             <!-- Main Hero Banner Carousel Slider -->
             <div
-                class="group relative mt-4 overflow-hidden rounded-2xl shadow-sm {{ $sliders->isNotEmpty() ? 'aspect-[1060/395] bg-white' : 'min-h-[330px] bg-slate-900 sm:min-h-[400px] lg:min-h-[482px]' }}"
+                class="group relative mt-4 overflow-hidden rounded-2xl shadow-sm {{ $sliders->isNotEmpty() ? 'bg-white' : 'min-h-[330px] bg-slate-900 sm:min-h-[400px] lg:min-h-[482px]' }}"
                 id="hero-slider"
                 @if($sliders->isNotEmpty()) data-responsive-banner-slider @endif
             >
@@ -79,23 +79,23 @@
                         @if($slider->destination_href)
                             <a
                                 href="{{ $slider->destination_href }}"
-                                class="hero-slide {{ $loop->first ? 'active opacity-100' : 'pointer-events-none opacity-0' }} absolute inset-0 transition-opacity duration-700 ease-in-out"
+                                class="hero-slide w-full {{ $loop->first ? 'active block' : 'hidden' }}"
                                 aria-label="{{ $slider->name }}"
                             >
                                 <img
                                     src="{{ $slider->image_url }}"
                                     alt="{{ $slider->name }}"
-                                    class="size-full object-contain"
+                                    class="block h-auto w-full"
                                     loading="{{ $loop->first ? 'eager' : 'lazy' }}"
                                     @if($loop->first) fetchpriority="high" @endif
                                 >
                             </a>
                         @else
-                            <div class="hero-slide {{ $loop->first ? 'active opacity-100' : 'pointer-events-none opacity-0' }} absolute inset-0 transition-opacity duration-700 ease-in-out">
+                            <div class="hero-slide w-full {{ $loop->first ? 'active block' : 'hidden' }}">
                                 <img
                                     src="{{ $slider->image_url }}"
                                     alt="{{ $slider->name }}"
-                                    class="size-full object-contain"
+                                    class="block h-auto w-full"
                                     loading="{{ $loop->first ? 'eager' : 'lazy' }}"
                                     @if($loop->first) fetchpriority="high" @endif
                                 >
@@ -352,6 +352,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Hero Slider Logic
         const slides = document.querySelectorAll('.hero-slide');
+        const sliderContainer = document.getElementById('hero-slider');
+        const usesResponsiveImages = sliderContainer?.hasAttribute('data-responsive-banner-slider') ?? false;
         const indicators = document.querySelectorAll('#hero-indicators button');
         const prevBtn = document.getElementById('hero-prev');
         const nextBtn = document.getElementById('hero-next');
@@ -360,6 +362,13 @@
 
         function showSlide(index) {
             slides.forEach((slide, i) => {
+                if (usesResponsiveImages) {
+                    slide.classList.toggle('hidden', i !== index);
+                    slide.classList.toggle('block', i === index);
+                    slide.classList.toggle('active', i === index);
+                    return;
+                }
+
                 if (i === index) {
                     slide.classList.remove('opacity-0', 'pointer-events-none');
                     slide.classList.add('active', 'opacity-100');
