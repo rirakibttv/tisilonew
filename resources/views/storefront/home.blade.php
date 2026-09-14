@@ -69,7 +69,11 @@
             </div>
 
             <!-- Main Hero Banner Carousel Slider -->
-            <div class="group relative mt-4 min-h-[330px] overflow-hidden rounded-2xl bg-slate-900 shadow-sm sm:min-h-[400px] lg:min-h-[482px]" id="hero-slider">
+            <div
+                class="group relative mt-4 overflow-hidden rounded-2xl shadow-sm {{ $sliders->isNotEmpty() ? 'aspect-[1060/395] bg-white' : 'min-h-[330px] bg-slate-900 sm:min-h-[400px] lg:min-h-[482px]' }}"
+                id="hero-slider"
+                @if($sliders->isNotEmpty()) data-responsive-banner-slider @endif
+            >
                 @if($sliders->isNotEmpty())
                     @foreach($sliders as $slider)
                         @if($slider->destination_href)
@@ -81,7 +85,7 @@
                                 <img
                                     src="{{ $slider->image_url }}"
                                     alt="{{ $slider->name }}"
-                                    class="size-full object-cover"
+                                    class="size-full object-contain"
                                     loading="{{ $loop->first ? 'eager' : 'lazy' }}"
                                     @if($loop->first) fetchpriority="high" @endif
                                 >
@@ -91,7 +95,7 @@
                                 <img
                                     src="{{ $slider->image_url }}"
                                     alt="{{ $slider->name }}"
-                                    class="size-full object-cover"
+                                    class="size-full object-contain"
                                     loading="{{ $loop->first ? 'eager' : 'lazy' }}"
                                     @if($loop->first) fetchpriority="high" @endif
                                 >

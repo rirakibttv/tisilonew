@@ -59,6 +59,9 @@ class BannerSliderTest extends TestCase
 
         $this->get('/')
             ->assertOk()
+            ->assertSee('data-responsive-banner-slider', false)
+            ->assertSee('aspect-[1060/395]', false)
+            ->assertSee('object-contain', false)
             ->assertSee('storage/banner-sliders/first.jpg', false)
             ->assertSee('href="/shop"', false)
             ->assertDontSee('storage/banner-sliders/second.jpg', false)
