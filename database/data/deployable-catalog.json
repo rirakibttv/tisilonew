@@ -28,7 +28,7 @@
         {
             "name": "Automotive & Motorbike",
             "slug": "automotive-motorbike",
-            "image": null,
+            "image": "categories/generated/automotive-motorbike.webp",
             "description": "<p></p>",
             "status": true,
             "show_on_homepage": false,
@@ -42,7 +42,7 @@
         {
             "name": "Babys & Toys",
             "slug": "babys-toys",
-            "image": null,
+            "image": "categories/generated/babys-toys.webp",
             "description": "<p></p>",
             "status": true,
             "show_on_homepage": false,
@@ -56,7 +56,7 @@
         {
             "name": "Beauty & Cosmetic",
             "slug": "beauty-cosmetic",
-            "image": null,
+            "image": "categories/generated/beauty-cosmetic.webp",
             "description": "<p></p>",
             "status": true,
             "show_on_homepage": false,
@@ -70,7 +70,7 @@
         {
             "name": "Books & Stationery",
             "slug": "books-stationery",
-            "image": null,
+            "image": "categories/generated/books-stationery.webp",
             "description": "<p></p>",
             "status": true,
             "show_on_homepage": false,
@@ -84,7 +84,7 @@
         {
             "name": "Computer & Laptop",
             "slug": "computer-laptop",
-            "image": null,
+            "image": "categories/generated/computer-laptop.webp",
             "description": "<p></p>",
             "status": true,
             "show_on_homepage": false,
@@ -98,7 +98,7 @@
         {
             "name": "Electronics & Electrical",
             "slug": "electronics-electrical",
-            "image": null,
+            "image": "categories/generated/electronics-electrical.webp",
             "description": "<p></p>",
             "status": true,
             "show_on_homepage": false,
@@ -112,7 +112,7 @@
         {
             "name": "Groceries & Pets",
             "slug": "groceries-pets",
-            "image": null,
+            "image": "categories/generated/groceries-pets.webp",
             "description": "<p></p>",
             "status": true,
             "show_on_homepage": false,
@@ -126,7 +126,7 @@
         {
             "name": "Home & Kitchen",
             "slug": "home-kitchen",
-            "image": null,
+            "image": "categories/generated/home-kitchen.webp",
             "description": "<p></p>",
             "status": true,
             "show_on_homepage": true,
@@ -140,7 +140,7 @@
         {
             "name": "Men's Fashion",
             "slug": "mens-fashion",
-            "image": null,
+            "image": "categories/generated/mens-fashion.webp",
             "description": "<p></p>",
             "status": true,
             "show_on_homepage": false,
@@ -154,7 +154,7 @@
         {
             "name": "Mobile & Accessories",
             "slug": "mobile-accessories",
-            "image": null,
+            "image": "categories/generated/mobile-accessories.webp",
             "description": "<p></p>",
             "status": true,
             "show_on_homepage": false,
@@ -168,7 +168,7 @@
         {
             "name": "Sports & Outdoor",
             "slug": "sports-outdoor",
-            "image": null,
+            "image": "categories/generated/sports-outdoor.webp",
             "description": "<p></p>",
             "status": true,
             "show_on_homepage": false,
@@ -182,7 +182,7 @@
         {
             "name": "Women's Fashion",
             "slug": "womens-fashion",
-            "image": null,
+            "image": "categories/generated/womens-fashion.webp",
             "description": "<p></p>",
             "status": true,
             "show_on_homepage": false,
