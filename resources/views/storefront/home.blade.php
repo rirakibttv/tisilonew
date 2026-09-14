@@ -228,7 +228,7 @@
         <div class="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-11">
             @foreach($categories as $cat)
                 <a href="{{ $cat->permalink }}" class="group flex flex-col items-center text-center p-2 rounded-2xl hover:bg-white transition hover:shadow-sm">
-                    <div class="relative grid size-16 sm:size-20 place-items-center rounded-2xl border border-slate-200 bg-white p-2 shadow-2xs group-hover:border-purple-300 group-hover:shadow-md transition">
+                    <div class="relative grid size-16 sm:size-20 place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs transition group-hover:border-purple-300 group-hover:shadow-md">
                         @if($cat->image)
                             <img src="{{ asset('storage/'.ltrim($cat->image, '/')) }}" alt="{{ $cat->name }}" class="size-full object-contain rounded-xl transition duration-300 group-hover:scale-105" loading="lazy">
                         @else
