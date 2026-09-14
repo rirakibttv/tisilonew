@@ -70,6 +70,35 @@
 
             <!-- Main Hero Banner Carousel Slider -->
             <div class="group relative mt-4 min-h-[330px] overflow-hidden rounded-2xl bg-slate-900 shadow-sm sm:min-h-[400px] lg:min-h-[482px]" id="hero-slider">
+                @if($sliders->isNotEmpty())
+                    @foreach($sliders as $slider)
+                        @if($slider->destination_href)
+                            <a
+                                href="{{ $slider->destination_href }}"
+                                class="hero-slide {{ $loop->first ? 'active opacity-100' : 'pointer-events-none opacity-0' }} absolute inset-0 transition-opacity duration-700 ease-in-out"
+                                aria-label="{{ $slider->name }}"
+                            >
+                                <img
+                                    src="{{ $slider->image_url }}"
+                                    alt="{{ $slider->name }}"
+                                    class="size-full object-cover"
+                                    loading="{{ $loop->first ? 'eager' : 'lazy' }}"
+                                    @if($loop->first) fetchpriority="high" @endif
+                                >
+                            </a>
+                        @else
+                            <div class="hero-slide {{ $loop->first ? 'active opacity-100' : 'pointer-events-none opacity-0' }} absolute inset-0 transition-opacity duration-700 ease-in-out">
+                                <img
+                                    src="{{ $slider->image_url }}"
+                                    alt="{{ $slider->name }}"
+                                    class="size-full object-cover"
+                                    loading="{{ $loop->first ? 'eager' : 'lazy' }}"
+                                    @if($loop->first) fetchpriority="high" @endif
+                                >
+                            </div>
+                        @endif
+                    @endforeach
+                @else
                 <!-- Slide 1 -->
                 <div class="hero-slide active absolute inset-0 flex items-center bg-gradient-to-br from-purple-950 via-purple-800 to-indigo-800 p-7 text-white transition-opacity duration-700 ease-in-out sm:p-12">
                     <div class="z-10 max-w-2xl">
@@ -114,20 +143,31 @@
                     </div>
                     <div class="absolute -right-16 -bottom-16 size-80 rounded-full bg-rose-500/20 blur-3xl pointer-events-none"></div>
                 </div>
+                @endif
 
                 <!-- Slider Arrows -->
-                <button type="button" class="absolute left-3 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-purple-950/65 text-white transition hover:bg-purple-950" id="hero-prev" aria-label="Previous Slide">
-                    @svg('heroicon-o-chevron-left', 'size-5')
-                </button>
-                <button type="button" class="absolute right-3 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-purple-950/65 text-white transition hover:bg-purple-950" id="hero-next" aria-label="Next Slide">
-                    @svg('heroicon-o-chevron-right', 'size-5')
-                </button>
+                @if($sliders->isEmpty() || $sliders->count() > 1)
+                    <button type="button" class="absolute left-3 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-purple-950/65 text-white transition hover:bg-purple-950" id="hero-prev" aria-label="Previous Slide">
+                        @svg('heroicon-o-chevron-left', 'size-5')
+                    </button>
+                    <button type="button" class="absolute right-3 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-purple-950/65 text-white transition hover:bg-purple-950" id="hero-next" aria-label="Next Slide">
+                        @svg('heroicon-o-chevron-right', 'size-5')
+                    </button>
+                @endif
 
                 <!-- Slider Indicators -->
-                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20" id="hero-indicators">
-                    <button type="button" class="size-2.5 rounded-full bg-white transition-all w-6" data-slide-index="0" aria-label="Slide 1"></button>
-                    <button type="button" class="size-2.5 rounded-full bg-white/50 transition-all" data-slide-index="1" aria-label="Slide 2"></button>
-                </div>
+                @if($sliders->isEmpty() || $sliders->count() > 1)
+                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20" id="hero-indicators">
+                        @foreach($sliders->isEmpty() ? collect([1, 2]) : $sliders as $indicator)
+                            <button
+                                type="button"
+                                class="size-2.5 rounded-full transition-all {{ $loop->first ? 'w-6 bg-white' : 'bg-white/50' }}"
+                                data-slide-index="{{ $loop->index }}"
+                                aria-label="Slide {{ $loop->iteration }}"
+                            ></button>
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </div>
     </section>

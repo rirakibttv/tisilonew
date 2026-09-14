@@ -7052,7 +7052,7 @@
         {
             "key": "general",
             "values": {
-                "site_name": "TISILO Supermarket",
+                "site_name": "TISILO Supermarket | Biggest Shopping Zone In Bangladesh",
                 "facebook_page_username": null,
                 "top_headline": "Biggest Shopping Zone In Bangladesh",
                 "footer_about_text": "বিশ্বস্ত বিক্রেতা, মানসম্মত পণ্য এবং নিরাপদ কেনাকাটার আধুনিক বাংলাদেশি মার্কেটপ্লেস।",
@@ -14883,6 +14883,24 @@
             "product_slugs": [
                 "premium-quality-panel-cotton-bed-sheets-pp-001"
             ]
+        }
+    ],
+    "banner_sliders": [
+        {
+            "uuid": "917cec22-16eb-4751-b5ad-5770e27f2ec0",
+            "name": "Slider 10",
+            "image": "banner-sliders/01M2E0MWM7J6EZQSBGG8DP0CAJ.png",
+            "destination_url": null,
+            "is_active": true,
+            "sort_order": 1
+        },
+        {
+            "uuid": "756e4c4c-357a-4e0e-923c-ee1148c7ed89",
+            "name": "Slider 11",
+            "image": "banner-sliders/01M2E0QBXEDPKBCFC3KVYTYMS3.jpg",
+            "destination_url": null,
+            "is_active": true,
+            "sort_order": 2
         }
     ],
     "popup_offers": []

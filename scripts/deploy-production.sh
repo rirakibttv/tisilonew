@@ -53,7 +53,7 @@ sync_public_files() {
     find "${PUBLIC_ROOT}" -type f -exec chmod 644 {} +
 
     local media_directory
-    for media_directory in brands categories popup-offers products settings vendors; do
+    for media_directory in banner-sliders brands categories popup-offers products settings vendors; do
         if [[ -d "${REPOSITORY}/storage/app/public/${media_directory}" ]]; then
             find "${REPOSITORY}/storage/app/public/${media_directory}" -type d -exec chmod 755 {} +
             find "${REPOSITORY}/storage/app/public/${media_directory}" -type f -exec chmod 644 {} +

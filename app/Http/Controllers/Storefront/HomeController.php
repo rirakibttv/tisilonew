@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Storefront;
 use App\Enums\VendorListingItemStatus;
 use App\Enums\VendorListingStatus;
 use App\Http\Controllers\Controller;
+use App\Models\BannerSlider;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -103,6 +104,12 @@ class HomeController extends Controller
             ->limit(12)
             ->get();
 
+        $sliders = BannerSlider::query()
+            ->visible()
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
         // Hot Deal end date (from setting or fallback to 3 days from now)
         $generalSettings = SiteSetting::valuesFor('general');
         $hotDealEndDate = $generalSettings['hot_deal_end_date'] ?? null;
@@ -115,6 +122,7 @@ class HomeController extends Controller
             'hotDealProducts' => $hotDealProducts,
             'categorySections' => $categorySections,
             'brands' => $brands,
+            'sliders' => $sliders,
             'hotDealEndDate' => $hotDealEndDate,
             'search' => $search,
         ]);

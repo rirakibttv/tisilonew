@@ -10,6 +10,7 @@ use App\Filament\Pages\GeneralSettings;
 use App\Filament\Pages\ModuleOverview;
 use App\Filament\Pages\PosSystem;
 use App\Filament\Pages\SeoOverview;
+use App\Filament\Resources\BannerSliders\Pages\ListBannerSliders;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
 use App\Filament\Resources\IncompleteOrders\Pages\ListIncompleteOrders;
 use App\Filament\Resources\LandingPages\Pages\CreateLandingPage;
@@ -254,11 +255,19 @@ class AdminPanelProvider extends PanelProvider
     private function offerPanelNavigationItems(): array
     {
         return [
+            NavigationItem::make('Banner & Slider')
+                ->key('offer-panel-banner-slider')
+                ->group(AdminNavigationGroup::OfferPanel)
+                ->icon(Heroicon::OutlinedPhoto)
+                ->sort(0)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.banner-sliders.*'))
+                ->url(fn (): string => ListBannerSliders::getUrl()),
+
             NavigationItem::make('PopUp Offer')
                 ->key('offer-panel-popup')
                 ->group(AdminNavigationGroup::OfferPanel)
                 ->icon(Heroicon::OutlinedChatBubbleBottomCenterText)
-                ->sort(0)
+                ->sort(1)
                 ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.popup-offers.*'))
                 ->url(fn (): string => ListPopupOffers::getUrl()),
         ];
