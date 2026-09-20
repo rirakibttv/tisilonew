@@ -134,4 +134,42 @@ class CategoryManagementTest extends TestCase
             ->assertSee('data-product-card="'.$categoryProduct->id.'"', false)
             ->assertDontSee('আপনার জন্য নির্বাচিত পণ্য');
     }
+
+    public function test_homepage_category_slider_stays_on_one_row_and_category_flows_load_twelve_products(): void
+    {
+        $suffix = Str::lower(Str::random(8));
+        $category = Category::query()->create([
+            'name' => 'Twelve Product Flow '.$suffix,
+            'slug' => 'twelve-product-flow-'.$suffix,
+            'status' => true,
+            'show_on_homepage' => true,
+        ]);
+
+        foreach (range(1, 13) as $index) {
+            Product::query()->create([
+                'category_id' => $category->id,
+                'name' => 'Flow Product '.$suffix.' '.$index,
+                'slug' => 'flow-product-'.$suffix.'-'.$index,
+                'product_type' => 'simple',
+                'regular_price' => 1200,
+                'sale_price' => 1000,
+                'manage_stock' => true,
+                'stock_quantity' => 5,
+                'stock_status' => 'in_stock',
+                'status' => 'published',
+            ]);
+        }
+
+        $this->get(route('store.home'))
+            ->assertOk()
+            ->assertSee('data-category-carousel', false)
+            ->assertSee('storefront-category-track', false)
+            ->assertViewHas('categorySections', function ($sections) use ($category): bool {
+                $section = $sections->first(
+                    fn (array $candidate): bool => $candidate['category']->is($category)
+                );
+
+                return is_array($section) && $section['products']->count() === 12;
+            });
+    }
 }

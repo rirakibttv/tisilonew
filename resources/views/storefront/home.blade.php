@@ -259,7 +259,7 @@
         </div>
     </section>
 
-    <!-- 3. Categories Circular/Rounded Grid Section -->
+    <!-- 3. Categories: single-row, right-to-left auto slider -->
     <section class="storefront-shell pt-2">
         <div class="border-b-2 border-purple-700 pb-3 flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -269,21 +269,31 @@
             <a href="{{ route('store.products.index') }}" class="text-sm font-bold text-purple-700 hover:text-purple-800">সব ক্যাটাগরি দেখুন →</a>
         </div>
 
-        <div class="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-11">
-            @foreach($categories as $cat)
-                <a href="{{ $cat->permalink }}" class="group flex flex-col items-center text-center p-2 rounded-2xl hover:bg-white transition hover:shadow-sm">
-                    <div class="relative grid size-16 sm:size-20 place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs transition group-hover:border-purple-300 group-hover:shadow-md">
-                        @if($cat->image)
-                            <img src="{{ asset('storage/'.ltrim($cat->image, '/')) }}" alt="{{ $cat->name }}" class="size-full object-contain rounded-xl transition duration-300 group-hover:scale-105" loading="lazy">
-                        @else
-                            <span class="grid size-full place-items-center rounded-xl bg-purple-50 text-xl font-black text-purple-700">{{ mb_substr($cat->name, 0, 1) }}</span>
-                        @endif
+        <div data-category-carousel class="storefront-category-carousel mt-6" aria-label="Product categories">
+            <div class="storefront-category-track">
+                @foreach([false, true] as $isDuplicate)
+                    <div class="storefront-category-group" @if($isDuplicate) aria-hidden="true" @endif>
+                        @foreach($categories as $cat)
+                            <a
+                                href="{{ $cat->permalink }}"
+                                class="storefront-category-item group flex flex-col items-center rounded-2xl text-center transition hover:bg-white hover:shadow-sm"
+                                @if($isDuplicate) tabindex="-1" @endif
+                            >
+                                <div class="relative grid size-16 place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs transition group-hover:border-purple-300 group-hover:shadow-md sm:size-20">
+                                    @if($cat->image)
+                                        <img src="{{ asset('storage/'.ltrim($cat->image, '/')) }}" alt="{{ $cat->name }}" class="size-full rounded-xl object-contain transition duration-300 group-hover:scale-105" loading="lazy">
+                                    @else
+                                        <span class="grid size-full place-items-center rounded-xl bg-purple-50 text-xl font-black text-purple-700">{{ mb_substr($cat->name, 0, 1) }}</span>
+                                    @endif
+                                </div>
+                                <span class="mt-2 line-clamp-2 text-sm font-bold leading-snug text-slate-800 group-hover:text-purple-700">
+                                    {{ $cat->name }}
+                                </span>
+                            </a>
+                        @endforeach
                     </div>
-                    <span class="mt-2 line-clamp-2 text-sm font-bold leading-snug text-slate-800 group-hover:text-purple-700">
-                        {{ $cat->name }}
-                    </span>
-                </a>
-            @endforeach
+                @endforeach
+            </div>
         </div>
     </section>
 

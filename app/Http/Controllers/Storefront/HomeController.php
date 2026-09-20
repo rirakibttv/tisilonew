@@ -87,7 +87,7 @@ class HomeController extends Controller
                     ->whereIn('category_id', $this->categoryTreeIds($category, $activeCategoryChildren))
                     ->with($productEagerLoads)
                     ->latest()
-                    ->limit(10)
+                    ->limit(12)
                     ->get()
                     ->map(fn (Product $p): array => MarketplaceProductPresenter::summarize($p));
 
