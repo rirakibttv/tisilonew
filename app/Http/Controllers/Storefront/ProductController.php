@@ -57,14 +57,6 @@ class ProductController extends Controller
 
         abort_unless($category, 404);
 
-        $requestedPath = (string) (parse_url($request->getRequestUri(), PHP_URL_PATH) ?: '');
-
-        if (! str_ends_with($requestedPath, '/')) {
-            $query = $request->getQueryString();
-
-            return redirect()->to($category->permalink.($query ? '?'.$query : ''), 301);
-        }
-
         return $this->catalog($request, $category);
     }
 

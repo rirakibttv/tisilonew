@@ -15,7 +15,7 @@
 <div class="bg-slate-50 pb-12">
     <!-- 1. Hero Slider & Vertical Category Menu Section -->
     <section class="storefront-shell">
-        <div class="grid grid-cols-1 gap-4 lg:grid-cols-[270px_minmax(0,1fr)] lg:items-start">
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-[270px_minmax(0,1fr)] lg:items-stretch">
             <!-- Desktop Vertical Category Sidebar -->
             <div id="categories" class="relative z-30 hidden lg:block">
                 <div class="overflow-visible rounded-b-2xl border-x border-b border-slate-200 bg-white shadow-sm">
@@ -81,23 +81,23 @@
                         @if($slider->destination_href)
                             <a
                                 href="{{ $slider->destination_href }}"
-                                class="hero-slide w-full {{ $loop->first ? 'active block' : 'hidden' }}"
+                                class="hero-slide w-full lg:absolute lg:inset-0 lg:h-full {{ $loop->first ? 'active block' : 'hidden' }}"
                                 aria-label="{{ $slider->name }}"
                             >
                                 <img
                                     src="{{ $slider->image_url }}"
                                     alt="{{ $slider->name }}"
-                                    class="block h-auto w-full"
+                                    class="block h-auto w-full lg:h-full lg:object-fill 2xl:object-cover"
                                     loading="{{ $loop->first ? 'eager' : 'lazy' }}"
                                     @if($loop->first) fetchpriority="high" @endif
                                 >
                             </a>
                         @else
-                            <div class="hero-slide w-full {{ $loop->first ? 'active block' : 'hidden' }}">
+                            <div class="hero-slide w-full lg:absolute lg:inset-0 lg:h-full {{ $loop->first ? 'active block' : 'hidden' }}">
                                 <img
                                     src="{{ $slider->image_url }}"
                                     alt="{{ $slider->name }}"
-                                    class="block h-auto w-full"
+                                    class="block h-auto w-full lg:h-full lg:object-fill 2xl:object-cover"
                                     loading="{{ $loop->first ? 'eager' : 'lazy' }}"
                                     @if($loop->first) fetchpriority="high" @endif
                                 >
@@ -179,7 +179,7 @@
     </section>
 
     <!-- Marketplace Service Highlights -->
-    <section class="storefront-shell pt-4">
+    <section class="storefront-shell pt-2">
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
             @foreach ([
                 ['heroicon-o-truck', 'দ্রুত ডেলিভারি', 'সারাদেশে বিশ্বস্ত কুরিয়ারে ডেলিভারি'],
@@ -202,8 +202,46 @@
         @include('storefront.partials.managed-slider', ['sliderGroup' => $sliderGroup])
     @endforeach
 
+    @if($flashSale && $flashSaleProducts->isNotEmpty())
+        <!-- Flash Sale Product Flow -->
+        <section id="flash-sale" class="storefront-shell pt-2">
+            <div class="overflow-hidden rounded-2xl border border-rose-200 bg-white shadow-xs">
+                <div class="flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-rose-600 via-orange-500 to-amber-400 px-4 py-4 text-white sm:px-6">
+                    <div class="flex items-center gap-3">
+                        <span class="grid size-10 place-items-center rounded-xl bg-white/20 shadow-inner">
+                            @svg('heroicon-o-bolt', 'size-6')
+                        </span>
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-[.18em] text-rose-50">Limited Time Offer</p>
+                            <h2 class="text-xl font-black sm:text-2xl">Flash Sale</h2>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2" data-countdown-timer data-end-time="{{ $flashSale->ends_at->toIso8601String() }}">
+                        <span class="hidden text-sm font-bold text-white/90 sm:inline">অফার শেষ হতে বাকি:</span>
+                        <div class="flex items-center gap-1 text-sm font-black text-slate-900">
+                            <span class="grid min-w-8 place-items-center rounded-lg bg-white px-2 py-1 shadow-xs" data-countdown-days>00</span>
+                            <span class="font-bold text-white">:</span>
+                            <span class="grid min-w-8 place-items-center rounded-lg bg-white px-2 py-1 shadow-xs" data-countdown-hours>00</span>
+                            <span class="font-bold text-white">:</span>
+                            <span class="grid min-w-8 place-items-center rounded-lg bg-white px-2 py-1 shadow-xs" data-countdown-minutes>00</span>
+                            <span class="font-bold text-white">:</span>
+                            <span class="grid min-w-8 place-items-center rounded-lg bg-slate-950 px-2 py-1 text-white shadow-xs" data-countdown-seconds>00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div data-product-grid class="storefront-product-grid grid-cols-2 p-[5px] sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                    @foreach($flashSaleProducts as $card)
+                        @include('storefront.components.product-card', ['card' => $card])
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
     <!-- 2. Bottom Ads Banner Area (Side-by-Side Promotional Banners) -->
-    <section class="storefront-shell pt-6">
+    <section class="storefront-shell pt-2">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <a href="{{ route('store.products.index') }}" class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-purple-800 to-indigo-900 p-6 sm:p-8 text-white shadow-xs transition hover:shadow-md">
                 <span class="rounded-full bg-white/20 px-3 py-1 text-xs font-black uppercase tracking-wider text-purple-100">Special Promo</span>
@@ -222,7 +260,7 @@
     </section>
 
     <!-- 3. Categories Circular/Rounded Grid Section -->
-    <section class="storefront-shell pt-10">
+    <section class="storefront-shell pt-2">
         <div class="border-b-2 border-purple-700 pb-3 flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <span class="grid size-6 place-items-center rounded-md bg-purple-700 text-white text-xs">@svg('heroicon-o-squares-2x2', 'size-3.5')</span>
@@ -254,7 +292,7 @@
     @endforeach
 
     <!-- 4. Full Width Mid Promo Banner -->
-    <section class="storefront-shell pt-10">
+    <section class="storefront-shell pt-2">
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-900 p-6 sm:p-10 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
             <div class="max-w-xl">
                 <span class="rounded-full bg-amber-400 px-3 py-1 text-xs font-black uppercase tracking-wider text-slate-950">Special Deals</span>
@@ -272,9 +310,9 @@
     @endforeach
 
     <!-- 5. Hot Deal Section with Live Countdown Timer -->
-    <section id="hot-deal" class="storefront-shell pt-12">
-        <div class="rounded-2xl border border-purple-200/80 bg-white p-4 sm:p-6 shadow-xs">
-            <div class="border-b border-slate-100 pb-4 flex flex-wrap items-center justify-between gap-4">
+    <section id="hot-deal" class="storefront-shell pt-2">
+        <div class="rounded-2xl border border-purple-200/80 bg-white p-[5px] shadow-xs">
+            <div class="border-b border-slate-100 pb-[5px] flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-2">
                     <span class="grid size-7 place-items-center rounded-lg bg-rose-500 text-white">
                         @svg('heroicon-o-fire', 'size-4.5')
@@ -298,7 +336,7 @@
             </div>
 
             <!-- Hot Deal Products Grid -->
-            <div data-product-grid class="storefront-product-grid mt-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div data-product-grid class="storefront-product-grid mt-[5px] grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 @forelse($hotDealProducts as $card)
                     @include('storefront.components.product-card', ['card' => $card])
                 @empty
@@ -320,9 +358,9 @@
             $cat = $section['category'];
             $prods = $section['products'];
         @endphp
-        <section class="storefront-shell pt-12">
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-xs">
-                <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
+        <section class="storefront-shell pt-2">
+            <div class="rounded-2xl border border-slate-200 bg-white p-[5px] shadow-xs">
+                <div class="border-b border-slate-100 pb-[5px] flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <span class="grid size-6 place-items-center rounded-md bg-purple-700 text-white text-xs">@svg('heroicon-o-shopping-bag', 'size-3.5')</span>
                         <h2 class="text-lg sm:text-xl font-black text-slate-900">{{ $cat->name }}</h2>
@@ -332,7 +370,7 @@
                     </a>
                 </div>
 
-                <div data-product-grid class="storefront-product-grid mt-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div data-product-grid class="storefront-product-grid mt-[5px] grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                     @foreach($prods as $card)
                         @include('storefront.components.product-card', ['card' => $card])
                     @endforeach
@@ -343,7 +381,7 @@
 
     <!-- 7. Brands Showcase -->
     @if($brands->isNotEmpty())
-        <section class="storefront-shell pt-12">
+        <section class="storefront-shell pt-2">
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div class="border-b border-slate-100 pb-4">
                     <h2 class="text-lg font-black text-slate-900">Top Brands</h2>
@@ -498,18 +536,16 @@
             restartManagedInterval();
         });
 
-        // Live Hot Deal Countdown Timer
-        const timerContainer = document.getElementById('hot-deal-timer');
-        if (timerContainer) {
-            const endTimeStr = timerContainer.getAttribute('data-end-time');
-            const targetDate = new Date(endTimeStr).getTime();
+        // Live countdown timers
+        document.querySelectorAll('[data-countdown-timer], #hot-deal-timer').forEach((timerContainer) => {
+            const targetDate = new Date(timerContainer.getAttribute('data-end-time')).getTime();
+            const isHotDealTimer = timerContainer.id === 'hot-deal-timer';
+            const daysEl = timerContainer.querySelector('[data-countdown-days]') || (isHotDealTimer ? document.getElementById('timer-days') : null);
+            const hoursEl = timerContainer.querySelector('[data-countdown-hours]') || (isHotDealTimer ? document.getElementById('timer-hours') : null);
+            const minsEl = timerContainer.querySelector('[data-countdown-minutes]') || (isHotDealTimer ? document.getElementById('timer-mins') : null);
+            const secsEl = timerContainer.querySelector('[data-countdown-seconds]') || (isHotDealTimer ? document.getElementById('timer-secs') : null);
 
-            const daysEl = document.getElementById('timer-days');
-            const hoursEl = document.getElementById('timer-hours');
-            const minsEl = document.getElementById('timer-mins');
-            const secsEl = document.getElementById('timer-secs');
-
-            function updateTimer() {
+            const updateTimer = () => {
                 const now = new Date().getTime();
                 const diff = targetDate - now;
 
@@ -530,11 +566,11 @@
                 if (hoursEl) hoursEl.innerText = String(hours).padStart(2, '0');
                 if (minsEl) minsEl.innerText = String(mins).padStart(2, '0');
                 if (secsEl) secsEl.innerText = String(secs).padStart(2, '0');
-            }
+            };
 
             updateTimer();
             setInterval(updateTimer, 1000);
-        }
+        });
     });
 </script>
 @endpush

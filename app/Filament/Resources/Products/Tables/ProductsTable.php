@@ -17,6 +17,11 @@ class ProductsTable
     {
         return $table
             ->columns([
+                TextColumn::make('id')
+                    ->label('SL')
+                    ->sortable()
+                    ->alignCenter(),
+
                 ImageColumn::make('featured_image')
                     ->label('Image')
                     ->disk('public')
@@ -156,7 +161,8 @@ class ProductsTable
                     DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('created_at', 'desc')
-            ->defaultPaginationPageOption(25);
+            ->defaultSort('id', 'desc')
+            ->paginationPageOptions([25, 50, 100])
+            ->defaultPaginationPageOption(50);
     }
 }

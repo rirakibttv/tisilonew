@@ -7,6 +7,7 @@ use App\Enums\VendorListingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\FlashSale;
 use App\Models\Product;
 use App\Models\SiteSetting;
 use App\Models\SliderGroup;
@@ -122,6 +123,25 @@ class HomeController extends Controller
             ->filter(fn (SliderGroup $group): bool => $group->slides->isNotEmpty())
             ->groupBy('placement');
 
+        $flashSale = FlashSale::query()
+            ->currentlyActive()
+            ->with(['items' => fn ($query) => $query
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->limit(12)
+                ->with(['product' => fn ($productQuery) => $productQuery
+                    ->where('status', 'published')
+                    ->withReviewSummary()
+                    ->with($productEagerLoads)])])
+            ->latest('starts_at')
+            ->first();
+
+        $flashSaleProducts = ($flashSale?->items ?? collect())
+            ->filter(fn ($item): bool => $item->product !== null)
+            ->map(fn ($item): array => MarketplaceProductPresenter::summarize($item->product))
+            ->values();
+
         // Hot Deal end date (from setting or fallback to 3 days from now)
         $generalSettings = SiteSetting::valuesFor('general');
         $hotDealEndDate = $generalSettings['hot_deal_end_date'] ?? null;
@@ -136,6 +156,8 @@ class HomeController extends Controller
             'brands' => $brands,
             'sliders' => $sliders,
             'additionalSliderGroups' => $additionalSliderGroups,
+            'flashSale' => $flashSale,
+            'flashSaleProducts' => $flashSaleProducts,
             'hotDealEndDate' => $hotDealEndDate,
             'search' => $search,
         ]);

@@ -60,7 +60,7 @@ class ShippingRateService
             ->with(['rates' => fn ($query) => $query
                 ->where('is_active', true)
                 ->whereIn('shipping_class_id', $classIds)
-                ->with(['shippingClass:id,name', 'partner:id,name'])])
+                ->with(['shippingClass:id,name', 'partner:id,name,estimated_min_days,estimated_max_days'])])
             ->orderBy('sort_order')
             ->orderBy('division')
             ->orderBy('district')
@@ -76,6 +76,8 @@ class ShippingRateService
                     $rate = $rates->get($classId);
                     $amount = (float) $rate->base_charge
                         + max(0, $quantity - 1) * (float) $rate->additional_item_charge;
+                    $minimumDays = max(1, (int) ($rate->partner?->estimated_min_days ?? 1));
+                    $maximumDays = max($minimumDays, (int) ($rate->partner?->estimated_max_days ?? 3));
 
                     return [
                         'shipping_class_id' => $classId,
@@ -86,8 +88,8 @@ class ShippingRateService
                         'amount' => round($amount, 2),
                         'partner_id' => $rate->shipping_partner_id,
                         'partner' => $rate->partner?->name,
-                        'estimated_min_days' => $rate->estimated_min_days,
-                        'estimated_max_days' => $rate->estimated_max_days,
+                        'estimated_min_days' => $minimumDays,
+                        'estimated_max_days' => $maximumDays,
                     ];
                 })->values();
 

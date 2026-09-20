@@ -22,6 +22,10 @@
             @if ($item['discount'] > 0)
                 <span class="absolute left-2.5 top-2.5 rounded-md bg-rose-600 px-2 py-0.5 text-xs font-black text-white shadow-xs">-{{ $item['discount'] }}%</span>
             @endif
+
+            @if($item['is_flash_sale'] ?? false)
+                <span class="absolute bottom-2.5 left-2.5 rounded-md bg-amber-400 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-950 shadow-sm">Flash Sale</span>
+            @endif
         </a>
 
         <form method="POST" action="{{ $wishlistMode || $isWishlisted ? route('store.wishlist.destroy', $product) : route('store.wishlist.store', $product) }}" class="absolute right-2.5 top-2.5">

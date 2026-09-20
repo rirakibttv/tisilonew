@@ -104,6 +104,8 @@ class PosSystemTest extends TestCase
         $partner = ShippingPartner::query()->create([
             'name' => 'POS Courier',
             'code' => 'pos-courier-'.$suffix,
+            'estimated_min_days' => 1,
+            'estimated_max_days' => 2,
             'is_active' => true,
         ]);
         $region = ShippingRegion::query()->create([
@@ -119,8 +121,6 @@ class PosSystemTest extends TestCase
             'shipping_partner_id' => $partner->id,
             'base_charge' => 80,
             'additional_item_charge' => 0,
-            'estimated_min_days' => 1,
-            'estimated_max_days' => 2,
             'is_active' => true,
         ]);
         $product = Product::query()->create([

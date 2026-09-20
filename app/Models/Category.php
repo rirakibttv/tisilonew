@@ -32,8 +32,8 @@ class Category extends Model
     }
 
     /**
-     * Canonical public category URL. Storefront category permalinks always end
-     * with a slash to match the marketplace's chosen SEO URL structure.
+     * Canonical public category URL. All storefront paths use the same
+     * trailing-slash-free format so internal navigation never needs a redirect.
      */
     protected function permalink(): Attribute
     {
@@ -44,7 +44,7 @@ class Category extends Model
             return rtrim(route('store.categories.show', [
                 'categorySlug' => $categorySlug,
                 'categoryPath' => $segments === [] ? null : implode('/', $segments),
-            ]), '/').'/';
+            ]), '/');
         });
     }
 

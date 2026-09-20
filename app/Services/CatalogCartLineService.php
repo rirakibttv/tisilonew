@@ -8,6 +8,8 @@ use Illuminate\Validation\ValidationException;
 
 class CatalogCartLineService
 {
+    public function __construct(private readonly FlashSalePricingService $flashSalePricing) {}
+
     /** @return array<string, mixed> */
     public function make(Product $product, ?int $variationId = null): array
     {
@@ -49,7 +51,10 @@ class CatalogCartLineService
             'vendor' => 'Tisilo',
             'sku' => $variation?->sku ?? $product->sku,
             'image' => $this->imageFor($product, $variation),
-            'price' => (float) ($variation?->sale_price ?? $variation?->regular_price ?? $product->sale_price ?? $product->regular_price),
+            'price' => $this->flashSalePricing->priceFor(
+                $product,
+                (float) ($variation?->sale_price ?? $variation?->regular_price ?? $product->sale_price ?? $product->regular_price),
+            ),
             'available' => $variation
                 ? (int) $variation->stock_quantity
                 : ($product->manage_stock ? (int) $product->stock_quantity : PHP_INT_MAX),

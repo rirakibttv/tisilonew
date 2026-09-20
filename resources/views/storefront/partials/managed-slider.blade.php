@@ -1,4 +1,4 @@
-<section class="storefront-shell pt-8" aria-label="{{ $sliderGroup->name }}">
+<section class="storefront-shell pt-2" aria-label="{{ $sliderGroup->name }}">
     <div
         class="group/managed-slider relative overflow-hidden rounded-2xl bg-white shadow-sm"
         data-managed-slider

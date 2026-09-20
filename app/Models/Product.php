@@ -120,6 +120,11 @@ class Product extends Model
         return $this->hasMany(ProductReview::class);
     }
 
+    public function flashSaleItems(): HasMany
+    {
+        return $this->hasMany(FlashSaleItem::class);
+    }
+
     public function approvedReviews(): HasMany
     {
         return $this->reviews()->published();

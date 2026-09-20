@@ -105,7 +105,7 @@ class ProductDuplicationTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(ListProducts::class)
-            ->assertSeeInOrder(['Image', 'Action', 'Product'])
+            ->assertSeeInOrder(['SL', 'Image', 'Action', 'Product'])
             ->assertSee('View')
             ->assertSee('Edit')
             ->assertSee('Duplicate')
@@ -124,5 +124,39 @@ class ProductDuplicationTest extends TestCase
             'slug' => 'action-column-product-copy',
             'status' => 'draft',
         ]);
+    }
+
+    public function test_all_products_keeps_new_uploads_on_top_with_their_permanent_serial_number(): void
+    {
+        Filament::setCurrentPanel('admin');
+        $admin = User::factory()->create([
+            'role' => UserRole::Admin,
+            'status' => UserStatus::Active,
+        ]);
+        $olderProduct = Product::query()->create([
+            'name' => 'Serial Order Product Older',
+            'slug' => 'serial-order-product-older',
+            'product_type' => 'simple',
+            'regular_price' => 500,
+            'stock_quantity' => 3,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+        $newerProduct = Product::query()->create([
+            'name' => 'Serial Order Product Newer',
+            'slug' => 'serial-order-product-newer',
+            'product_type' => 'simple',
+            'regular_price' => 500,
+            'stock_quantity' => 3,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(ListProducts::class)
+            ->searchTable('Serial Order Product')
+            ->assertCanSeeTableRecords([$newerProduct, $olderProduct], inOrder: true)
+            ->assertTableColumnStateSet('id', $olderProduct->id, $olderProduct)
+            ->assertTableColumnStateSet('id', $newerProduct->id, $newerProduct);
     }
 }

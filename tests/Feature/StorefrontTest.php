@@ -168,7 +168,7 @@ class StorefrontTest extends TestCase
             'status' => 'published',
         ]);
 
-        $canonicalUrl = rtrim(url('/product-category/electronics-electrical'), '/').'/';
+        $canonicalUrl = rtrim(url('/product-category/electronics-electrical'), '/');
 
         $this->assertSame($canonicalUrl, $category->permalink);
         $kernel = $this->app->make(Kernel::class);
@@ -182,8 +182,7 @@ class StorefrontTest extends TestCase
         $this->assertStringContainsString('<link rel="canonical" href="'.$canonicalUrl.'">', (string) $response->getContent());
 
         $this->get('/product-category/electronics-electrical')
-            ->assertRedirect($canonicalUrl)
-            ->assertStatus(301);
+            ->assertOk();
 
         $this->get('/shop?category=electronics-electrical&sort=name')
             ->assertRedirect($canonicalUrl.'?sort=name')
@@ -240,8 +239,8 @@ class StorefrontTest extends TestCase
             'status' => 'published',
         ]);
 
-        $mensUrl = url('/product-category/'.$mens->slug.'/'.$sharedSlug).'/';
-        $womensUrl = url('/product-category/'.$womens->slug.'/'.$sharedSlug).'/';
+        $mensUrl = url('/product-category/'.$mens->slug.'/'.$sharedSlug);
+        $womensUrl = url('/product-category/'.$womens->slug.'/'.$sharedSlug);
 
         $this->assertSame($mensUrl, $mensInnerWear->permalink);
         $this->assertSame($womensUrl, $womensInnerWear->permalink);
@@ -260,31 +259,50 @@ class StorefrontTest extends TestCase
         $this->assertStringContainsString('Women Inner Wear Product '.$token, (string) $womensResponse->getContent());
         $this->assertStringNotContainsString('Men Inner Wear Product '.$token, (string) $womensResponse->getContent());
 
-        $this->get('/product-category/'.$sharedSlug.'/')->assertNotFound();
-        $this->get('/product-category/'.$uniqueChild->slug.'/')
+        $this->get('/product-category/'.$sharedSlug)->assertNotFound();
+        $this->get('/product-category/'.$uniqueChild->slug)
             ->assertRedirect($uniqueChild->permalink)
             ->assertStatus(301);
         $this->get('/product-category/'.$mens->slug.'/'.$sharedSlug)
-            ->assertRedirect($mensUrl)
-            ->assertStatus(301);
+            ->assertOk();
         $this->get('/shop?category='.$mens->slug.'/'.$sharedSlug)
             ->assertRedirect($mensUrl)
             ->assertStatus(301);
     }
 
-    public function test_apache_preserves_trailing_slashes_for_nested_category_permalinks(): void
+    public function test_apache_removes_trailing_slashes_from_all_non_directory_urls(): void
     {
         $htaccess = file_get_contents(public_path('.htaccess'));
 
         $this->assertIsString($htaccess);
-        $this->assertStringContainsString(
-            'RewriteCond %{REQUEST_URI} !^/product-category(?:/.+)?/$ [NC]',
-            $htaccess,
-        );
         $this->assertStringNotContainsString(
-            'RewriteCond %{REQUEST_URI} !^/product-category/[^/]+/$ [NC]',
+            'RewriteCond %{REQUEST_URI} !^/product-category',
             $htaccess,
         );
+        $this->assertStringContainsString('RewriteCond %{REQUEST_URI} (.+)/$', $htaccess);
+    }
+
+    public function test_non_canonical_safe_requests_redirect_directly_to_the_configured_origin(): void
+    {
+        config([
+            'app.env' => 'production',
+            'app.canonical_url' => 'https://www.tisilo.com',
+        ]);
+
+        $this->get('http://tisilo.com/product-category/home-kitchen/bed-sheet?sort=name')
+            ->assertRedirect('https://www.tisilo.com/product-category/home-kitchen/bed-sheet?sort=name')
+            ->assertStatus(301);
+    }
+
+    public function test_canonical_origin_does_not_redirect(): void
+    {
+        config([
+            'app.env' => 'production',
+            'app.canonical_url' => 'https://www.tisilo.com',
+        ]);
+
+        $this->get('https://www.tisilo.com/shop')
+            ->assertOk();
     }
 
     public function test_variable_product_keeps_main_image_primary_and_lists_main_and_variation_thumbnails(): void

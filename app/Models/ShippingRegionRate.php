@@ -9,8 +9,7 @@ class ShippingRegionRate extends Model
 {
     protected $fillable = [
         'shipping_region_id', 'shipping_class_id', 'shipping_partner_id',
-        'base_charge', 'additional_item_charge', 'estimated_min_days',
-        'estimated_max_days', 'is_active',
+        'base_charge', 'additional_item_charge', 'is_active',
     ];
 
     protected function casts(): array
@@ -18,8 +17,6 @@ class ShippingRegionRate extends Model
         return [
             'base_charge' => 'decimal:2',
             'additional_item_charge' => 'decimal:2',
-            'estimated_min_days' => 'integer',
-            'estimated_max_days' => 'integer',
             'is_active' => 'boolean',
         ];
     }

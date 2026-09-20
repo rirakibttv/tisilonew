@@ -6,6 +6,7 @@ use App\Enums\VendorListingItemStatus;
 use App\Enums\VendorListingStatus;
 use App\Models\Product;
 use App\Models\VendorListingItem;
+use App\Services\FlashSalePricingService;
 
 class MarketplaceProductPresenter
 {
@@ -105,7 +106,7 @@ class MarketplaceProductPresenter
             ? (int) round((($regularPrice - $price) / $regularPrice) * 100)
             : 0;
 
-        return [
+        return app(FlashSalePricingService::class)->applyToSummary([
             'product' => $product,
             'price' => $price,
             'regular_price' => $regularPrice,
@@ -121,6 +122,6 @@ class MarketplaceProductPresenter
             'image' => filled($product->featured_image)
                 ? asset('storage/'.ltrim($product->featured_image, '/'))
                 : null,
-        ];
+        ]);
     }
 }

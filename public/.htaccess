@@ -48,9 +48,6 @@ RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
 # Redirect Trailing Slashes If Not A Folder...
 RewriteCond %{REQUEST_FILENAME} !-d
-# Category permalinks at every hierarchy depth are canonical with a trailing
-# slash. Let Laravel handle them so Apache cannot create a slash/no-slash loop.
-RewriteCond %{REQUEST_URI} !^/product-category(?:/.+)?/$ [NC]
 RewriteCond %{REQUEST_URI} (.+)/$
 RewriteRule ^ %1 [L,R=301]
 

@@ -7,6 +7,7 @@ use App\Models\AttributeValue;
 use App\Models\BannerSlider;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\FlashSale;
 use App\Models\InventoryStock;
 use App\Models\LandingPage;
 use App\Models\Permission;
@@ -27,6 +28,7 @@ use App\Models\VendorListing;
 use App\Models\VendorListingItem;
 use App\Models\VendorWarehouse;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -99,7 +101,7 @@ class DeploymentDataSnapshot
             'shipping_partners' => ShippingPartner::query()->orderBy('code')->get()->map(
                 fn (ShippingPartner $partner): array => Arr::only(
                     $partner->toArray(),
-                    ['name', 'code', 'contact_name', 'phone', 'email', 'tracking_url', 'api_provider', 'notes', 'is_active'],
+                    ['name', 'code', 'contact_name', 'phone', 'email', 'tracking_url', 'api_provider', 'estimated_min_days', 'estimated_max_days', 'notes', 'is_active'],
                 ),
             )->all(),
             'shipping_regions' => ShippingRegion::query()
@@ -112,8 +114,7 @@ class DeploymentDataSnapshot
                     ]),
                     'rates' => $region->rates->map(fn (ShippingRegionRate $rate): array => [
                         ...Arr::only($rate->toArray(), [
-                            'base_charge', 'additional_item_charge', 'estimated_min_days',
-                            'estimated_max_days', 'is_active',
+                            'base_charge', 'additional_item_charge', 'is_active',
                         ]),
                         'shipping_class_code' => $rate->shippingClass->code,
                         'shipping_partner_code' => $rate->partner?->code,
@@ -270,6 +271,28 @@ class DeploymentDataSnapshot
                     'is_active', 'display_delay_seconds', 'starts_at', 'ends_at',
                 ]))
                 ->all(),
+            'flash_sales' => FlashSale::query()
+                ->with(['items.product:id,slug'])
+                ->orderBy('starts_at')
+                ->orderBy('uuid')
+                ->get()
+                ->map(fn (FlashSale $flashSale): array => [
+                    ...Arr::only($flashSale->toArray(), [
+                        'uuid', 'name', 'starts_at', 'ends_at', 'is_active',
+                    ]),
+                    'items' => $flashSale->items
+                        ->sortBy('sort_order')
+                        ->map(fn ($item): array => [
+                            'product_slug' => $item->product?->slug,
+                            ...Arr::only($item->toArray(), [
+                                'flash_price', 'sort_order', 'is_active',
+                            ]),
+                        ])
+                        ->filter(fn (array $item): bool => filled($item['product_slug']))
+                        ->values()
+                        ->all(),
+                ])
+                ->all(),
         ];
     }
 
@@ -302,7 +325,7 @@ class DeploymentDataSnapshot
         }
 
         return DB::transaction(function () use ($snapshot): array {
-            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'permissions' => 0, 'roles' => 0, 'users' => 0, 'site_settings' => 0, 'shipping_classes' => 0, 'shipping_partners' => 0, 'shipping_regions' => 0, 'shipping_region_rates' => 0, 'products' => 0, 'product_variations' => 0, 'wishlists' => 0, 'landing_pages' => 0, 'slider_groups' => 0, 'banner_sliders' => 0, 'popup_offers' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
+            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'permissions' => 0, 'roles' => 0, 'users' => 0, 'site_settings' => 0, 'shipping_classes' => 0, 'shipping_partners' => 0, 'shipping_regions' => 0, 'shipping_region_rates' => 0, 'products' => 0, 'product_variations' => 0, 'wishlists' => 0, 'landing_pages' => 0, 'slider_groups' => 0, 'banner_sliders' => 0, 'popup_offers' => 0, 'flash_sales' => 0, 'flash_sale_items' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
 
             foreach ($snapshot['brands'] ?? [] as $data) {
                 Brand::query()->updateOrCreate(['slug' => $data['slug']], $data);
@@ -405,7 +428,26 @@ class DeploymentDataSnapshot
                 $counts['shipping_classes']++;
             }
 
+            $legacyPartnerEstimates = collect($snapshot['shipping_regions'] ?? [])
+                ->flatMap(fn (array $region): array => collect($region['rates'] ?? [])
+                    ->filter(fn (array $rate): bool => filled($rate['shipping_partner_code'] ?? null))
+                    ->map(fn (array $rate): array => [
+                        'code' => $rate['shipping_partner_code'],
+                        'min_days' => $rate['estimated_min_days'] ?? null,
+                        'max_days' => $rate['estimated_max_days'] ?? null,
+                    ])
+                    ->all())
+                ->groupBy('code')
+                ->map(fn (Collection $rates): array => [
+                    'estimated_min_days' => max(1, (int) ($rates->min('min_days') ?: 1)),
+                    'estimated_max_days' => max(1, (int) ($rates->max('max_days') ?: 3)),
+                ]);
+
             foreach ($snapshot['shipping_partners'] ?? [] as $data) {
+                if (! array_key_exists('estimated_min_days', $data) || ! array_key_exists('estimated_max_days', $data)) {
+                    $data = [...($legacyPartnerEstimates->get($data['code']) ?? []), ...$data];
+                }
+
                 ShippingPartner::query()->updateOrCreate(['code' => $data['code']], $data);
                 $counts['shipping_partners']++;
             }
@@ -418,6 +460,7 @@ class DeploymentDataSnapshot
                 foreach ($rates as $rateData) {
                     $classCode = Arr::pull($rateData, 'shipping_class_code');
                     $partnerCode = Arr::pull($rateData, 'shipping_partner_code');
+                    Arr::forget($rateData, ['estimated_min_days', 'estimated_max_days']);
                     $classId = ShippingClass::query()->where('code', $classCode)->value('id');
                     if (! $classId) {
                         continue;
@@ -570,6 +613,26 @@ class DeploymentDataSnapshot
             foreach ($snapshot['popup_offers'] ?? [] as $data) {
                 PopupOffer::query()->updateOrCreate(['uuid' => $data['uuid']], $data);
                 $counts['popup_offers']++;
+            }
+
+            foreach ($snapshot['flash_sales'] ?? [] as $data) {
+                $items = Arr::pull($data, 'items', []);
+                $flashSale = FlashSale::query()->updateOrCreate(['uuid' => $data['uuid']], $data);
+                $counts['flash_sales']++;
+
+                foreach ($items as $itemData) {
+                    $productSlug = Arr::pull($itemData, 'product_slug');
+                    $productId = Product::query()->where('slug', $productSlug)->value('id');
+                    if (! $productId) {
+                        continue;
+                    }
+
+                    $flashSale->items()->updateOrCreate(
+                        ['product_id' => $productId],
+                        $itemData,
+                    );
+                    $counts['flash_sale_items']++;
+                }
             }
 
             foreach ($snapshot['vendors'] ?? [] as $data) {

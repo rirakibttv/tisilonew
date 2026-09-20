@@ -20,6 +20,8 @@ class AttributeValueResource extends Resource
 {
     protected static ?string $model = AttributeValue::class;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedListBullet;
 
     protected static ?string $navigationLabel = 'Attribute Values';

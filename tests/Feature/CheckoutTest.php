@@ -196,8 +196,6 @@ class CheckoutTest extends TestCase
             'shipping_partner_id' => $this->shippingPartnerId,
             'base_charge' => 120,
             'additional_item_charge' => 10,
-            'estimated_min_days' => 1,
-            'estimated_max_days' => 3,
             'is_active' => true,
         ]);
         $listingItem = VendorListingItem::query()->create([
@@ -272,6 +270,8 @@ class CheckoutTest extends TestCase
         $partner = ShippingPartner::query()->create([
             'name' => 'Test Courier',
             'code' => 'test-courier-'.Str::lower(Str::random(6)),
+            'estimated_min_days' => 1,
+            'estimated_max_days' => 2,
             'is_active' => true,
         ]);
         $region = ShippingRegion::query()->create([
@@ -288,8 +288,6 @@ class CheckoutTest extends TestCase
             'shipping_partner_id' => $partner->id,
             'base_charge' => 80,
             'additional_item_charge' => 0,
-            'estimated_min_days' => 1,
-            'estimated_max_days' => 2,
             'is_active' => true,
         ]);
 

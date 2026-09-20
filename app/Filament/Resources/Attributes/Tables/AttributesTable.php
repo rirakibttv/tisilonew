@@ -37,6 +37,11 @@ class AttributesTable
                     })
                     ->sortable(),
 
+                TextColumn::make('values_count')
+                    ->label('Values')
+                    ->counts('values')
+                    ->sortable(),
+
                 TextColumn::make('sort_order')
                     ->label('Sort Order')
                     ->sortable(),

@@ -11,6 +11,7 @@ use App\Filament\Pages\ModuleOverview;
 use App\Filament\Pages\PosSystem;
 use App\Filament\Pages\SeoOverview;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
+use App\Filament\Resources\FlashSaleResource;
 use App\Filament\Resources\IncompleteOrders\Pages\ListIncompleteOrders;
 use App\Filament\Resources\LandingPages\Pages\CreateLandingPage;
 use App\Filament\Resources\LandingPages\Pages\ListLandingPages;
@@ -270,6 +271,14 @@ class AdminPanelProvider extends PanelProvider
                 ->sort(1)
                 ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.popup-offers.*'))
                 ->url(fn (): string => ListPopupOffers::getUrl()),
+
+            NavigationItem::make('Flash Sale')
+                ->key('offer-panel-flash-sale')
+                ->group(AdminNavigationGroup::OfferPanel)
+                ->icon(Heroicon::OutlinedBolt)
+                ->sort(2)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.flash-sales.*'))
+                ->url(fn (): string => FlashSaleResource::getUrl('index')),
         ];
     }
 

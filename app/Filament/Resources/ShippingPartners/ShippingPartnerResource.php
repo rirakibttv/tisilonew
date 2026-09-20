@@ -51,6 +51,23 @@ class ShippingPartnerResource extends Resource
                 Textarea::make('notes')->rows(3)->columnSpanFull(),
                 Toggle::make('is_active')->label('Active')->default(true),
             ]),
+            Section::make('Delivery Estimate')->columns(2)
+                ->description('Set the normal delivery time for this courier partner. Every assigned shipping region will use this estimate.')
+                ->schema([
+                    TextInput::make('estimated_min_days')
+                        ->label('Minimum Days')
+                        ->numeric()
+                        ->minValue(1)
+                        ->default(1)
+                        ->required(),
+                    TextInput::make('estimated_max_days')
+                        ->label('Maximum Days')
+                        ->numeric()
+                        ->minValue(1)
+                        ->gte('estimated_min_days')
+                        ->default(3)
+                        ->required(),
+                ]),
         ]);
     }
 
@@ -61,6 +78,9 @@ class ShippingPartnerResource extends Resource
             TextColumn::make('code')->badge()->searchable(),
             TextColumn::make('phone')->searchable(),
             TextColumn::make('api_provider')->label('API Provider'),
+            TextColumn::make('estimated_min_days')
+                ->label('Delivery Estimate')
+                ->formatStateUsing(fn ($state, ShippingPartner $record): string => "{$record->estimated_min_days}–{$record->estimated_max_days} days"),
             TextColumn::make('rates_count')->label('Assigned Rates')->counts('rates')->sortable(),
             IconColumn::make('is_active')->label('Active')->boolean(),
         ])->recordActions([EditAction::make(), DeleteAction::make()])

@@ -21,6 +21,8 @@ use Illuminate\Validation\ValidationException;
 
 class CheckoutService
 {
+    public function __construct(private readonly FlashSalePricingService $flashSalePricing) {}
+
     /**
      * @param  Collection<string, array<string, mixed>>  $cart
      * @param  array<string, mixed>  $customer
@@ -124,7 +126,10 @@ class CheckoutService
             throw ValidationException::withMessages(['cart' => "{$product->name}-এর পর্যাপ্ত স্টক নেই।"]);
         }
 
-        $unitPrice = (float) ($listingItem->sale_price ?? $listingItem->regular_price);
+        $unitPrice = $this->flashSalePricing->priceFor(
+            $product,
+            (float) ($listingItem->sale_price ?? $listingItem->regular_price),
+        );
         $orderItem = $order->items()->create([
             'product_id' => $product->getKey(),
             'product_variation_id' => $listingItem->product_variation_id,
@@ -178,7 +183,10 @@ class CheckoutService
             }
         }
 
-        $unitPrice = (float) ($variation?->sale_price ?? $variation?->regular_price ?? $product->sale_price ?? $product->regular_price);
+        $unitPrice = $this->flashSalePricing->priceFor(
+            $product,
+            (float) ($variation?->sale_price ?? $variation?->regular_price ?? $product->sale_price ?? $product->regular_price),
+        );
 
         return $order->items()->create([
             'product_id' => $product->getKey(),

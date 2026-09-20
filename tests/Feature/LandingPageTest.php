@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\ShippingClass;
+use App\Models\ShippingPartner;
 use App\Models\ShippingRegion;
 use App\Models\ShippingRegionRate;
 use App\Models\SiteSetting;
@@ -374,6 +375,13 @@ class LandingPageTest extends TestCase
             'code' => 'landing-class-'.Str::lower(Str::random(6)),
             'is_active' => true,
         ]);
+        $partner = ShippingPartner::query()->create([
+            'name' => 'Landing Courier',
+            'code' => 'landing-courier-'.Str::lower(Str::random(6)),
+            'estimated_min_days' => 1,
+            'estimated_max_days' => 2,
+            'is_active' => true,
+        ]);
         $region = ShippingRegion::query()->create([
             'division' => 'Dhaka',
             'district' => 'Dhaka',
@@ -384,9 +392,8 @@ class LandingPageTest extends TestCase
         ShippingRegionRate::query()->create([
             'shipping_region_id' => $region->id,
             'shipping_class_id' => $class->id,
+            'shipping_partner_id' => $partner->id,
             'base_charge' => 80,
-            'estimated_min_days' => 1,
-            'estimated_max_days' => 2,
             'is_active' => true,
         ]);
         $this->shippingClassId = $class->id;

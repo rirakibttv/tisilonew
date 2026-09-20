@@ -44,6 +44,13 @@ class AttributeResource extends Resource
         return AttributesTable::configure($table);
     }
 
+    public static function getRelations(): array
+    {
+        return [
+            ValuesRelationManager::class,
+        ];
+    }
+
     public static function getPages(): array
     {
         return [

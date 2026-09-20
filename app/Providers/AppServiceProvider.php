@@ -7,6 +7,7 @@ use App\Models\PopupOffer;
 use App\Models\SiteSetting;
 use App\Observers\OrderObserver;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\View as IlluminateView;
@@ -27,6 +28,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $canonicalRoot = rtrim((string) config('app.canonical_url'), '/');
+        $canonicalScheme = parse_url($canonicalRoot, PHP_URL_SCHEME);
+
+        if ($canonicalRoot !== '' && filter_var($canonicalRoot, FILTER_VALIDATE_URL) && is_string($canonicalScheme)) {
+            URL::forceRootUrl($canonicalRoot);
+            URL::forceScheme($canonicalScheme);
+        }
+
         Order::observe(OrderObserver::class);
 
         try {

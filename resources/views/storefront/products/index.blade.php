@@ -37,15 +37,15 @@
     </section>
 
     <section class="storefront-shell py-10">
-        <form method="GET" action="{{ route('store.shop.index') }}" class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_220px_190px_auto]">
+        <form method="GET" action="{{ route('store.shop.index') }}" data-catalog-filter class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_220px_190px_auto]">
             <label class="sr-only" for="catalog-search">পণ্য খুঁজুন</label>
             <input id="catalog-search" type="search" name="q" value="{{ request('q') }}" placeholder="পণ্য, ব্র্যান্ড বা SKU খুঁজুন" class="h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100">
 
             <label class="sr-only" for="category-filter">ক্যাটাগরি</label>
-            <select id="category-filter" name="category" class="h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-orange-400">
-                <option value="">সব ক্যাটাগরি</option>
+            <select id="category-filter" name="category" data-category-filter class="h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none focus:border-orange-400">
+                <option value="" data-url="{{ route('store.shop.index') }}">সব ক্যাটাগরি</option>
                 @foreach ($categories as $category)
-                    <option value="{{ $category->hierarchicalPath() }}" @selected(($selectedCategory?->hierarchicalPath() ?? request('category')) === $category->hierarchicalPath())>{{ $category->hierarchicalName() }}</option>
+                    <option value="{{ $category->hierarchicalPath() }}" data-url="{{ $category->permalink }}" @selected(($selectedCategory?->hierarchicalPath() ?? request('category')) === $category->hierarchicalPath())>{{ $category->hierarchicalName() }}</option>
                 @endforeach
             </select>
 

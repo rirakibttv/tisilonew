@@ -9,6 +9,7 @@ use App\Models\LandingPage;
 use App\Models\Product;
 use App\Models\VendorListingItem;
 use App\Services\CatalogCartLineService;
+use App\Services\FlashSalePricingService;
 use App\Services\VisitorAnalyticsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -32,6 +33,7 @@ class CartController extends Controller
         Request $request,
         VisitorAnalyticsService $analytics,
         CatalogCartLineService $catalogCart,
+        FlashSalePricingService $flashSalePricing,
     ): RedirectResponse {
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
@@ -44,7 +46,7 @@ class CartController extends Controller
 
         $product = Product::query()->where('status', 'published')->findOrFail($validated['product_id']);
         $line = isset($validated['vendor_listing_item_id'])
-            ? $this->marketplaceLine($product, (int) $validated['vendor_listing_item_id'])
+            ? $this->marketplaceLine($product, (int) $validated['vendor_listing_item_id'], $flashSalePricing)
             : $catalogCart->make($product, isset($validated['product_variation_id']) ? (int) $validated['product_variation_id'] : null);
 
         $landingPageId = $validated['landing_page_id'] ?? null;
@@ -116,7 +118,7 @@ class CartController extends Controller
     }
 
     /** @return array<string, mixed> */
-    private function marketplaceLine(Product $product, int $itemId): array
+    private function marketplaceLine(Product $product, int $itemId, FlashSalePricingService $flashSalePricing): array
     {
         $item = VendorListingItem::query()
             ->whereKey($itemId)
@@ -141,7 +143,10 @@ class CartController extends Controller
             'vendor' => $item->listing->vendor->name,
             'sku' => $item->seller_sku,
             'image' => $this->imageFor($product),
-            'price' => (float) ($item->sale_price ?? $item->regular_price),
+            'price' => $flashSalePricing->priceFor(
+                $product,
+                (float) ($item->sale_price ?? $item->regular_price),
+            ),
             'available' => $item->available_quantity,
             'backorders_allowed' => $item->backorders_allowed,
         ];

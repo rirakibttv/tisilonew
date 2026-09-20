@@ -30,14 +30,20 @@
             ->sortBy(fn ($offer) => (float) ($offer['item']->sale_price ?? $offer['item']->regular_price));
         $activeVariations = $product->variations->where('status', true)->sortBy([['is_default', 'desc'], ['sort_order', 'asc']])->values();
         $selectedVariation = $activeVariations->first(fn ($variation) => $variation->stock_status !== 'out_of_stock' && $variation->stock_quantity > 0) ?? $activeVariations->first();
-        $displayPrice = (float) ($selectedVariation?->sale_price ?? $selectedVariation?->regular_price ?? $summary['price']);
-        $displayRegularPrice = (float) ($selectedVariation?->regular_price ?? $summary['regular_price']);
+        $isFlashSale = (bool) ($summary['is_flash_sale'] ?? false);
+        $displayPrice = $isFlashSale
+            ? (float) $summary['price']
+            : (float) ($selectedVariation?->sale_price ?? $selectedVariation?->regular_price ?? $summary['price']);
+        $displayRegularPrice = max(
+            (float) ($selectedVariation?->regular_price ?? 0),
+            (float) $summary['regular_price'],
+        );
         $displayDiscount = $displayRegularPrice > $displayPrice && $displayRegularPrice > 0 ? (int) round((($displayRegularPrice - $displayPrice) / $displayRegularPrice) * 100) : 0;
-        $variationOptions = $activeVariations->map(function ($variation): array {
+        $variationOptions = $activeVariations->map(function ($variation) use ($isFlashSale, $summary): array {
             return [
                 'id' => $variation->id,
                 'label' => $variation->attributeValues->isNotEmpty() ? $variation->attributeValues->map(fn ($value) => $value->attribute->name.': '.$value->value)->join(' · ') : ($variation->sku ?: 'Option '.$variation->id),
-                'price' => (float) ($variation->sale_price ?? $variation->regular_price),
+                'price' => $isFlashSale ? (float) $summary['price'] : (float) ($variation->sale_price ?? $variation->regular_price),
                 'regular_price' => (float) $variation->regular_price,
                 'available' => $variation->stock_status === 'out_of_stock' ? 0 : (int) $variation->stock_quantity,
                 'image' => $variation->image ? asset('storage/'.ltrim($variation->image, '/')) : null,
@@ -102,6 +108,9 @@
             </div>
 
             <div class="mt-6 rounded-2xl bg-orange-50 px-5 py-4">
+                @if($isFlashSale)
+                    <span class="mb-2 inline-flex rounded-full bg-rose-600 px-2.5 py-1 text-xs font-black uppercase tracking-wide text-white">Flash Sale</span>
+                @endif
                 <div class="flex items-end gap-3">
                     <span data-product-price class="text-4xl font-black text-orange-600">৳{{ number_format($displayPrice, 0) }}</span>
                     <span data-product-regular-price @class(['pb-1 text-lg text-slate-400 line-through', 'hidden' => $displayRegularPrice <= $displayPrice])>৳{{ number_format($displayRegularPrice, 0) }}</span>
@@ -130,7 +139,7 @@
                                     <p class="font-black text-slate-900">{{ $offer['listing']->vendor->name }}</p>
                                     <p class="mt-1 text-xs text-slate-500">{{ $offerItem->seller_sku }} · {{ $offerItem->available_quantity }}টি স্টকে</p>
                                 </div>
-                                <span class="text-lg font-black text-orange-600">৳{{ number_format((float) ($offerItem->sale_price ?? $offerItem->regular_price), 0) }}</span>
+                                <span class="text-lg font-black text-orange-600">৳{{ number_format($isFlashSale ? $summary['price'] : (float) ($offerItem->sale_price ?? $offerItem->regular_price), 0) }}</span>
                                 <input type="number" name="quantity" value="1" min="1" max="99" class="h-11 w-20 rounded-xl border border-slate-200 px-3 text-center">
                                 <button class="h-11 rounded-xl bg-orange-500 px-5 text-sm font-black text-white hover:bg-orange-600">কার্টে যোগ</button>
                             </form>
@@ -148,7 +157,7 @@
                             @foreach ($activeVariations as $variation)
                                 <option value="{{ $variation->id }}" @selected($selectedVariation?->id === $variation->id) @disabled($variation->stock_status === 'out_of_stock' || $variation->stock_quantity < 1)>
                                     {{ $variation->attributeValues->isNotEmpty() ? $variation->attributeValues->map(fn ($value) => $value->attribute->name.': '.$value->value)->join(' · ') : 'Option '.$loop->iteration }}
-                                    — ৳{{ number_format((float) ($variation->sale_price ?? $variation->regular_price), 0) }}
+                                    — ৳{{ number_format($isFlashSale ? $summary['price'] : (float) ($variation->sale_price ?? $variation->regular_price), 0) }}
                                 </option>
                             @endforeach
                         </select>
