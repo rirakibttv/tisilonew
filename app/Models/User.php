@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -122,5 +123,20 @@ class User extends Authenticatable implements FilamentUser
     public function productReviews(): HasMany
     {
         return $this->hasMany(ProductReview::class);
+    }
+
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(CustomerAddress::class);
+    }
+
+    public function orderRequests(): HasMany
+    {
+        return $this->hasMany(CustomerOrderRequest::class);
+    }
+
+    public function paymentPreference(): HasOne
+    {
+        return $this->hasOne(CustomerPaymentPreference::class);
     }
 }

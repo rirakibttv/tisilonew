@@ -128,4 +128,9 @@ class Order extends Model
     {
         return $this->hasMany(IncompleteOrder::class, 'converted_order_id');
     }
+
+    public function customerRequests(): HasMany
+    {
+        return $this->hasMany(CustomerOrderRequest::class);
+    }
 }

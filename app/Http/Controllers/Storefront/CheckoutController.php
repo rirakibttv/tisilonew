@@ -48,13 +48,18 @@ class CheckoutController extends Controller
             // Analytics must never block checkout.
         }
 
+        $enabledPaymentMethods = $paymentMethods->enabled();
+        $preferredPaymentMethod = $request->user()?->paymentPreference?->default_method;
+
         return view('storefront.checkout.index', [
             'lines' => $cart,
             'subtotal' => $this->subtotal($cart),
             'regions' => $regions,
             'checkoutNote' => SiteSetting::valuesFor('general')['checkout_note'] ?? null,
-            'paymentMethods' => $paymentMethods->enabled(),
-            'defaultPaymentMethod' => $paymentMethods->default(),
+            'paymentMethods' => $enabledPaymentMethods,
+            'defaultPaymentMethod' => array_key_exists((string) $preferredPaymentMethod, $enabledPaymentMethods)
+                ? $preferredPaymentMethod
+                : $paymentMethods->default(),
         ]);
     }
 

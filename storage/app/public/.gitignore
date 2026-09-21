@@ -1,12 +1,2 @@
 *
 !.gitignore
-!brands/
-!brands/**
-!categories/
-!categories/**
-!products/
-!products/**
-!settings/
-!settings/**
-!vendors/
-!vendors/**

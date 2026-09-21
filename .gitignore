@@ -5,6 +5,9 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/app/public/*
+!/storage/app/public/.gitignore
+/database/data/deployable-catalog.json
 /vendor
 .env
 .env.backup

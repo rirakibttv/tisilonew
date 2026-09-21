@@ -3,15 +3,208 @@
 set -Eeuo pipefail
 umask 077
 
-readonly REPOSITORY="/home/rirakib/tisilonew-release-b98e1db"
+readonly REPOSITORY="/home/rirakib/tisilonew-release"
 readonly PUBLIC_ROOT="/home/rirakib/public_html"
-readonly BACKUP_ROOT="/home/rirakib/tisilo-deploy-backups"
-readonly PHP_BIN="/usr/local/bin/php"
+readonly BACKUP_ROOT="/home/rirakib/TisiloBackup"
+readonly BOOTSTRAP_UPLOAD_ARCHIVE="${BACKUP_ROOT}/bootstrap-storage.tar.gz"
+readonly BOOTSTRAP_UPLOAD_MARKER="${REPOSITORY}/storage/app/.bootstrap-media-imported"
 readonly LOCK_FILE="${REPOSITORY}/storage/framework/tisilo-auto-deploy.lock"
 readonly DEPLOY_LOG="${REPOSITORY}/storage/logs/deploy.log"
+readonly INDEX_SIGNATURE="tisilo-cpanel-front-controller-v1"
+
+PHP_BIN=""
+COMPOSER_BIN=""
+MYSQLDUMP_BIN=""
+APPLICATION_BACKUP_FILE=""
+APPLICATION_BACKUP_HAS_UPLOADS=0
+APPLICATION_BACKUP_HAS_CATALOG=0
 
 log() {
     printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$*"
+}
+
+resolve_executable() {
+    local candidate resolved
+
+    for candidate in "$@"; do
+        [[ -n "${candidate}" ]] || continue
+
+        if [[ "${candidate}" == */* ]]; then
+            [[ -x "${candidate}" ]] || continue
+            printf '%s\n' "${candidate}"
+            return 0
+        fi
+
+        resolved="$(command -v "${candidate}" 2>/dev/null || true)"
+        if [[ -n "${resolved}" && -x "${resolved}" ]]; then
+            printf '%s\n' "${resolved}"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+locate_php() {
+    local candidate resolved
+
+    [[ -n "${PHP_BIN}" ]] && return 0
+
+    for candidate in \
+        "${TISILO_PHP_BIN:-}" \
+        php \
+        /usr/local/bin/php \
+        /opt/cpanel/ea-php82/root/usr/bin/php \
+        /opt/cpanel/ea-php83/root/usr/bin/php \
+        /opt/cpanel/ea-php84/root/usr/bin/php \
+        ea-php82 ea-php83 ea-php84 \
+        /usr/bin/php; do
+        resolved="$(resolve_executable "${candidate}" || true)"
+        [[ -n "${resolved}" ]] || continue
+
+        if "${resolved}" -r 'exit(PHP_VERSION_ID >= 80200 ? 0 : 1);' >/dev/null 2>&1; then
+            PHP_BIN="${resolved}"
+            return 0
+        fi
+    done
+
+    log "PHP 8.2 or newer could not be found. Set TISILO_PHP_BIN to the cPanel PHP CLI path."
+    return 1
+}
+
+locate_composer() {
+    local candidate resolved
+
+    [[ -n "${COMPOSER_BIN}" ]] && return 0
+    locate_php
+
+    for candidate in \
+        "${TISILO_COMPOSER_BIN:-}" \
+        composer \
+        /home/rirakib/bin/composer \
+        /opt/cpanel/composer/bin/composer \
+        /usr/local/bin/composer \
+        /usr/bin/composer \
+        "${REPOSITORY}/composer.phar"; do
+        resolved="$(resolve_executable "${candidate}" || true)"
+        [[ -n "${resolved}" ]] || continue
+
+        if "${PHP_BIN}" "${resolved}" --version >/dev/null 2>&1; then
+            COMPOSER_BIN="${resolved}"
+            return 0
+        fi
+    done
+
+    log "Composer could not be found. Set TISILO_COMPOSER_BIN to its executable path."
+    return 1
+}
+
+locate_mysqldump() {
+    local candidate resolved
+
+    [[ -n "${MYSQLDUMP_BIN}" ]] && return 0
+
+    for candidate in \
+        "${TISILO_MYSQLDUMP_BIN:-}" \
+        mysqldump mariadb-dump \
+        /usr/bin/mysqldump \
+        /usr/bin/mariadb-dump \
+        /usr/local/bin/mysqldump \
+        /usr/local/mysql/bin/mysqldump; do
+        resolved="$(resolve_executable "${candidate}" || true)"
+        [[ -n "${resolved}" ]] || continue
+
+        if "${resolved}" --version >/dev/null 2>&1; then
+            MYSQLDUMP_BIN="${resolved}"
+            return 0
+        fi
+    done
+
+    log "mysqldump or mariadb-dump could not be found. Set TISILO_MYSQLDUMP_BIN to its executable path."
+    return 1
+}
+
+public_index_is_managed() {
+    [[ -f "${PUBLIC_ROOT}/index.php" ]] \
+        && grep -Fq -- "${INDEX_SIGNATURE}" "${PUBLIC_ROOT}/index.php"
+}
+
+prepare_bootstrap_environment() {
+    mkdir -p \
+        "${REPOSITORY}/storage/app/public" \
+        "${REPOSITORY}/storage/framework/cache" \
+        "${REPOSITORY}/storage/framework/sessions" \
+        "${REPOSITORY}/storage/framework/views" \
+        "${REPOSITORY}/storage/logs" \
+        "${REPOSITORY}/bootstrap/cache" \
+        "${BACKUP_ROOT}/database" \
+        "${BACKUP_ROOT}/files" \
+        "${BACKUP_ROOT}/legacy-public"
+
+    chmod 700 "${BACKUP_ROOT}" "${BACKUP_ROOT}/database" \
+        "${BACKUP_ROOT}/files" "${BACKUP_ROOT}/legacy-public"
+    chmod -R u+rwX,go-rwx "${REPOSITORY}/storage" "${REPOSITORY}/bootstrap/cache"
+
+    if [[ ! -f "${REPOSITORY}/.env" ]]; then
+        if [[ -f "${PUBLIC_ROOT}/.env" ]]; then
+            cp -p -- "${PUBLIC_ROOT}/.env" "${REPOSITORY}/.env"
+            chmod 600 "${REPOSITORY}/.env"
+            log "Production .env copied into the private release directory."
+        else
+            log "Production .env was not found in ${REPOSITORY} or ${PUBLIC_ROOT}; deployment stopped."
+            return 1
+        fi
+    fi
+}
+
+import_bootstrap_uploads() {
+    [[ -f "${BOOTSTRAP_UPLOAD_ARCHIVE}" ]] || return 0
+    [[ ! -f "${BOOTSTRAP_UPLOAD_MARKER}" ]] || return 0
+
+    if ! tar -tzf "${BOOTSTRAP_UPLOAD_ARCHIVE}" >/dev/null; then
+        log "Bootstrap media archive is invalid; deployment stopped."
+        return 1
+    fi
+
+    tar -C "${REPOSITORY}" -xzf "${BOOTSTRAP_UPLOAD_ARCHIVE}" \
+        --exclude='storage/app/public/.gitignore' \
+        storage/app/public
+    touch "${BOOTSTRAP_UPLOAD_MARKER}"
+    chmod 600 "${BOOTSTRAP_UPLOAD_MARKER}"
+    log "Initial media migration restored from the protected backup directory."
+}
+
+prepare_public_storage_link() {
+    local timestamp legacy_storage
+
+    mkdir -p "${REPOSITORY}/storage/app/public"
+
+    if [[ -d "${PUBLIC_ROOT}/storage" && ! -L "${PUBLIC_ROOT}/storage" ]]; then
+        if [[ -d "${PUBLIC_ROOT}/storage/app/public" ]]; then
+            rsync -a "${PUBLIC_ROOT}/storage/app/public/" "${REPOSITORY}/storage/app/public/"
+        fi
+
+        timestamp="$(date '+%Y%m%d-%H%M%S')"
+        legacy_storage="${BACKUP_ROOT}/legacy-public/storage-${timestamp}"
+        mv -- "${PUBLIC_ROOT}/storage" "${legacy_storage}"
+        log "Legacy public storage moved intact to ${legacy_storage}."
+    fi
+
+    if [[ -e "${PUBLIC_ROOT}/storage" && ! -L "${PUBLIC_ROOT}/storage" ]]; then
+        log "${PUBLIC_ROOT}/storage could not be prepared safely."
+        return 1
+    fi
+}
+
+quarantine_legacy_public_env() {
+    local timestamp destination
+
+    [[ -f "${PUBLIC_ROOT}/.env" ]] || return 0
+    timestamp="$(date '+%Y%m%d-%H%M%S')"
+    destination="${BACKUP_ROOT}/legacy-public/env-${timestamp}"
+    mv -- "${PUBLIC_ROOT}/.env" "${destination}"
+    chmod 600 "${destination}"
+    log "Legacy public_html .env moved to ${destination}."
 }
 
 ensure_minute_auto_deploy_cron() {
@@ -40,7 +233,27 @@ ensure_minute_auto_deploy_cron() {
 }
 
 sync_public_files() {
-    rsync -a --delete \
+    if ! grep -Fq -- "${INDEX_SIGNATURE}" "${REPOSITORY}/scripts/cpanel-index.php"; then
+        log "The managed cPanel index signature is missing; refusing to replace public_html/index.php."
+        return 1
+    fi
+
+    mkdir -p "${PUBLIC_ROOT}"
+
+    if [[ -e "${PUBLIC_ROOT}/storage" && ! -L "${PUBLIC_ROOT}/storage" ]]; then
+        log "${PUBLIC_ROOT}/storage exists but is not a symlink; refusing to overwrite it."
+        return 1
+    fi
+
+    if [[ -L "${PUBLIC_ROOT}/storage" \
+        && "$(readlink -f "${PUBLIC_ROOT}/storage")" != "$(readlink -f "${REPOSITORY}/storage/app/public")" ]]; then
+        log "${PUBLIC_ROOT}/storage points somewhere unexpected; refusing to replace it."
+        return 1
+    fi
+
+    # Never use --delete here: public_html can also contain cPanel-managed files,
+    # domain verification files, or addon-domain roots.
+    rsync -a --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
         --exclude='index.php' \
         --exclude='storage' \
         --exclude='.well-known' \
@@ -48,41 +261,20 @@ sync_public_files() {
         --exclude='.htaccess.pre-litespeed-20260825' \
         "${REPOSITORY}/public/" "${PUBLIC_ROOT}/"
 
-    chmod 755 "${PUBLIC_ROOT}"
-    find "${PUBLIC_ROOT}" -type d -exec chmod 755 {} +
-    find "${PUBLIC_ROOT}" -type f -exec chmod 644 {} +
+    cp "${REPOSITORY}/scripts/cpanel-index.php" "${PUBLIC_ROOT}/index.php"
 
-    local media_directory
-    for media_directory in banner-sliders brands categories popup-offers products settings vendors; do
-        if [[ -d "${REPOSITORY}/storage/app/public/${media_directory}" ]]; then
-            find "${REPOSITORY}/storage/app/public/${media_directory}" -type d -exec chmod 755 {} +
-            find "${REPOSITORY}/storage/app/public/${media_directory}" -type f -exec chmod 644 {} +
-        fi
-    done
+    if [[ ! -L "${PUBLIC_ROOT}/storage" ]]; then
+        ln -s "${REPOSITORY}/storage/app/public" "${PUBLIC_ROOT}/storage"
+    fi
+
+    chmod 755 "${PUBLIC_ROOT}"
+    chmod 644 "${PUBLIC_ROOT}/index.php"
 }
 
 install_dependencies() {
-    local composer_bin candidate
-    composer_bin="$(command -v composer || true)"
+    locate_composer
 
-    if [[ -z "${composer_bin}" ]]; then
-        for candidate in \
-            /home/rirakib/bin/composer \
-            /opt/cpanel/composer/bin/composer \
-            /usr/local/bin/composer; do
-            if [[ -f "${candidate}" ]]; then
-                composer_bin="${candidate}"
-                break
-            fi
-        done
-    fi
-
-    if [[ -z "${composer_bin}" ]]; then
-        log "Composer executable was not found."
-        return 1
-    fi
-
-    "${PHP_BIN}" "${composer_bin}" install \
+    "${PHP_BIN}" "${COMPOSER_BIN}" install \
         --no-dev \
         --prefer-dist \
         --no-interaction \
@@ -95,11 +287,15 @@ backup_database() {
     local timestamp backup_file database_settings
     local DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD DB_SOCKET
 
-    timestamp="$(date '+%Y%m%d-%H%M%S')"
-    backup_file="${BACKUP_ROOT}/tisilo-${timestamp}.sql.gz"
+    locate_php
+    locate_mysqldump
 
-    mkdir -p "${BACKUP_ROOT}"
+    timestamp="$(date '+%Y%m%d-%H%M%S')"
+    backup_file="${BACKUP_ROOT}/database/tisilo-${timestamp}.sql.gz"
+
+    mkdir -p "${BACKUP_ROOT}/database"
     chmod 700 "${BACKUP_ROOT}"
+    chmod 700 "${BACKUP_ROOT}/database"
 
     database_settings="$("${PHP_BIN}" -r '
         require "vendor/autoload.php";
@@ -142,12 +338,97 @@ backup_database() {
         dump_args+=("--host=${DB_HOST}" "--port=${DB_PORT}")
     fi
 
-    MYSQL_PWD="${DB_PASSWORD}" mysqldump "${dump_args[@]}" "${DB_DATABASE}" \
-        | gzip -9 > "${backup_file}.partial"
+    if ! MYSQL_PWD="${DB_PASSWORD}" "${MYSQLDUMP_BIN}" "${dump_args[@]}" "${DB_DATABASE}" \
+        | gzip -9 > "${backup_file}.partial"; then
+        rm -f -- "${backup_file}.partial"
+        log "Database backup failed; deployment stopped before code or production data changed."
+        return 1
+    fi
 
     mv "${backup_file}.partial" "${backup_file}"
     chmod 600 "${backup_file}"
     log "Database backup created: ${backup_file}"
+}
+
+backup_application_files() {
+    local timestamp backup_file
+
+    timestamp="$(date '+%Y%m%d-%H%M%S')"
+    backup_file="${BACKUP_ROOT}/files/tisilo-files-${timestamp}.tar.gz"
+
+    mkdir -p "${BACKUP_ROOT}/files"
+    chmod 700 "${BACKUP_ROOT}" "${BACKUP_ROOT}/files"
+
+    local backup_targets=()
+    [[ -f "${REPOSITORY}/.env" ]] && backup_targets+=(".env")
+    if [[ -d "${REPOSITORY}/storage/app/public" ]]; then
+        backup_targets+=("storage/app/public")
+        APPLICATION_BACKUP_HAS_UPLOADS=1
+    fi
+    if [[ -f "${REPOSITORY}/database/data/deployable-catalog.json" ]]; then
+        backup_targets+=("database/data/deployable-catalog.json")
+        APPLICATION_BACKUP_HAS_CATALOG=1
+    fi
+
+    if [[ ${#backup_targets[@]} -eq 0 ]]; then
+        log "Application file backup skipped: no production-local files exist yet."
+        return 0
+    fi
+
+    tar -C "${REPOSITORY}" -czf "${backup_file}.partial" "${backup_targets[@]}"
+    tar -tzf "${backup_file}.partial" >/dev/null
+    mv "${backup_file}.partial" "${backup_file}"
+    chmod 600 "${backup_file}"
+    APPLICATION_BACKUP_FILE="${backup_file}"
+    log "Application file backup created: ${backup_file}"
+}
+
+restore_production_files() {
+    local -a restore_targets=()
+
+    [[ -n "${APPLICATION_BACKUP_FILE}" && -f "${APPLICATION_BACKUP_FILE}" ]] || return 0
+
+    [[ ${APPLICATION_BACKUP_HAS_UPLOADS} -eq 1 ]] \
+        && restore_targets+=("storage/app/public")
+    [[ ${APPLICATION_BACKUP_HAS_CATALOG} -eq 1 ]] \
+        && restore_targets+=("database/data/deployable-catalog.json")
+
+    [[ ${#restore_targets[@]} -gt 0 ]] || return 0
+
+    tar -C "${REPOSITORY}" -xzf "${APPLICATION_BACKUP_FILE}" \
+        --exclude='storage/app/public/.gitignore' \
+        "${restore_targets[@]}"
+
+    log "Production uploads restored from the verified pre-deploy snapshot."
+}
+
+target_has_tracked_production_files() {
+    local target_commit="$1" tracked_path
+
+    while IFS= read -r tracked_path; do
+        [[ -n "${tracked_path}" ]] || continue
+        [[ "${tracked_path}" == "storage/app/public/.gitignore" ]] && continue
+        return 0
+    done < <(
+        git ls-tree -r --name-only "${target_commit}" -- \
+            storage/app/public database/data/deployable-catalog.json
+    )
+
+    return 1
+}
+
+has_tracked_code_changes() {
+    local changes
+
+    changes="$(
+        git status --porcelain --untracked-files=no -- \
+            . \
+            ':(exclude)storage/app/public/**' \
+            ':(exclude)database/data/deployable-catalog.json'
+        git status --porcelain --untracked-files=no -- storage/app/public/.gitignore
+    )"
+
+    [[ -n "${changes}" ]]
 }
 
 rollback_code() {
@@ -155,6 +436,7 @@ rollback_code() {
 
     log "Deployment failed; rolling code back to ${previous_commit}."
     git reset --hard "${previous_commit}"
+    restore_production_files
     install_dependencies
     sync_public_files
     "${PHP_BIN}" artisan filament:optimize-clear
@@ -184,20 +466,33 @@ main() {
         exit 0
     fi
 
+    prepare_bootstrap_environment
+    import_bootstrap_uploads
+    locate_php
     ensure_minute_auto_deploy_cron
 
-    if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+    if has_tracked_code_changes; then
         log "Tracked server files have local changes; automatic deployment was stopped."
         exit 1
     fi
 
     git fetch --quiet origin main
 
-    local previous_commit target_commit deployment_started=0 dependencies_changed=0
+    local previous_commit target_commit deployment_started=0 dependencies_changed=0 bootstrap_required=0
     previous_commit="$(git rev-parse HEAD)"
     target_commit="$(git rev-parse origin/main)"
 
-    if [[ "${previous_commit}" == "${target_commit}" ]]; then
+    if target_has_tracked_production_files "${target_commit}"; then
+        log "The target commit tracks production uploads or catalog data; deployment refused."
+        exit 1
+    fi
+
+    if [[ ! -f "${REPOSITORY}/vendor/autoload.php" ]] || ! public_index_is_managed; then
+        bootstrap_required=1
+        dependencies_changed=1
+    fi
+
+    if [[ "${previous_commit}" == "${target_commit}" && ${bootstrap_required} -eq 0 ]]; then
         exit 0
     fi
 
@@ -208,12 +503,22 @@ main() {
     trap 'handle_failure $?' ERR INT TERM
 
     log "Deploying ${previous_commit} -> ${target_commit}."
+
+    if [[ ! -f "${REPOSITORY}/vendor/autoload.php" ]]; then
+        install_dependencies
+        dependencies_changed=0
+    fi
+
     backup_database
+    backup_application_files
 
     deployment_started=1
     "${PHP_BIN}" artisan down --retry=60
 
-    git merge --ff-only "${target_commit}"
+    if [[ "${previous_commit}" != "${target_commit}" ]]; then
+        git merge --ff-only "${target_commit}"
+    fi
+    restore_production_files
     if [[ ${dependencies_changed} -eq 1 ]]; then
         install_dependencies
     else
@@ -221,8 +526,9 @@ main() {
     fi
     "${PHP_BIN}" artisan filament:optimize-clear
     "${PHP_BIN}" artisan migrate --force
-    "${PHP_BIN}" artisan db:seed --class='Database\Seeders\ProductionRequiredDataSeeder' --force
+    prepare_public_storage_link
     sync_public_files
+    quarantine_legacy_public_env
     "${PHP_BIN}" artisan optimize
     "${PHP_BIN}" artisan up
 

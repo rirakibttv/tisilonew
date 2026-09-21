@@ -20,6 +20,15 @@ class AutoDeployCronTest extends TestCase
         $this->assertStringContainsString('ensure_minute_auto_deploy_cron', $script);
         $this->assertStringContainsString('artisan filament:optimize-clear', $script);
         $this->assertStringNotContainsString('artisan filament:optimize\n', $script);
+        $this->assertStringContainsString('readonly BACKUP_ROOT="/home/rirakib/TisiloBackup"', $script);
+        $this->assertStringContainsString('bootstrap-storage.tar.gz', $script);
+        $this->assertStringContainsString('target_has_tracked_production_files', $script);
+        $this->assertStringContainsString('restore_production_files', $script);
+        $this->assertStringContainsString('prepare_public_storage_link', $script);
+        $this->assertStringContainsString('scripts/cpanel-index.php', $script);
+        $this->assertStringNotContainsString('ProductionRequiredDataSeeder', $script);
+        $this->assertStringNotContainsString('deployable-catalog:import', $script);
+        $this->assertStringNotContainsString('db:seed', $script);
     }
 
     public function test_filament_component_cache_uses_the_writable_storage_directory(): void

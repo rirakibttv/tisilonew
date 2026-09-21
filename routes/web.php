@@ -29,6 +29,28 @@ Route::middleware('guest')->group(function (): void {
 });
 Route::middleware('auth')->group(function (): void {
     Route::get('/account', [AccountController::class, 'dashboard'])->name('store.account.dashboard');
+    Route::get('/account/orders/{filter}', [AccountController::class, 'orders'])
+        ->where('filter', 'to-pay|to-ship|to-receive|all')
+        ->name('store.account.orders');
+    Route::get('/account/reviews/{filter}', [AccountController::class, 'reviews'])
+        ->where('filter', 'to-review|all')
+        ->name('store.account.reviews');
+    Route::get('/account/requests/{type}/{mode}', [AccountController::class, 'orderRequests'])
+        ->where('type', 'return|cancellation')
+        ->where('mode', 'new|all')
+        ->name('store.account.requests');
+    Route::post('/account/requests/{type}/{order}', [AccountController::class, 'storeOrderRequest'])
+        ->where('type', 'return|cancellation')
+        ->middleware('throttle:10,1')
+        ->name('store.account.requests.store');
+    Route::get('/account/profile', [AccountController::class, 'profile'])->name('store.account.profile');
+    Route::patch('/account/profile', [AccountController::class, 'updateProfile'])->name('store.account.profile.update');
+    Route::get('/account/addresses', [AccountController::class, 'addresses'])->name('store.account.addresses');
+    Route::post('/account/addresses', [AccountController::class, 'storeAddress'])->name('store.account.addresses.store');
+    Route::patch('/account/addresses/{address}/default', [AccountController::class, 'defaultAddress'])->name('store.account.addresses.default');
+    Route::delete('/account/addresses/{address}', [AccountController::class, 'destroyAddress'])->name('store.account.addresses.destroy');
+    Route::get('/account/payment-options', [AccountController::class, 'paymentOptions'])->name('store.account.payment-options');
+    Route::patch('/account/payment-options', [AccountController::class, 'updatePaymentOption'])->name('store.account.payment-options.update');
     Route::post('/account/logout', [AccountController::class, 'logout'])->name('store.account.logout');
     Route::post('/products/{product:slug}/reviews', [ProductReviewController::class, 'store'])
         ->middleware('throttle:5,1')

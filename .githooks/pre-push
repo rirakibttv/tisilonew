@@ -1,16 +1,16 @@
 #!/usr/bin/env sh
 set -eu
 
-php artisan deployment-data:export --quiet
+remote_name="${1:-origin}"
+remote_ref="refs/remotes/${remote_name}/main"
 
-if ! git diff --quiet -- database/data/deployable-catalog.json; then
-    echo "Deployable business database data changed after the last commit."
-    echo "Commit database/data/deployable-catalog.json, then push again."
-    exit 1
-fi
-
-if [ -n "$(git status --porcelain --untracked-files=normal -- storage/app/public)" ]; then
-    echo "Deployable media changed after the last commit."
-    echo "Commit storage/app/public media, then push again."
-    exit 1
+if git rev-parse --verify --quiet "${remote_ref}" >/dev/null; then
+    if ! git diff --diff-filter=AMCR --quiet "${remote_ref}..HEAD" -- \
+        database/data/deployable-catalog.json \
+        ':(glob)storage/app/public/**' \
+        ':(exclude)storage/app/public/.gitignore'; then
+        echo "Push blocked: local catalog snapshot or uploaded media is included."
+        echo "Manage products, users and shipping data only from www.tisilo.com."
+        exit 1
+    fi
 fi

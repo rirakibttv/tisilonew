@@ -38,6 +38,17 @@
 RewriteEngine On
 RewriteBase /
 
+# A legacy full Laravel tree may still exist in public_html after the first
+# non-destructive cPanel cutover. Keep application source and secrets private.
+<IfModule mod_authz_core.c>
+    <FilesMatch "^\.">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+RewriteRule ^(?:app|bootstrap|cache|config|database|public|resources|routes|tests|vendor)(?:/|$) - [F,L,NC]
+RewriteRule ^(?:artisan|composer\.(?:json|lock)|package(?:-lock)?\.json|phpunit\.xml|vite\.config\.js)$ - [F,L,NC]
+
 # Handle Authorization Header
 RewriteCond %{HTTP:Authorization} .
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
