@@ -451,10 +451,33 @@ rollback_code() {
     restore_production_files
     install_dependencies
     sync_public_files
-    "${PHP_BIN}" artisan filament:optimize-clear
-    "${PHP_BIN}" artisan optimize
+    "${PHP_BIN}" artisan optimize:clear
     "${PHP_BIN}" artisan up || true
     log "Code rollback completed. Database backup is available for manual recovery."
+}
+
+quarantine_legacy_public_source() {
+    local timestamp destination candidate basename
+    local -a legacy_candidates=(
+        app bootstrap config database resources routes tests vendor public
+        artisan composer.json composer.lock composer.phar package.json package-lock.json
+        phpunit.xml vite.config.js server.php .env.example
+    )
+
+    timestamp="$(date '+%Y%m%d-%H%M%S')"
+    destination="${BACKUP_ROOT}/legacy-public/source-${timestamp}"
+
+    for candidate in "${legacy_candidates[@]}"; do
+        [[ -e "${PUBLIC_ROOT}/${candidate}" || -L "${PUBLIC_ROOT}/${candidate}" ]] || continue
+        mkdir -p "${destination}"
+        basename="$(basename -- "${candidate}")"
+        mv -- "${PUBLIC_ROOT}/${candidate}" "${destination}/${basename}"
+    done
+
+    if [[ -d "${destination}" ]]; then
+        chmod -R u+rwX,go-rwx "${destination}"
+        log "Legacy public_html application source moved intact to ${destination}."
+    fi
 }
 
 handle_failure() {
@@ -536,12 +559,12 @@ main() {
     else
         log "Composer files are unchanged; dependency installation skipped."
     fi
-    "${PHP_BIN}" artisan filament:optimize-clear
+    "${PHP_BIN}" artisan optimize:clear
     "${PHP_BIN}" artisan migrate --force
     prepare_public_storage_link
+    quarantine_legacy_public_source
     sync_public_files
     quarantine_legacy_public_env
-    "${PHP_BIN}" artisan optimize
     "${PHP_BIN}" artisan up
 
     deployment_started=0
