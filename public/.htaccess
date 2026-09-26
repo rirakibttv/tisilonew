@@ -47,6 +47,7 @@ RewriteBase /
 </IfModule>
 
 RewriteRule ^(?:app|bootstrap|cache|config|database|public|resources|routes|tests|vendor)(?:/|$) - [F,L,NC]
+RewriteRule ^storage/(?:app|framework|logs|private)(?:/|$) - [F,L,NC]
 RewriteRule ^(?:artisan|composer\.(?:json|lock)|package(?:-lock)?\.json|phpunit\.xml|vite\.config\.js)$ - [F,L,NC]
 
 # Handle Authorization Header

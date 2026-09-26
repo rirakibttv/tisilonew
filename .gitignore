@@ -18,6 +18,9 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+/tisilo-*.zip
+/scripts/tisilo-*.zip
+/scripts/tisilo-*.tar.gz
 /auth.json
 /.fleet
 /.idea

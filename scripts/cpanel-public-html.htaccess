@@ -1,0 +1,31 @@
+<IfModule mod_negotiation.c>
+    Options -MultiViews -Indexes
+</IfModule>
+
+RewriteEngine On
+
+# Allow certificate validation files managed by cPanel.
+RewriteRule ^\.well-known(?:/|$) - [L]
+
+# Never expose the Laravel application, credentials, dependencies, or runtime data.
+<IfModule mod_authz_core.c>
+    <FilesMatch "^\.">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+RewriteRule ^(?:app|bootstrap|config|database|resources|routes|tests|vendor)(?:/|$) - [F,L,NC]
+# Public uploads live behind Laravel's public/storage symlink. Resolve only an
+# existing public file before denying every other direct storage request.
+RewriteCond %{DOCUMENT_ROOT}/public/storage/$1 -f
+RewriteRule ^storage/(.+)$ public/storage/$1 [END]
+RewriteRule ^storage(?:/|$) - [F,L,NC]
+RewriteRule ^(?:artisan|composer\.(?:json|lock)|package(?:-lock)?\.json|phpunit\.xml|vite\.config\.js)$ - [F,L,NC]
+
+# Serve the contents of Laravel's public directory without adding /public to the URL.
+RewriteCond %{DOCUMENT_ROOT}/public/$1 -f [OR]
+RewriteCond %{DOCUMENT_ROOT}/public/$1 -d
+RewriteRule ^(.+)$ public/$1 [END]
+
+# Route all application requests through the root front controller.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [END]
