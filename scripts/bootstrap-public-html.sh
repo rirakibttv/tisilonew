@@ -5,6 +5,7 @@ umask 077
 
 readonly APP_ROOT="/home/rirakib/public_html"
 readonly BACKUP_ROOT="/home/rirakib/TisiloBackup"
+readonly ENV_BACKUP="${BACKUP_ROOT}/.env.production"
 readonly MEDIA_ARCHIVE="${BACKUP_ROOT}/bootstrap-storage.tar.gz"
 readonly MEDIA_MARKER="${APP_ROOT}/storage/app/.bootstrap-media-imported"
 readonly COMPLETE_MARKER="${BACKUP_ROOT}/manual-deploy-current.done"
@@ -33,8 +34,28 @@ resolve_executable() {
     return 1
 }
 
-[[ ! -f "${COMPLETE_MARKER}" ]] || exit 0
 cd "${APP_ROOT}"
+
+mkdir -p "${BACKUP_ROOT}"
+chmod 700 "${BACKUP_ROOT}"
+
+if [[ -f .env ]]; then
+    chmod 600 .env
+    if [[ ! -f "${ENV_BACKUP}" ]]; then
+        cp -p -- .env "${ENV_BACKUP}"
+        chmod 600 "${ENV_BACKUP}"
+        log "Production environment was backed up outside the web root."
+    fi
+elif [[ -f "${ENV_BACKUP}" ]]; then
+    cp -p -- "${ENV_BACKUP}" .env
+    chmod 600 .env
+    log "Production environment was restored from the protected backup."
+else
+    log "Production .env is missing and no protected backup is available."
+    exit 1
+fi
+
+[[ ! -f "${COMPLETE_MARKER}" ]] || exit 0
 
 PHP_BIN="$(resolve_executable \
     /opt/cpanel/ea-php84/root/usr/bin/php \
@@ -89,10 +110,9 @@ else
     log "Composer is unavailable; verified existing vendor dependencies will be used."
 fi
 
-"${PHP_BIN}" artisan filament:optimize-clear
+"${PHP_BIN}" artisan optimize:clear
 "${PHP_BIN}" artisan storage:link --force
 "${PHP_BIN}" artisan migrate --force
-"${PHP_BIN}" artisan optimize
 "${PHP_BIN}" artisan up || true
 
 printf 'deployed_at=%s\nsource=copy-ready-production-bundle\n' \

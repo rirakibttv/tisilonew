@@ -6,6 +6,7 @@ umask 077
 readonly REPOSITORY="/home/rirakib/tisilonew-release"
 readonly PUBLIC_ROOT="/home/rirakib/public_html"
 readonly BACKUP_ROOT="/home/rirakib/TisiloBackup"
+readonly ENV_BACKUP_FILE="${BACKUP_ROOT}/.env.production"
 readonly BOOTSTRAP_UPLOAD_ARCHIVE="${BACKUP_ROOT}/bootstrap-storage.tar.gz"
 readonly BOOTSTRAP_UPLOAD_MARKER="${REPOSITORY}/storage/app/.bootstrap-media-imported"
 readonly LOCK_FILE="${REPOSITORY}/storage/framework/tisilo-auto-deploy.lock"
@@ -146,14 +147,25 @@ prepare_bootstrap_environment() {
     chmod -R u+rwX,go-rwx "${REPOSITORY}/storage" "${REPOSITORY}/bootstrap/cache"
 
     if [[ ! -f "${REPOSITORY}/.env" ]]; then
-        if [[ -f "${PUBLIC_ROOT}/.env" ]]; then
+        if [[ -f "${ENV_BACKUP_FILE}" ]]; then
+            cp -p -- "${ENV_BACKUP_FILE}" "${REPOSITORY}/.env"
+            chmod 600 "${REPOSITORY}/.env"
+            log "Production .env restored from the protected backup directory."
+        elif [[ -f "${PUBLIC_ROOT}/.env" ]]; then
             cp -p -- "${PUBLIC_ROOT}/.env" "${REPOSITORY}/.env"
             chmod 600 "${REPOSITORY}/.env"
             log "Production .env copied into the private release directory."
         else
-            log "Production .env was not found in ${REPOSITORY} or ${PUBLIC_ROOT}; deployment stopped."
+            log "Production .env was not found in the release, public root, or protected backup; deployment stopped."
             return 1
         fi
+    fi
+
+    chmod 600 "${REPOSITORY}/.env"
+    if [[ ! -f "${ENV_BACKUP_FILE}" ]]; then
+        cp -p -- "${REPOSITORY}/.env" "${ENV_BACKUP_FILE}"
+        chmod 600 "${ENV_BACKUP_FILE}"
+        log "Production .env backed up outside the web root."
     fi
 }
 
