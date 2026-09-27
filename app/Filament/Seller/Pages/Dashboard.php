@@ -8,6 +8,7 @@ use App\Models\InventoryStock;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Vendor;
+use App\Support\SellerAccess;
 use Filament\Facades\Filament;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Illuminate\Contracts\Support\Htmlable;
@@ -17,6 +18,11 @@ use Illuminate\Support\Facades\Schema;
 class Dashboard extends BaseDashboard
 {
     protected string $view = 'filament.seller.pages.dashboard';
+
+    public static function canAccess(): bool
+    {
+        return SellerAccess::can(SellerAccess::DASHBOARD_VIEW);
+    }
 
     public function getTitle(): string|Htmlable
     {
@@ -32,7 +38,7 @@ class Dashboard extends BaseDashboard
     protected function getViewData(): array
     {
         $seller = Filament::auth()->user();
-        $vendor = $seller?->ownedVendors()->first() ?? $seller?->vendors()->first();
+        $vendor = SellerAccess::currentVendor($seller);
 
         if (! $vendor || ! Schema::hasTable('order_items')) {
             return $this->emptyDashboardData($seller, $vendor);
@@ -145,6 +151,7 @@ class Dashboard extends BaseDashboard
             'grossSales' => $grossSales,
             'commissionRate' => $commissionRate,
             'estimatedEarnings' => $estimatedEarnings,
+            'quickActions' => $this->quickActions(),
         ];
     }
 
@@ -253,6 +260,41 @@ class Dashboard extends BaseDashboard
             'grossSales' => 0,
             'commissionRate' => (float) ($vendor?->commission_rate ?? 0),
             'estimatedEarnings' => 0,
+            'quickActions' => $this->quickActions(),
         ];
+    }
+
+    /** @return list<array{label: string, icon: string, url: string, external?: bool}> */
+    protected function quickActions(): array
+    {
+        $actions = [];
+
+        if (SellerAccess::can(SellerAccess::PRODUCTS_VIEW)) {
+            $actions[] = ['label' => 'My Products', 'icon' => 'heroicon-o-shopping-bag', 'url' => route('filament.seller.resources.products.index')];
+        }
+
+        if (SellerAccess::can(SellerAccess::PRODUCTS_MANAGE)) {
+            $actions[] = ['label' => 'Add Product', 'icon' => 'heroicon-o-plus-circle', 'url' => route('filament.seller.resources.products.create')];
+        }
+
+        if (SellerAccess::can(SellerAccess::ORDERS_VIEW)) {
+            $actions[] = ['label' => 'Manage Orders', 'icon' => 'heroicon-o-clipboard-document-list', 'url' => route('filament.seller.resources.orders.index')];
+        }
+
+        if (SellerAccess::can(SellerAccess::INVENTORY_VIEW)) {
+            $actions[] = ['label' => 'Inventory', 'icon' => 'heroicon-o-circle-stack', 'url' => route('filament.seller.resources.inventory.index')];
+        }
+
+        if (SellerAccess::can(SellerAccess::STAFF_VIEW)) {
+            $actions[] = ['label' => 'Staff & Permissions', 'icon' => 'heroicon-o-user-group', 'url' => route('filament.seller.resources.staff.index')];
+        }
+
+        if (SellerAccess::can(SellerAccess::SHOP_VIEW)) {
+            $actions[] = ['label' => 'Shop Profile', 'icon' => 'heroicon-o-building-storefront', 'url' => route('filament.seller.resources.shop-profile.index')];
+        }
+
+        $actions[] = ['label' => 'View Storefront', 'icon' => 'heroicon-o-globe-alt', 'url' => url('/shop'), 'external' => true];
+
+        return $actions;
     }
 }

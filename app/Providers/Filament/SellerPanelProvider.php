@@ -43,6 +43,10 @@ class SellerPanelProvider extends PanelProvider
                 PanelsRenderHook::TOPBAR_START,
                 fn () => view('filament.partials.visit-site'),
             )
+            ->discoverResources(
+                in: app_path('Filament/Seller/Resources'),
+                for: 'App\\Filament\\Seller\\Resources',
+            )
             ->pages([Dashboard::class])
             ->widgets([AccountWidget::class])
             ->middleware([

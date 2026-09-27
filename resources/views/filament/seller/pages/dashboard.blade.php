@@ -161,9 +161,12 @@
                 <div><span>SHORTCUTS</span><h3>Quick Actions</h3></div>
             </div>
             <div class="tisilo-quick-actions">
-                <a href="{{ url('/seller/profile') }}"><x-filament::icon icon="heroicon-o-user-circle" /><span>Seller Profile</span></a>
-                <a href="{{ url('/shop') }}" target="_blank"><x-filament::icon icon="heroicon-o-building-storefront" /><span>View Storefront</span></a>
-                <a href="{{ url('/contact-us') }}" target="_blank"><x-filament::icon icon="heroicon-o-lifebuoy" /><span>Get Support</span></a>
+                @foreach ($quickActions as $action)
+                    <a href="{{ $action['url'] }}" @if ($action['external'] ?? false) target="_blank" rel="noopener" @endif>
+                        <x-filament::icon :icon="$action['icon']" />
+                        <span>{{ $action['label'] }}</span>
+                    </a>
+                @endforeach
             </div>
         </section>
     </div>

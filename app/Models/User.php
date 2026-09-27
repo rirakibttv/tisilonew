@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Support\SellerAccess;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -70,7 +71,8 @@ class User extends Authenticatable implements FilamentUser
 
         return match ($panel->getId()) {
             'admin' => $this->role->canAccessAdminPanel(),
-            'seller' => in_array($this->role, [UserRole::VendorOwner, UserRole::VendorStaff], true),
+            'seller' => in_array($this->role, [UserRole::VendorOwner, UserRole::VendorStaff], true)
+                && SellerAccess::hasSellerAccess($this),
             default => false,
         };
     }
