@@ -73,6 +73,31 @@ class PanelAuthenticationTest extends TestCase
         ]);
     }
 
+    public function test_vendor_dashboard_shows_the_authenticated_sellers_shop_summary(): void
+    {
+        $seller = User::factory()->create([
+            'role' => UserRole::VendorOwner,
+            'status' => UserStatus::Active,
+        ]);
+
+        Vendor::query()->create([
+            'owner_id' => $seller->getKey(),
+            'name' => 'Professional Seller Shop',
+            'slug' => 'professional-seller-shop',
+            'status' => VendorStatus::Active,
+            'commission_rate' => 7.5,
+        ]);
+
+        $this->actingAs($seller, 'seller')
+            ->get('/seller')
+            ->assertOk()
+            ->assertSee('Vendor Dashboard')
+            ->assertSee('Professional Seller Shop')
+            ->assertSee('Total Orders')
+            ->assertSee('Delivered Sales Trend')
+            ->assertSee('Recent Orders');
+    }
+
     public function test_admin_password_reset_request_sends_a_panel_reset_link(): void
     {
         Notification::fake();

@@ -635,6 +635,12 @@
 .tisilo-status-active { color: #047857; background: #ecfdf5; }
 .tisilo-status-draft { color: #64748b; background: #f1f5f9; }
 .tisilo-status-pending { color: #b45309; background: #fffbeb; }
+.tisilo-status-confirmed { color: #6d28d9; background: #f5f3ff; }
+.tisilo-status-processing { color: #1d4ed8; background: #eff6ff; }
+.tisilo-status-shipped { color: #0e7490; background: #ecfeff; }
+.tisilo-status-delivered { color: #047857; background: #ecfdf5; }
+.tisilo-status-cancelled,
+.tisilo-status-refunded { color: #b91c1c; background: #fef2f2; }
 
 .tisilo-customer-list {
     display: grid;
@@ -747,6 +753,310 @@
     .tisilo-stat-card { min-height: 5.8rem; align-items: flex-start; flex-direction: column; gap: 0.6rem; }
     .tisilo-stat-icon { width: 2.45rem; height: 2.45rem; }
     .tisilo-stat-card strong { font-size: 1.15rem; }
+}
+
+/* Vendor dashboard */
+.tisilo-seller-dashboard {
+    gap: 1rem;
+}
+
+.tisilo-seller-welcome {
+    background:
+        radial-gradient(circle at 82% 15%, rgb(255 255 255 / 0.22), transparent 24%),
+        linear-gradient(120deg, #312e81 0%, #6d28d9 55%, #9333ea 100%);
+}
+
+.tisilo-live-dot-pending,
+.tisilo-live-dot-draft {
+    background: #fbbf24 !important;
+    box-shadow: 0 0 0 0.22rem rgb(251 191 36 / 0.2) !important;
+}
+
+.tisilo-live-dot-suspended,
+.tisilo-live-dot-rejected {
+    background: #fb7185 !important;
+    box-shadow: 0 0 0 0.22rem rgb(251 113 133 / 0.2) !important;
+}
+
+.tisilo-seller-notice {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    border: 1px solid #fde68a;
+    border-radius: 0.95rem;
+    background: #fffbeb;
+    padding: 0.9rem 1rem;
+    color: #92400e;
+}
+
+.tisilo-seller-notice svg {
+    width: 1.55rem;
+    height: 1.55rem;
+    flex: 0 0 auto;
+}
+
+.tisilo-seller-notice div {
+    min-width: 0;
+    flex: 1;
+}
+
+.tisilo-seller-notice strong,
+.tisilo-seller-notice p {
+    display: block;
+    margin: 0;
+}
+
+.tisilo-seller-notice strong { font-size: 0.82rem; }
+.tisilo-seller-notice p { margin-top: 0.14rem; color: #a16207; font-size: 0.72rem; }
+
+.tisilo-seller-notice a {
+    flex: 0 0 auto;
+    border-radius: 0.65rem;
+    background: #fff;
+    padding: 0.55rem 0.75rem;
+    color: #7c2d12;
+    font-size: 0.7rem;
+    font-weight: 800;
+    box-shadow: 0 3px 12px rgb(146 64 14 / 0.08);
+}
+
+.tisilo-stat-card > div:last-child > span,
+.tisilo-stat-meta {
+    display: block;
+}
+
+.tisilo-stat-card > div:last-child > span {
+    margin-bottom: 0.2rem;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.tisilo-stat-meta {
+    margin-top: 0.28rem;
+    color: #94a3b8;
+    font-size: 0.62rem;
+    font-weight: 600;
+}
+
+.tisilo-stat-icon-purple { color: #6d28d9; background: #f5f3ff; }
+.tisilo-stat-icon-green { color: #059669; background: #ecfdf5; }
+.tisilo-stat-icon-blue { color: #0284c7; background: #f0f9ff; }
+.tisilo-stat-icon-orange { color: #ea580c; background: #fff7ed; }
+
+.tisilo-dashboard-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.tisilo-panel-heading > div > span {
+    display: block;
+    margin-bottom: 0.24rem;
+    color: #7c3aed;
+    font-size: 0.62rem;
+    font-weight: 850;
+    letter-spacing: 0.11em;
+}
+
+.tisilo-chart-wrap {
+    position: relative;
+    height: 13rem;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(25% - 1px), #e2e8f0 25%);
+}
+
+.tisilo-chart-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.tisilo-chart-labels > div {
+    display: grid;
+    gap: 0.1rem;
+    text-align: center;
+}
+
+.tisilo-chart-labels > div strong { color: #6d28d9; font-size: 0.68rem; }
+.tisilo-chart-labels > div span { color: #94a3b8; font-size: 0.62rem; }
+
+.tisilo-order-donut-wrap {
+    display: grid;
+    align-items: center;
+    gap: 1rem;
+}
+
+.tisilo-order-donut {
+    display: grid;
+    width: 8.5rem;
+    height: 8.5rem;
+    place-items: center;
+    justify-self: center;
+    border-radius: 999px;
+    background: var(--order-gradient);
+}
+
+.tisilo-order-donut > div {
+    display: grid;
+    width: 5.8rem;
+    height: 5.8rem;
+    place-content: center;
+    border-radius: 999px;
+    background: #fff;
+    text-align: center;
+    box-shadow: inset 0 0 0 1px #f1f5f9;
+}
+
+.tisilo-order-donut strong,
+.tisilo-order-donut span { display: block; }
+.tisilo-order-donut strong { color: #1e1b4b; font-size: 1.35rem; }
+.tisilo-order-donut span { color: #94a3b8; font-size: 0.64rem; }
+
+.tisilo-order-legend {
+    display: grid;
+    gap: 0.44rem;
+}
+
+.tisilo-order-legend > div {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.5rem;
+    color: #64748b;
+    font-size: 0.68rem;
+}
+
+.tisilo-order-legend i {
+    width: 0.52rem;
+    height: 0.52rem;
+    border-radius: 999px;
+    background: var(--legend-color);
+}
+
+.tisilo-order-legend p {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 0.72rem;
+}
+
+.tisilo-earning-card {
+    display: grid;
+    gap: 0.16rem;
+    margin-top: 1rem;
+    border-radius: 0.85rem;
+    background: linear-gradient(120deg, #f5f3ff, #eef2ff);
+    padding: 0.8rem 0.9rem;
+}
+
+.tisilo-earning-card span { color: #6d28d9; font-size: 0.66rem; font-weight: 800; }
+.tisilo-earning-card strong { color: #1e1b4b; font-size: 1.15rem; }
+.tisilo-earning-card small { color: #64748b; font-size: 0.6rem; }
+
+.tisilo-alert-pill {
+    border-radius: 999px;
+    background: #f5f3ff;
+    padding: 0.34rem 0.58rem;
+    color: #6d28d9;
+    font-size: 0.64rem;
+    font-weight: 800;
+}
+
+.tisilo-table-wrap {
+    overflow-x: auto;
+}
+
+.tisilo-table {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+}
+
+.tisilo-table th {
+    background: #f8fafc;
+    padding: 0.68rem;
+    color: #64748b;
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.tisilo-table td {
+    border-bottom: 1px solid #eef2f7;
+    padding: 0.72rem 0.68rem;
+    color: #475569;
+    font-size: 0.7rem;
+}
+
+.tisilo-table td strong,
+.tisilo-table td small { display: block; }
+.tisilo-table td strong { color: #1e293b; }
+.tisilo-table td small { margin-top: 0.12rem; color: #94a3b8; font-size: 0.6rem; }
+
+.tisilo-empty-cell {
+    padding: 1.5rem !important;
+    color: #94a3b8 !important;
+    text-align: center;
+}
+
+.tisilo-product-rankings {
+    display: grid;
+}
+
+.tisilo-product-rank {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.68rem;
+    border-bottom: 1px solid #eef2f7;
+    padding: 0.7rem 0;
+}
+
+.tisilo-product-rank:first-child { padding-top: 0; }
+.tisilo-product-rank:last-child { border-bottom: 0; padding-bottom: 0; }
+.tisilo-product-rank > div { min-width: 0; }
+.tisilo-product-rank strong,
+.tisilo-product-rank small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tisilo-product-rank strong { color: #1e293b; font-size: 0.7rem; }
+.tisilo-product-rank small { margin-top: 0.14rem; color: #94a3b8; font-size: 0.6rem; }
+.tisilo-product-rank b { color: #059669; font-size: 0.66rem; white-space: nowrap; }
+
+.tisilo-rank {
+    display: grid;
+    width: 1.8rem;
+    height: 1.8rem;
+    place-items: center;
+    border-radius: 0.55rem;
+    color: #6d28d9;
+    background: #f5f3ff;
+    font-size: 0.66rem;
+    font-weight: 850;
+}
+
+.tisilo-seller-dashboard .tisilo-quick-actions a span {
+    color: #1e1b4b;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+@media (min-width: 640px) {
+    .tisilo-order-donut-wrap { grid-template-columns: auto minmax(0, 1fr); }
+}
+
+@media (min-width: 1100px) {
+    .tisilo-seller-analytics { grid-template-columns: minmax(0, 1.65fr) minmax(19rem, 0.75fr); }
+    .tisilo-seller-lower { grid-template-columns: minmax(0, 1.65fr) minmax(18rem, 0.75fr); }
+}
+
+@media (max-width: 639px) {
+    .tisilo-seller-notice { align-items: flex-start; flex-wrap: wrap; }
+    .tisilo-seller-notice div { flex-basis: calc(100% - 2.5rem); }
+    .tisilo-seller-notice a { margin-left: 2.4rem; }
+    .tisilo-seller-dashboard .tisilo-stat-card { flex-direction: row; align-items: center; }
+    .tisilo-chart-wrap { height: 10rem; }
 }
 
 body.tisilo-popup-open {
