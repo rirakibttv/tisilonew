@@ -253,14 +253,7 @@ ensure_minute_auto_deploy_cron() {
     log "Auto-deploy cron verified: GitHub main is checked once per minute."
 }
 
-sync_public_files() {
-    if ! grep -Fq -- "${INDEX_SIGNATURE}" "${REPOSITORY}/scripts/cpanel-index.php"; then
-        log "The managed cPanel index signature is missing; refusing to replace public_html/index.php."
-        return 1
-    fi
-
-    mkdir -p "${PUBLIC_ROOT}"
-
+sync_public_media() {
     if [[ -e "${PUBLIC_ROOT}/storage" \
         && ! -L "${PUBLIC_ROOT}/storage" \
         && ! -d "${PUBLIC_ROOT}/storage" ]]; then
@@ -273,18 +266,6 @@ sync_public_files() {
         log "${PUBLIC_ROOT}/storage points somewhere unexpected; refusing to replace it."
         return 1
     fi
-
-    # Never use --delete here: public_html can also contain cPanel-managed files,
-    # domain verification files, or addon-domain roots.
-    rsync -a --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
-        --exclude='index.php' \
-        --exclude='storage' \
-        --exclude='.well-known' \
-        --exclude='cgi-bin' \
-        --exclude='.htaccess.pre-litespeed-20260825' \
-        "${REPOSITORY}/public/" "${PUBLIC_ROOT}/"
-
-    cp "${REPOSITORY}/scripts/cpanel-index.php" "${PUBLIC_ROOT}/index.php"
 
     if [[ -L "${PUBLIC_ROOT}/storage" ]]; then
         # LiteSpeed on this shared host returns 403 for the otherwise-correct
@@ -299,6 +280,28 @@ sync_public_files() {
         "${REPOSITORY}/storage/app/public/" "${PUBLIC_ROOT}/storage/"
     touch "${PUBLIC_ROOT}/storage/${PUBLIC_MEDIA_MARKER}"
     chmod 644 "${PUBLIC_ROOT}/storage/${PUBLIC_MEDIA_MARKER}"
+}
+
+sync_public_files() {
+    if ! grep -Fq -- "${INDEX_SIGNATURE}" "${REPOSITORY}/scripts/cpanel-index.php"; then
+        log "The managed cPanel index signature is missing; refusing to replace public_html/index.php."
+        return 1
+    fi
+
+    mkdir -p "${PUBLIC_ROOT}"
+
+    # Never use --delete here: public_html can also contain cPanel-managed files,
+    # domain verification files, or addon-domain roots.
+    rsync -a --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
+        --exclude='index.php' \
+        --exclude='storage' \
+        --exclude='.well-known' \
+        --exclude='cgi-bin' \
+        --exclude='.htaccess.pre-litespeed-20260825' \
+        "${REPOSITORY}/public/" "${PUBLIC_ROOT}/"
+
+    cp "${REPOSITORY}/scripts/cpanel-index.php" "${PUBLIC_ROOT}/index.php"
+    sync_public_media
 
     chmod 755 "${PUBLIC_ROOT}"
     chmod 644 "${PUBLIC_ROOT}/index.php"
@@ -553,6 +556,8 @@ main() {
     fi
 
     if [[ "${previous_commit}" == "${target_commit}" && ${bootstrap_required} -eq 0 ]]; then
+        prepare_public_storage_link
+        sync_public_media
         exit 0
     fi
 
