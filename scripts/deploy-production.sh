@@ -193,7 +193,8 @@ prepare_public_storage_link() {
 
     if [[ -d "${PUBLIC_ROOT}/storage" && ! -L "${PUBLIC_ROOT}/storage" ]]; then
         if [[ -d "${PUBLIC_ROOT}/storage/app/public" ]]; then
-            rsync -a "${PUBLIC_ROOT}/storage/app/public/" "${REPOSITORY}/storage/app/public/"
+            rsync -a --exclude='.gitignore' \
+                "${PUBLIC_ROOT}/storage/app/public/" "${REPOSITORY}/storage/app/public/"
         fi
 
         timestamp="$(date '+%Y%m%d-%H%M%S')"
