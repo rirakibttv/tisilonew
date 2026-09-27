@@ -522,9 +522,13 @@ main() {
         exit 1
     fi
 
-    if [[ ! -f "${REPOSITORY}/vendor/autoload.php" ]] || ! public_index_is_managed; then
+    if [[ ! -f "${REPOSITORY}/vendor/autoload.php" ]]; then
         bootstrap_required=1
         dependencies_changed=1
+    fi
+
+    if ! public_index_is_managed; then
+        bootstrap_required=1
     fi
 
     if [[ "${previous_commit}" == "${target_commit}" && ${bootstrap_required} -eq 0 ]]; then
