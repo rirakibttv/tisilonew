@@ -12,6 +12,7 @@ readonly BOOTSTRAP_UPLOAD_MARKER="${REPOSITORY}/storage/app/.bootstrap-media-imp
 readonly LOCK_FILE="${REPOSITORY}/storage/framework/tisilo-auto-deploy.lock"
 readonly DEPLOY_LOG="${REPOSITORY}/storage/logs/deploy.log"
 readonly INDEX_SIGNATURE="tisilo-cpanel-front-controller-v1"
+readonly PUBLIC_MEDIA_MARKER=".tisilo-public-media-mirror"
 
 PHP_BIN=""
 COMPOSER_BIN=""
@@ -192,6 +193,13 @@ prepare_public_storage_link() {
     mkdir -p "${REPOSITORY}/storage/app/public"
 
     if [[ -d "${PUBLIC_ROOT}/storage" && ! -L "${PUBLIC_ROOT}/storage" ]]; then
+        # Shared cPanel/LiteSpeed hosts can deny public symbolic links with a
+        # 403 response. A directory carrying our marker is the managed media
+        # mirror and must remain in place between deployments.
+        if [[ -f "${PUBLIC_ROOT}/storage/${PUBLIC_MEDIA_MARKER}" ]]; then
+            return 0
+        fi
+
         if [[ -d "${PUBLIC_ROOT}/storage/app/public" ]]; then
             rsync -a --exclude='.gitignore' \
                 "${PUBLIC_ROOT}/storage/app/public/" "${REPOSITORY}/storage/app/public/"
@@ -253,8 +261,10 @@ sync_public_files() {
 
     mkdir -p "${PUBLIC_ROOT}"
 
-    if [[ -e "${PUBLIC_ROOT}/storage" && ! -L "${PUBLIC_ROOT}/storage" ]]; then
-        log "${PUBLIC_ROOT}/storage exists but is not a symlink; refusing to overwrite it."
+    if [[ -e "${PUBLIC_ROOT}/storage" \
+        && ! -L "${PUBLIC_ROOT}/storage" \
+        && ! -d "${PUBLIC_ROOT}/storage" ]]; then
+        log "${PUBLIC_ROOT}/storage exists but is not a directory or symlink; refusing to overwrite it."
         return 1
     fi
 
@@ -276,9 +286,19 @@ sync_public_files() {
 
     cp "${REPOSITORY}/scripts/cpanel-index.php" "${PUBLIC_ROOT}/index.php"
 
-    if [[ ! -L "${PUBLIC_ROOT}/storage" ]]; then
-        ln -s "${REPOSITORY}/storage/app/public" "${PUBLIC_ROOT}/storage"
+    if [[ -L "${PUBLIC_ROOT}/storage" ]]; then
+        # LiteSpeed on this shared host returns 403 for the otherwise-correct
+        # Laravel storage symlink. Replace only the validated link itself with
+        # a real public mirror; the private source remains canonical.
+        rm -- "${PUBLIC_ROOT}/storage"
     fi
+
+    mkdir -p "${PUBLIC_ROOT}/storage"
+    rsync -a --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
+        --exclude='.gitignore' \
+        "${REPOSITORY}/storage/app/public/" "${PUBLIC_ROOT}/storage/"
+    touch "${PUBLIC_ROOT}/storage/${PUBLIC_MEDIA_MARKER}"
+    chmod 644 "${PUBLIC_ROOT}/storage/${PUBLIC_MEDIA_MARKER}"
 
     chmod 755 "${PUBLIC_ROOT}"
     chmod 644 "${PUBLIC_ROOT}/index.php"
