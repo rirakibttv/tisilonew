@@ -281,6 +281,10 @@ class Dashboard extends BaseDashboard
             $actions[] = ['label' => 'Manage Orders', 'icon' => 'heroicon-o-clipboard-document-list', 'url' => route('filament.seller.resources.orders.index')];
         }
 
+        if (SellerAccess::can(SellerAccess::FRAUD_CHECK)) {
+            $actions[] = ['label' => 'Fraud Checker', 'icon' => 'heroicon-o-shield-check', 'url' => route('filament.seller.pages.fraud-checker')];
+        }
+
         if (SellerAccess::can(SellerAccess::INVENTORY_VIEW)) {
             $actions[] = ['label' => 'Inventory', 'icon' => 'heroicon-o-circle-stack', 'url' => route('filament.seller.resources.inventory.index')];
         }

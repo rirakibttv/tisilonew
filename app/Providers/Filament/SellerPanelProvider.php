@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Seller\Auth\RegisterSeller;
 use App\Filament\Seller\Pages\Dashboard;
+use App\Filament\Seller\Pages\FraudChecker;
 use App\Support\SiteBranding;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -47,7 +48,7 @@ class SellerPanelProvider extends PanelProvider
                 in: app_path('Filament/Seller/Resources'),
                 for: 'App\\Filament\\Seller\\Resources',
             )
-            ->pages([Dashboard::class])
+            ->pages([Dashboard::class, FraudChecker::class])
             ->widgets([AccountWidget::class])
             ->middleware([
                 EncryptCookies::class,

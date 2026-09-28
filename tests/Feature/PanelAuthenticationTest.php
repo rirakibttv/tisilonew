@@ -130,6 +130,7 @@ class PanelAuthenticationTest extends TestCase
             ->assertOk()
             ->assertSee('My Products')
             ->assertSee('Orders')
+            ->assertSee('Fraud Checker')
             ->assertSee('Inventory')
             ->assertSee('Warehouses')
             ->assertSee('Staff &amp; Permissions', false)
@@ -138,6 +139,7 @@ class PanelAuthenticationTest extends TestCase
         foreach ([
             '/seller/products', '/seller/products/create',
             '/seller/orders',
+            '/seller/fraud-checker',
             '/seller/inventory', '/seller/inventory/create',
             '/seller/warehouses', '/seller/warehouses/create',
             '/seller/staff', '/seller/staff/create',

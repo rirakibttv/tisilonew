@@ -28,4 +28,9 @@ class FraudCheckHistory extends Model
     {
         return $this->belongsTo(User::class, 'checked_by');
     }
+
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class);
+    }
 }

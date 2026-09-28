@@ -6,8 +6,10 @@ use App\Models\FraudCheckHistory;
 use App\Models\SiteSetting;
 use App\Services\FraudCheckerApiException;
 use App\Services\FraudCheckerService;
+use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 
 class FraudChecker extends Page
@@ -93,7 +95,7 @@ class FraudChecker extends Page
     }
 
     /** @param array<string, mixed> $result */
-    private function recordSuccess(array $result): void
+    protected function recordSuccess(array $result): void
     {
         if (! Schema::hasTable('fraud_check_histories')) {
             return;
@@ -103,7 +105,8 @@ class FraudChecker extends Page
         $phone = (string) $result['phone'];
 
         FraudCheckHistory::query()->create([
-            'checked_by' => auth()->id(),
+            'checked_by' => $this->checkerId(),
+            'vendor_id' => $this->historyVendorId(),
             'provider' => $result['provider'],
             'mobile' => $phone,
             'mobile_masked' => $this->maskMobile($phone),
@@ -122,7 +125,7 @@ class FraudChecker extends Page
         ]);
     }
 
-    private function recordFailure(FraudCheckerService $checker, FraudCheckerApiException $exception): void
+    protected function recordFailure(FraudCheckerService $checker, FraudCheckerApiException $exception): void
     {
         if (! Schema::hasTable('fraud_check_histories')) {
             return;
@@ -135,7 +138,8 @@ class FraudChecker extends Page
         }
 
         FraudCheckHistory::query()->create([
-            'checked_by' => auth()->id(),
+            'checked_by' => $this->checkerId(),
+            'vendor_id' => $this->historyVendorId(),
             'provider' => $this->configuration()['provider'],
             'mobile' => $phone,
             'mobile_masked' => $this->maskMobile($phone),
@@ -145,7 +149,7 @@ class FraudChecker extends Page
         ]);
     }
 
-    private function refreshHistory(): void
+    protected function refreshHistory(): void
     {
         if (! Schema::hasTable('fraud_check_histories')) {
             $this->history = [];
@@ -153,7 +157,7 @@ class FraudChecker extends Page
             return;
         }
 
-        $this->history = FraudCheckHistory::query()
+        $this->history = $this->historyQuery()
             ->with('checker:id,name')
             ->latest()
             ->limit(20)
@@ -173,6 +177,21 @@ class FraudChecker extends Page
                 'checked_at' => $check->created_at?->format('d M Y, h:i A'),
             ])
             ->all();
+    }
+
+    protected function historyQuery(): Builder
+    {
+        return FraudCheckHistory::query();
+    }
+
+    protected function historyVendorId(): ?int
+    {
+        return null;
+    }
+
+    protected function checkerId(): ?int
+    {
+        return Filament::auth()->id() ?? auth()->id();
     }
 
     private function maskMobile(string $mobile): string

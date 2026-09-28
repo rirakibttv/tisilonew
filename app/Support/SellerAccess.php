@@ -21,6 +21,8 @@ class SellerAccess
 
     public const ORDERS_MANAGE = 'orders.manage';
 
+    public const FRAUD_CHECK = 'fraud.check';
+
     public const INVENTORY_VIEW = 'inventory.view';
 
     public const INVENTORY_MANAGE = 'inventory.manage';
@@ -46,6 +48,7 @@ class SellerAccess
             self::PRODUCTS_MANAGE => 'Create & Edit Products',
             self::ORDERS_VIEW => 'View Orders',
             self::ORDERS_MANAGE => 'Process Orders',
+            self::FRAUD_CHECK => 'Use Fraud Checker',
             self::INVENTORY_VIEW => 'View Inventory',
             self::INVENTORY_MANAGE => 'Adjust Inventory',
             self::WAREHOUSES_VIEW => 'View Warehouses',
@@ -144,6 +147,7 @@ class SellerAccess
                 ...$dashboard,
                 self::PRODUCTS_VIEW, self::PRODUCTS_MANAGE,
                 self::ORDERS_VIEW, self::ORDERS_MANAGE,
+                self::FRAUD_CHECK,
                 self::INVENTORY_VIEW, self::INVENTORY_MANAGE,
                 self::WAREHOUSES_VIEW, self::WAREHOUSES_MANAGE,
                 self::STAFF_VIEW,
@@ -159,6 +163,7 @@ class SellerAccess
                 ...$dashboard,
                 self::ORDERS_VIEW, self::ORDERS_MANAGE,
                 self::INVENTORY_VIEW,
+                self::FRAUD_CHECK,
             ],
             VendorMemberRole::Accountant => [
                 ...$dashboard,
@@ -167,12 +172,14 @@ class SellerAccess
             VendorMemberRole::Support => [
                 ...$dashboard,
                 self::ORDERS_VIEW,
+                self::FRAUD_CHECK,
             ],
             VendorMemberRole::Staff => [
                 ...$dashboard,
                 self::PRODUCTS_VIEW,
                 self::ORDERS_VIEW,
                 self::INVENTORY_VIEW,
+                self::FRAUD_CHECK,
             ],
         };
     }

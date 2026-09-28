@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
@@ -37,7 +38,13 @@ class SiteSetting extends Model
         return Cache::remember(
             self::cacheKey($key, 'secrets'),
             now()->addHour(),
-            fn (): array => static::query()->where('key', $key)->first()?->secret_values ?? [],
+            function () use ($key): array {
+                try {
+                    return static::query()->where('key', $key)->first()?->secret_values ?? [];
+                } catch (DecryptException) {
+                    return [];
+                }
+            },
         );
     }
 
@@ -49,11 +56,38 @@ class SiteSetting extends Model
     {
         $setting = static::query()->firstOrNew(['key' => $key]);
         $setting->values = $values;
-        $setting->secret_values = [
-            ...($setting->secret_values ?? []),
-            ...$secretUpdates,
-        ];
-        $setting->save();
+        $replacingUnreadableSecrets = false;
+
+        if ($secretUpdates !== [] || ! $setting->exists) {
+            try {
+                $existingSecrets = $setting->exists ? ($setting->secret_values ?? []) : [];
+            } catch (DecryptException) {
+                $existingSecrets = [];
+                $replacingUnreadableSecrets = true;
+            }
+
+            $setting->secret_values = [
+                ...$existingSecrets,
+                ...$secretUpdates,
+            ];
+        }
+
+        if ($replacingUnreadableSecrets && $setting->exists) {
+            $attributes = $setting->getAttributes();
+
+            static::query()
+                ->whereKey($setting->getKey())
+                ->toBase()
+                ->update([
+                    'values' => $attributes['values'],
+                    'secret_values' => $attributes['secret_values'],
+                    'updated_at' => now(),
+                ]);
+
+            $setting = static::query()->findOrFail($setting->getKey());
+        } else {
+            $setting->save();
+        }
 
         static::forget($key);
 

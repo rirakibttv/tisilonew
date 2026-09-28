@@ -4,12 +4,17 @@ namespace Tests\Feature;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Enums\VendorStatus;
 use App\Filament\Pages\FraudChecker;
+use App\Filament\Seller\Pages\FraudChecker as SellerFraudChecker;
 use App\Models\FraudCheckHistory;
 use App\Models\SiteSetting;
 use App\Models\User;
+use App\Models\Vendor;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -122,6 +127,84 @@ class FraudCheckerTest extends TestCase
         $this->assertSame('blocked', $history->status);
         $this->assertStringContainsString('allowlist/whitelist', $history->message);
         $this->assertStringContainsString('162.0.209.109', $history->message);
+    }
+
+    public function test_imported_secrets_with_a_different_app_key_do_not_crash_the_admin_page_and_can_be_replaced(): void
+    {
+        $admin = $this->admin();
+
+        DB::table('site_settings')->updateOrInsert(
+            ['key' => 'fraud'],
+            [
+                'values' => json_encode([
+                    'enabled' => true,
+                    'provider' => 'BD Courier',
+                    'endpoint' => 'https://fraud-provider.test/check',
+                ]),
+                'secret_values' => 'encrypted-with-a-different-app-key',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        );
+        SiteSetting::forget('fraud');
+
+        $this->actingAs($admin)
+            ->get('/admin/fraud-checker')
+            ->assertOk()
+            ->assertSee('Setup অসম্পূর্ণ');
+
+        SiteSetting::put('fraud', SiteSetting::valuesFor('fraud'), [
+            'fraud_api_key' => 'replacement-secret',
+        ]);
+
+        $this->assertSame('replacement-secret', SiteSetting::secretsFor('fraud')['fraud_api_key']);
+    }
+
+    public function test_vendor_owner_can_use_fraud_checker_and_history_is_scoped_to_their_shop(): void
+    {
+        $owner = User::factory()->create([
+            'role' => UserRole::VendorOwner,
+            'status' => UserStatus::Active,
+        ]);
+        $vendor = Vendor::query()->create([
+            'owner_id' => $owner->getKey(),
+            'name' => 'Fraud Check Shop',
+            'slug' => 'fraud-check-shop',
+            'status' => VendorStatus::Active,
+            'commission_rate' => 5,
+        ]);
+        $this->enableFraudProvider();
+
+        Http::fake([
+            'https://fraud-provider.test/check' => Http::response([
+                'status' => 'success',
+                'data' => [
+                    'summary' => [
+                        'total_parcel' => 5,
+                        'success_parcel' => 4,
+                        'cancelled_parcel' => 1,
+                    ],
+                ],
+            ]),
+        ]);
+
+        Filament::setCurrentPanel(Filament::getPanel('seller'));
+        $this->actingAs($owner, 'seller')
+            ->get('/seller/fraud-checker')
+            ->assertOk()
+            ->assertSee('Fraud Checker');
+
+        Livewire::test(SellerFraudChecker::class)
+            ->set('mobile', '01766354548')
+            ->call('check')
+            ->assertHasNoErrors()
+            ->assertSet('result.summary.total_parcel', 5);
+
+        $this->assertDatabaseHas('fraud_check_histories', [
+            'checked_by' => $owner->getKey(),
+            'vendor_id' => $vendor->getKey(),
+            'status' => 'success',
+        ]);
     }
 
     private function enableFraudProvider(): void
