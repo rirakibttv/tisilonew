@@ -22,6 +22,8 @@ class StorefrontTest extends TestCase
             ->assertOk()
             ->assertSee('TISILO')
             ->assertSee('আপনার প্রয়োজনের সবকিছু')
+            ->assertSee('Seller Central')
+            ->assertDontSee('>Sellers</a>', false)
             ->assertSee('data-product-grid', false);
 
         $this->get('/products')

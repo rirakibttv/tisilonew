@@ -143,7 +143,6 @@
             <div class="flex h-full items-center gap-7 text-sm font-bold text-slate-800">
                 <a href="{{ route('store.home') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.home') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">Home</a>
                 <a href="{{ route('store.shop.index') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.shop.index', 'store.products.index') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">Shop</a>
-                <a href="/admin" class="flex h-full items-center border-b-2 border-transparent transition hover:border-purple-700 hover:text-purple-700">Sellers</a>
             </div>
 
             <a href="{{ route('store.contact') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.contact') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">
