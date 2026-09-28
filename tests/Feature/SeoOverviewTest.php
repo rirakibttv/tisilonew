@@ -98,4 +98,20 @@ class SeoOverviewTest extends TestCase
                 ->assertSee('Conversion funnel');
         }
     }
+
+    public function test_visitor_analytics_opens_with_today_selected_by_default(): void
+    {
+        $admin = User::factory()->create([
+            'role' => UserRole::Admin,
+            'status' => UserStatus::Active,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get('/admin/seo-overview?platform=all')
+            ->assertOk();
+
+        $response->assertSee('Visitor Analytics');
+        $response->assertSee('period=1', false);
+        $response->assertSee('bg-white text-indigo-950 shadow-lg', false);
+    }
 }

@@ -14,15 +14,15 @@ class SeoOverview extends Page
 
     protected string $view = 'filament.pages.seo-overview';
 
-    public int $period = 7;
+    public int $period = 1;
 
     public string $platform = 'all';
 
     public function mount(): void
     {
-        $requestedPeriod = request()->integer('period', 7);
+        $requestedPeriod = request()->integer('period', 1);
         $requestedPlatform = request()->string('platform', 'all')->toString();
-        $this->period = in_array($requestedPeriod, [1, 7, 30, 90], true) ? $requestedPeriod : 7;
+        $this->period = in_array($requestedPeriod, [1, 7, 30, 90], true) ? $requestedPeriod : 1;
         $this->platform = in_array($requestedPlatform, ['all', 'facebook', 'google'], true) ? $requestedPlatform : 'all';
     }
 

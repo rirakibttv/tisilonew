@@ -165,7 +165,7 @@ class AdminPanelProvider extends PanelProvider
                     ->sort(-100)
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.seo-overview')
                         && request()->string('platform', 'all')->toString() === 'all')
-                    ->url(fn (): string => SeoOverview::getUrl(['platform' => 'all'])),
+                    ->url(fn (): string => SeoOverview::getUrl(['platform' => 'all', 'period' => 1])),
 
                 NavigationItem::make('Facebook Overview')
                     ->key('seo-overview-facebook')
