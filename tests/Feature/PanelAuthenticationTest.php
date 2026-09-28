@@ -147,6 +147,14 @@ class PanelAuthenticationTest extends TestCase
         ] as $path) {
             $this->actingAs($owner, 'seller')->get($path)->assertOk();
         }
+
+        $this->actingAs($owner, 'seller')
+            ->get('/seller/products/create')
+            ->assertOk()
+            ->assertSee('Basic Information')
+            ->assertSee('Product Offer')
+            ->assertSee('Publishing')
+            ->assertSee('Shipping &amp; Fulfillment', false);
     }
 
     public function test_vendor_staff_permissions_control_visible_seller_modules(): void

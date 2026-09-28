@@ -11,6 +11,11 @@ class CreateProduct extends CreateRecord
 {
     protected static string $resource = ProductResource::class;
 
+    public function getTitle(): string
+    {
+        return 'Add Product';
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['vendor_id'] = SellerAccess::currentVendor()?->getKey();

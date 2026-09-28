@@ -8,7 +8,7 @@ use App\Filament\Resources\Products\Pages\EditProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\Pages\PendingProducts;
 use App\Filament\Resources\Products\RelationManagers\VariationsRelationManager;
-use App\Filament\Resources\Products\Schemas\ProductForm;
+use App\Filament\Resources\Products\Schemas\ProfessionalProductForm;
 use App\Filament\Resources\Products\Tables\ProductsTable;
 use App\Models\Product;
 use BackedEnum;
@@ -60,7 +60,7 @@ class ProductResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return ProductForm::configure($schema);
+        return ProfessionalProductForm::configure($schema);
     }
 
     /*

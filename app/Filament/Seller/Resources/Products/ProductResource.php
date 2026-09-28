@@ -20,6 +20,7 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -52,49 +53,102 @@ class ProductResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Product Listing')
-                ->description('ক্যাটালগ পণ্য নির্বাচন করে আপনার মূল্য, SKU ও fulfillment তথ্য দিন।')
-                ->columns(2)
+            Grid::make(['default' => 1, 'xl' => 4])
                 ->schema([
-                    Select::make('product_id')
-                        ->label('Catalog Product')
-                        ->relationship('product', 'name', fn ($query) => $query->where('status', 'published'))
-                        ->searchable()
-                        ->preload()
-                        ->disabled(fn (string $operation): bool => $operation === 'edit')
-                        ->dehydrated()
-                        ->required(),
-                    Select::make('shipping_class_id')
-                        ->label('Shipping Class')
-                        ->relationship('shippingClass', 'name', fn ($query) => $query->where('is_active', true))
-                        ->searchable()
-                        ->preload(),
-                    Select::make('status')
-                        ->options([
-                            VendorListingStatus::Draft->value => 'Save as Draft',
-                            VendorListingStatus::Pending->value => 'Submit for Review',
+                    Grid::make(1)
+                        ->schema([
+                            Section::make('Basic Information')
+                                ->description('প্রকাশিত ক্যাটালগ থেকে পণ্য নির্বাচন করে আপনার বিক্রয় লিস্টিং তৈরি করুন।')
+                                ->schema([
+                                    Select::make('product_id')
+                                        ->label('Catalog Product')
+                                        ->relationship('product', 'name', fn ($query) => $query->where('status', 'published'))
+                                        ->searchable()
+                                        ->preload()
+                                        ->disabled(fn (string $operation): bool => $operation === 'edit')
+                                        ->dehydrated()
+                                        ->required()
+                                        ->columnSpanFull(),
+                                ]),
+
+                            Section::make('Product Offer')
+                                ->columns(2)
+                                ->schema([
+                                    Select::make('condition')
+                                        ->label('Product Condition')
+                                        ->options(ProductCondition::options())
+                                        ->default(ProductCondition::New->value)
+                                        ->required(),
+
+                                    TextInput::make('warranty')
+                                        ->label('Warranty')
+                                        ->maxLength(255),
+
+                                    TextInput::make('min_order_quantity')
+                                        ->label('Minimum Order Quantity')
+                                        ->numeric()
+                                        ->minValue(1)
+                                        ->default(1)
+                                        ->required(),
+
+                                    TextInput::make('max_order_quantity')
+                                        ->label('Maximum Order Quantity')
+                                        ->numeric()
+                                        ->minValue(1)
+                                        ->gte('min_order_quantity'),
+                                ]),
                         ])
-                        ->default(VendorListingStatus::Pending->value)
-                        ->visible(fn (string $operation): bool => $operation === 'create')
-                        ->required(),
-                    Placeholder::make('approval_status')
-                        ->label('Approval Status')
-                        ->content(fn (?VendorListing $record): string => $record?->status?->label() ?? 'Pending Review')
-                        ->visible(fn (string $operation): bool => $operation === 'edit'),
-                    Select::make('condition')
-                        ->options(ProductCondition::options())
-                        ->default(ProductCondition::New->value)
-                        ->required(),
-                    Select::make('fulfillment_type')
-                        ->label('Fulfillment')
-                        ->options(FulfillmentType::options())
-                        ->default(FulfillmentType::Vendor->value)
-                        ->required(),
-                    TextInput::make('warranty')->maxLength(255),
-                    TextInput::make('handling_time_days')->numeric()->minValue(0)->default(1)->suffix('days')->required(),
-                    TextInput::make('min_order_quantity')->numeric()->minValue(1)->default(1)->required(),
-                    TextInput::make('max_order_quantity')->numeric()->minValue(1)->gte('min_order_quantity'),
-                ]),
+                        ->columnSpan(['default' => 1, 'xl' => 3]),
+
+                    Grid::make(1)
+                        ->schema([
+                            Section::make('Publishing')
+                                ->schema([
+                                    Select::make('status')
+                                        ->label('Status')
+                                        ->options([
+                                            VendorListingStatus::Draft->value => 'Save as Draft',
+                                            VendorListingStatus::Pending->value => 'Submit for Review',
+                                        ])
+                                        ->default(VendorListingStatus::Pending->value)
+                                        ->visible(fn (string $operation): bool => $operation === 'create')
+                                        ->required()
+                                        ->native(false),
+
+                                    Placeholder::make('approval_status')
+                                        ->label('Approval Status')
+                                        ->content(fn (?VendorListing $record): string => $record?->status?->label() ?? 'Pending Review')
+                                        ->visible(fn (string $operation): bool => $operation === 'edit'),
+                                ]),
+
+                            Section::make('Shipping & Fulfillment')
+                                ->schema([
+                                    Select::make('shipping_class_id')
+                                        ->label('Shipping Class')
+                                        ->relationship('shippingClass', 'name', fn ($query) => $query->where('is_active', true))
+                                        ->searchable()
+                                        ->preload()
+                                        ->helperText('Customer delivery charge is calculated from this class.'),
+
+                                    Select::make('fulfillment_type')
+                                        ->label('Fulfillment')
+                                        ->options(FulfillmentType::options())
+                                        ->default(FulfillmentType::Vendor->value)
+                                        ->required()
+                                        ->native(false),
+
+                                    TextInput::make('handling_time_days')
+                                        ->label('Handling Time')
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->default(1)
+                                        ->suffix('days')
+                                        ->required(),
+                                ]),
+                        ])
+                        ->columnSpan(['default' => 1, 'xl' => 1]),
+                ])
+                ->columnSpanFull(),
         ]);
     }
 

@@ -115,6 +115,11 @@ class ProductDuplicationTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin/products/create')
             ->assertOk()
+            ->assertSee('Basic Information')
+            ->assertSee('Publishing')
+            ->assertSee('Product Images')
+            ->assertSee('Product Codes')
+            ->assertSee('Shipping')
             ->assertDontSee('SEO Title')
             ->assertDontSee('Meta Description')
             ->assertDontSee('Meta Keywords');
@@ -124,6 +129,29 @@ class ProductDuplicationTest extends TestCase
             'slug' => 'action-column-product-copy',
             'status' => 'draft',
         ]);
+    }
+
+    public function test_variable_product_edit_keeps_the_existing_variation_editor(): void
+    {
+        Filament::setCurrentPanel('admin');
+        $admin = User::factory()->create([
+            'role' => UserRole::Admin,
+            'status' => UserStatus::Active,
+        ]);
+        $product = Product::query()->create([
+            'name' => 'Variable Layout Product',
+            'slug' => 'variable-layout-product',
+            'product_type' => 'variable',
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/products/'.$product->getKey().'/edit')
+            ->assertOk()
+            ->assertSee('Basic Information')
+            ->assertSee('Variation Attributes')
+            ->assertSee('VariationsRelationManager', false);
     }
 
     public function test_all_products_keeps_new_uploads_on_top_with_their_permanent_serial_number(): void
