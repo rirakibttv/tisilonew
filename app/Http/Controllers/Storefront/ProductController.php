@@ -7,6 +7,8 @@ use App\Enums\UserRole;
 use App\Enums\VendorListingItemStatus;
 use App\Enums\VendorListingStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Attribute;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -14,12 +16,16 @@ use App\Models\ProductReview;
 use App\Support\Storefront\MarketplaceProductPresenter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
-    public function index(Request $request): View|RedirectResponse
+    private const CATALOG_PAGE_SIZE = 30;
+
+    public function index(Request $request): View|JsonResponse|RedirectResponse
     {
         if ($request->filled('category')) {
             $category = $this->resolveCategoryPath($request->string('category')->toString());
@@ -35,7 +41,7 @@ class ProductController extends Controller
         return $this->catalog($request);
     }
 
-    public function category(Request $request, string $categorySlug, ?string $categoryPath = null): View|RedirectResponse
+    public function category(Request $request, string $categorySlug, ?string $categoryPath = null): View|JsonResponse|RedirectResponse
     {
         $category = $this->resolveCategoryPath(
             $categorySlug.(filled($categoryPath) ? '/'.$categoryPath : ''),
@@ -60,11 +66,36 @@ class ProductController extends Controller
         return $this->catalog($request, $category);
     }
 
-    private function catalog(Request $request, ?Category $selectedCategory = null): View
+    private function catalog(Request $request, ?Category $selectedCategory = null): View|JsonResponse
     {
         $sort = in_array($request->string('sort')->toString(), ['latest', 'price_low', 'price_high', 'name'], true)
             ? $request->string('sort')->toString()
             : 'latest';
+        $brandIds = collect((array) $request->input('brands', []))
+            ->push($request->integer('brand'))
+            ->map(static fn ($id): int => max(0, (int) $id))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+        $availability = in_array($request->string('availability')->toString(), ['in_stock', 'out_of_stock'], true)
+            ? $request->string('availability')->toString()
+            : '';
+        $minimumRating = min(5, max(0, $request->integer('rating')));
+        $minimumPrice = $this->normalizedPrice($request->input('min_price'));
+        $maximumPrice = $this->normalizedPrice($request->input('max_price'));
+        $attributeFilters = collect((array) $request->input('attributes', []))
+            ->filter(static fn ($values, $slug): bool => is_string($slug) && is_array($values))
+            ->map(static fn (array $values): array => collect($values)
+                ->map(static fn ($id): int => max(0, (int) $id))
+                ->filter()
+                ->unique()
+                ->values()
+                ->all())
+            ->filter()
+            ->all();
+        $categoryIds = $selectedCategory ? $this->categoryAndDescendantIds($selectedCategory) : [];
+        $effectivePrice = 'COALESCE(products.sale_price, products.regular_price)';
 
         $query = Product::query()
             ->withReviewSummary()
@@ -79,10 +110,34 @@ class ProductController extends Controller
                         ->orWhereHas('category', fn (Builder $query) => $query->where('name', 'like', "%{$search}%"));
                 });
             })
-            ->when($selectedCategory, function (Builder $query) use ($selectedCategory): void {
-                $query->whereIn('category_id', $this->categoryAndDescendantIds($selectedCategory));
+            ->when($selectedCategory, function (Builder $query) use ($categoryIds): void {
+                $query->whereIn('category_id', $categoryIds);
             })
-            ->with($this->storefrontRelations());
+            ->when($brandIds !== [], fn (Builder $query) => $query->whereIn('brand_id', $brandIds))
+            ->when($minimumPrice !== null, fn (Builder $query) => $query->whereRaw("{$effectivePrice} >= ?", [$minimumPrice]))
+            ->when($maximumPrice !== null, fn (Builder $query) => $query->whereRaw("{$effectivePrice} <= ?", [$maximumPrice]))
+            ->when($availability === 'in_stock', fn (Builder $query) => $this->whereAvailable($query))
+            ->when($availability === 'out_of_stock', fn (Builder $query) => $this->whereUnavailable($query))
+            ->when($minimumRating > 0, function (Builder $query) use ($minimumRating): void {
+                $query->whereIn('products.id', ProductReview::query()
+                    ->select('product_id')
+                    ->published()
+                    ->groupBy('product_id')
+                    ->havingRaw('AVG(rating) >= ?', [$minimumRating]));
+            });
+
+        foreach ($attributeFilters as $attributeSlug => $valueIds) {
+            $query->whereHas('variations', fn (Builder $variationQuery) => $variationQuery
+                ->where('status', true)
+                ->whereHas('attributeValues', fn (Builder $valueQuery) => $valueQuery
+                    ->where('attribute_values.status', true)
+                    ->whereIn('attribute_values.id', $valueIds)
+                    ->whereHas('attribute', fn (Builder $attributeQuery) => $attributeQuery
+                        ->where('slug', $attributeSlug)
+                        ->where('status', true))));
+        }
+
+        $query->with($this->storefrontRelations());
 
         match ($sort) {
             'price_low' => $query->orderByRaw('COALESCE(sale_price, regular_price) asc'),
@@ -91,8 +146,73 @@ class ProductController extends Controller
             default => $query->orderByDesc('featured')->latest(),
         };
 
-        $products = $query->paginate(16)->withQueryString();
+        $products = $query->paginate(self::CATALOG_PAGE_SIZE)->withQueryString();
         $products->through(fn (Product $product): array => MarketplaceProductPresenter::summarize($product));
+
+        if ($request->boolean('catalog_fragment')) {
+            return response()->json([
+                'html' => view('storefront.products._cards', compact('products'))->render(),
+                'next_page_url' => $products->nextPageUrl(),
+                'loaded' => $products->count(),
+            ]);
+        }
+
+        $brands = Brand::query()
+            ->where('status', true)
+            ->whereHas('products', function (Builder $query) use ($categoryIds): void {
+                $query->where('status', 'published')
+                    ->when($categoryIds !== [], fn (Builder $query) => $query->whereIn('category_id', $categoryIds));
+            })
+            ->withCount(['products as catalog_products_count' => fn (Builder $query) => $query
+                ->where('status', 'published')
+                ->when($categoryIds !== [], fn (Builder $query) => $query->whereIn('category_id', $categoryIds))])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $priceRange = Product::query()
+            ->where('status', 'published')
+            ->when($categoryIds !== [], fn (Builder $query) => $query->whereIn('category_id', $categoryIds))
+            ->selectRaw("FLOOR(MIN({$effectivePrice})) as minimum, CEIL(MAX({$effectivePrice})) as maximum")
+            ->first();
+        $catalogMinimumPrice = max(0, (int) ($priceRange?->minimum ?? 0));
+        $catalogMaximumPrice = max($catalogMinimumPrice, (int) ($priceRange?->maximum ?? 0));
+
+        $attributeValueCounts = DB::table('attribute_value_product_variation as attribute_pivot')
+            ->join('product_variations', 'product_variations.id', '=', 'attribute_pivot.product_variation_id')
+            ->join('products', 'products.id', '=', 'product_variations.product_id')
+            ->where('products.status', 'published')
+            ->where('product_variations.status', true)
+            ->when($categoryIds !== [], fn ($query) => $query->whereIn('products.category_id', $categoryIds))
+            ->groupBy('attribute_pivot.attribute_value_id')
+            ->selectRaw('attribute_pivot.attribute_value_id, COUNT(DISTINCT products.id) as product_count')
+            ->pluck('product_count', 'attribute_pivot.attribute_value_id');
+
+        $filterAttributes = Attribute::query()
+            ->where('status', true)
+            ->whereHas('values.productVariations', fn (Builder $query) => $query
+                ->where('product_variations.status', true)
+                ->whereHas('product', fn (Builder $productQuery) => $productQuery
+                    ->where('status', 'published')
+                    ->when($categoryIds !== [], fn (Builder $productQuery) => $productQuery->whereIn('category_id', $categoryIds))))
+            ->with(['values' => fn ($query) => $query
+                ->where('status', true)
+                ->whereHas('productVariations', fn (Builder $variationQuery) => $variationQuery
+                    ->where('product_variations.status', true)
+                    ->whereHas('product', fn (Builder $productQuery) => $productQuery
+                        ->where('status', 'published')
+                        ->when($categoryIds !== [], fn (Builder $productQuery) => $productQuery->whereIn('category_id', $categoryIds))))
+                ->orderBy('sort_order')
+                ->orderBy('value')])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->each(function (Attribute $attribute) use ($attributeValueCounts): void {
+                $attribute->values->each(fn ($value) => $value->setAttribute(
+                    'catalog_products_count',
+                    (int) ($attributeValueCounts[$value->getKey()] ?? 0),
+                ));
+            });
 
         return view('storefront.products.index', [
             'products' => $products,
@@ -101,9 +221,75 @@ class ProductController extends Controller
                 ->with('parent.parent')
                 ->orderBy('name')
                 ->get(['id', 'parent_id', 'name', 'slug']),
+            'brands' => $brands,
             'sort' => $sort,
+            'brandIds' => $brandIds,
+            'availability' => $availability,
+            'minimumRating' => $minimumRating,
+            'minimumPrice' => $minimumPrice,
+            'maximumPrice' => $maximumPrice,
+            'catalogMinimumPrice' => $catalogMinimumPrice,
+            'catalogMaximumPrice' => $catalogMaximumPrice,
+            'attributeFilters' => $attributeFilters,
+            'filterAttributes' => $filterAttributes,
             'selectedCategory' => $selectedCategory,
         ]);
+    }
+
+    private function normalizedPrice(mixed $value): ?float
+    {
+        if ($value === null || $value === '' || ! is_numeric($value)) {
+            return null;
+        }
+
+        return max(0, round((float) $value, 2));
+    }
+
+    private function whereAvailable(Builder $query): void
+    {
+        $query->where(function (Builder $query): void {
+            $query->where(function (Builder $query): void {
+                $query->where('product_type', '!=', 'variable')
+                    ->where('stock_status', '!=', 'out_of_stock')
+                    ->where(function (Builder $query): void {
+                        $query->where('manage_stock', false)
+                            ->orWhere('stock_quantity', '>', 0)
+                            ->orWhere('stock_status', 'on_backorder');
+                    });
+            })->orWhere(function (Builder $query): void {
+                $query->where('product_type', 'variable')
+                    ->whereHas('variations', fn (Builder $query) => $query
+                        ->where('status', true)
+                        ->where('stock_status', '!=', 'out_of_stock')
+                        ->where(fn (Builder $query) => $query
+                            ->where('stock_quantity', '>', 0)
+                            ->orWhere('stock_status', 'on_backorder')));
+            });
+        });
+    }
+
+    private function whereUnavailable(Builder $query): void
+    {
+        $query->where(function (Builder $query): void {
+            $query->where(function (Builder $query): void {
+                $query->where('product_type', '!=', 'variable')
+                    ->where(function (Builder $query): void {
+                        $query->where('stock_status', 'out_of_stock')
+                            ->orWhere(fn (Builder $query) => $query
+                                ->where('manage_stock', true)
+                                ->where('stock_quantity', '<=', 0)
+                                ->where('stock_status', '!=', 'on_backorder'));
+                    });
+            })->orWhere(function (Builder $query): void {
+                $query->where('product_type', 'variable')
+                    ->whereDoesntHave('variations', fn (Builder $query) => $query
+                        ->where('status', true)
+                        ->where('stock_status', '!=', 'out_of_stock')
+                        ->where(fn (Builder $query) => $query
+                            ->where('stock_quantity', '>', 0)
+                            ->orWhere('stock_status', 'on_backorder')));
+            });
+        });
     }
 
     /** @return array<int, int> */

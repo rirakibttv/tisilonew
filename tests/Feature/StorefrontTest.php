@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Attribute;
+use App\Models\AttributeValue;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductReview;
@@ -44,6 +47,121 @@ class StorefrontTest extends TestCase
         $this->assertStringContainsString('.storefront-product-grid', $css);
         $this->assertStringContainsString('gap: 5px;', $css);
         $this->assertStringContainsString('padding: 0;', $css);
+    }
+
+    public function test_shop_and_category_catalogs_filter_thirty_products_and_expose_infinite_scroll_batches(): void
+    {
+        $token = Str::lower(Str::random(8));
+        $category = Category::query()->create([
+            'name' => 'Infinite Catalog '.$token,
+            'slug' => 'infinite-catalog-'.$token,
+            'status' => true,
+        ]);
+        $brand = Brand::query()->create([
+            'name' => 'Filter Brand '.$token,
+            'slug' => 'filter-brand-'.$token,
+            'status' => true,
+        ]);
+
+        $products = collect(range(1, 31))->map(fn (int $number): Product => Product::query()->create([
+            'category_id' => $category->id,
+            'brand_id' => $brand->id,
+            'name' => 'Infinite Product '.$token.' '.str_pad((string) $number, 2, '0', STR_PAD_LEFT),
+            'slug' => 'infinite-product-'.$token.'-'.$number,
+            'product_type' => 'simple',
+            'regular_price' => 1000 + $number,
+            'sale_price' => 900 + $number,
+            'manage_stock' => true,
+            'stock_quantity' => 5,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]));
+
+        ProductReview::query()->create([
+            'product_id' => $products->last()->id,
+            'reviewer_name' => 'Catalog Customer',
+            'rating' => 5,
+            'review' => 'Approved catalog filter review.',
+            'status' => ProductReview::STATUS_APPROVED,
+        ]);
+        $attribute = Attribute::query()->create([
+            'name' => 'Catalog Color '.$token,
+            'slug' => 'catalog-color-'.$token,
+            'type' => 'color',
+            'status' => true,
+        ]);
+        $attributeValue = AttributeValue::query()->create([
+            'attribute_id' => $attribute->id,
+            'value' => 'Purple '.$token,
+            'slug' => 'purple-'.$token,
+            'color_code' => '#7e22ce',
+            'status' => true,
+        ]);
+        $products->last()->update(['product_type' => 'variable']);
+        $products->last()->attributes()->attach($attribute);
+        $variation = ProductVariation::query()->create([
+            'product_id' => $products->last()->id,
+            'sku' => 'FILTER-'.$token,
+            'regular_price' => 1031,
+            'sale_price' => 931,
+            'stock_quantity' => 5,
+            'stock_status' => 'in_stock',
+            'status' => true,
+        ]);
+        $variation->attributeValues()->attach($attributeValue);
+
+        $shopResponse = $this->get(route('store.shop.index', [
+            'q' => 'Infinite Product '.$token,
+            'brand' => $brand->id,
+            'availability' => 'in_stock',
+            'min_price' => 900,
+            'max_price' => 1000,
+        ]));
+
+        $shopResponse->assertOk()
+            ->assertSee('data-catalog-filter', false)
+            ->assertSee('data-catalog-filter-panel', false)
+            ->assertSee('data-catalog-filter-open', false)
+            ->assertSee('name="brands[]"', false)
+            ->assertSee('name="availability"', false)
+            ->assertSee('name="rating"', false)
+            ->assertSee('name="min_price"', false)
+            ->assertSee('name="max_price"', false)
+            ->assertSee('name="attributes['.$attribute->slug.'][]"', false)
+            ->assertSee('data-catalog-infinite', false)
+            ->assertSee('xl:grid-cols-5', false);
+        $this->assertSame(30, substr_count((string) $shopResponse->getContent(), 'data-product-card="'));
+
+        $fragmentResponse = $this->getJson(route('store.shop.index', [
+            'q' => 'Infinite Product '.$token,
+            'brand' => $brand->id,
+            'availability' => 'in_stock',
+            'min_price' => 900,
+            'max_price' => 1000,
+            'catalog_fragment' => 1,
+            'page' => 2,
+        ]));
+
+        $fragmentResponse->assertOk()
+            ->assertJsonPath('loaded', 1)
+            ->assertJsonPath('next_page_url', null);
+        $this->assertSame(1, substr_count((string) $fragmentResponse->json('html'), 'data-product-card="'));
+
+        $categoryResponse = $this->get($category->permalink.'?brand='.$brand->id.'&rating=5');
+        $categoryResponse->assertOk()
+            ->assertSee('data-catalog-filter', false)
+            ->assertSee('value="'.$brand->id.'" checked', false)
+            ->assertSee('value="5" checked', false)
+            ->assertSee('data-product-card="'.$products->last()->id.'"', false)
+            ->assertDontSee('data-product-card="'.$products->first()->id.'"', false);
+
+        $this->get($category->permalink.'?'.http_build_query([
+            'attributes' => [$attribute->slug => [$attributeValue->id]],
+        ]))
+            ->assertOk()
+            ->assertSee('value="'.$attributeValue->id.'" checked', false)
+            ->assertSee('data-product-card="'.$products->last()->id.'"', false)
+            ->assertDontSee('data-product-card="'.$products->first()->id.'"', false);
     }
 
     public function test_product_cards_hide_category_and_show_real_review_stock_and_purchase_actions(): void
@@ -112,7 +230,7 @@ class StorefrontTest extends TestCase
     {
         foreach ([
             resource_path('views/storefront/home.blade.php'),
-            resource_path('views/storefront/products/index.blade.php'),
+            resource_path('views/storefront/products/_catalog-professional.blade.php'),
             resource_path('views/storefront/products/show.blade.php'),
             resource_path('views/storefront/wishlist/index.blade.php'),
         ] as $view) {
