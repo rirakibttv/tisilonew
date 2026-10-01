@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\SetStorefrontLocale;
 use App\Support\CanonicalUrl;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(prepend: [
             CanonicalUrl::class,
+        ]);
+
+        $middleware->web(append: [
+            SetStorefrontLocale::class,
         ]);
 
         $middleware->redirectGuestsTo(fn (): string => route('store.account.login'));

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="{{ app()->getLocale() }}">
 <head>
     @php
         $siteName = \App\Support\SeoMetadata::title($generalSettings['site_name'] ?? null, 'Tisilo');

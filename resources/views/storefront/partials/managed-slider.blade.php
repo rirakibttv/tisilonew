@@ -39,7 +39,7 @@
                 type="button"
                 class="absolute left-3 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-purple-950/65 text-white transition hover:bg-purple-950"
                 data-managed-slider-prev
-                aria-label="Previous slide"
+                aria-label="{{ __('Previous Slide') }}"
             >
                 @svg('heroicon-o-chevron-left', 'size-5')
             </button>
@@ -47,7 +47,7 @@
                 type="button"
                 class="absolute right-3 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-purple-950/65 text-white transition hover:bg-purple-950"
                 data-managed-slider-next
-                aria-label="Next slide"
+                aria-label="{{ __('Next Slide') }}"
             >
                 @svg('heroicon-o-chevron-right', 'size-5')
             </button>
@@ -58,7 +58,7 @@
                         type="button"
                         class="size-2.5 rounded-full transition-all {{ $loop->first ? 'w-6 bg-white' : 'bg-white/50' }}"
                         data-managed-slider-indicator="{{ $loop->index }}"
-                        aria-label="Slide {{ $loop->iteration }}"
+                        aria-label="{{ __('Slide :number', ['number' => $loop->iteration]) }}"
                     ></button>
                 @endforeach
             </div>

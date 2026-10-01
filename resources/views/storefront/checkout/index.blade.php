@@ -1,6 +1,6 @@
 @extends('layouts.storefront')
 
-@section('title', 'চেকআউট — Tisilo')
+@section('title', __('Checkout').' — Tisilo')
 
 @section('content')
     @php
@@ -9,9 +9,9 @@
     @endphp
     <section class="border-b border-slate-200 bg-white">
         <div class="storefront-shell py-10">
-            <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">Secure checkout</p>
-            <h1 class="mt-2 text-3xl font-black text-slate-950 sm:text-4xl">অর্ডার সম্পন্ন করুন</h1>
-            <p class="mt-2 text-sm text-slate-500">ডেলিভারি তথ্য যাচাই করে অর্ডার নিশ্চিত করুন।</p>
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">{{ __('Secure Checkout') }}</p>
+            <h1 class="mt-2 text-3xl font-black text-slate-950 sm:text-4xl">{{ __('Complete Your Order') }}</h1>
+            <p class="mt-2 text-sm text-slate-500">{{ __('Review delivery information and confirm your order.') }}</p>
         </div>
     </section>
 
@@ -28,29 +28,29 @@
             @csrf
             <div class="space-y-6">
                 <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-                    <h2 class="text-xl font-black text-slate-950">যোগাযোগের তথ্য</h2>
+                    <h2 class="text-xl font-black text-slate-950">{{ __('Contact Information') }}</h2>
                     <div class="mt-6 grid gap-5 sm:grid-cols-2">
                         <label class="text-sm font-bold text-slate-700">
-                            নাম <span class="text-rose-500">*</span>
+                            {{ __('Name') }} <span class="text-rose-500">*</span>
                             <input name="customer_name" value="{{ old('customer_name', auth()->user()?->name) }}" required autocomplete="name" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
                         </label>
                         <label class="text-sm font-bold text-slate-700">
-                            মোবাইল নম্বর <span class="text-rose-500">*</span>
+                            {{ __('Mobile Number') }} <span class="text-rose-500">*</span>
                             <input name="customer_phone" value="{{ old('customer_phone', auth()->user()?->phone) }}" required inputmode="tel" autocomplete="tel" placeholder="01XXXXXXXXX" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
                         </label>
                     </div>
                 </div>
 
                 <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-                    <h2 class="text-xl font-black text-slate-950">ডেলিভারি ঠিকানা</h2>
+                    <h2 class="text-xl font-black text-slate-950">{{ __('Delivery Address') }}</h2>
                     <div class="mt-6 grid gap-5 sm:grid-cols-2">
                         <label class="text-sm font-bold text-slate-700 sm:col-span-2">
-                            সম্পূর্ণ ঠিকানা <span class="text-rose-500">*</span>
-                            <textarea name="address_line" required rows="3" autocomplete="street-address" placeholder="বাসা/রোড/এলাকার বিস্তারিত ঠিকানা" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">{{ old('address_line') }}</textarea>
+                            {{ __('Full Address') }} <span class="text-rose-500">*</span>
+                            <textarea name="address_line" required rows="3" autocomplete="street-address" placeholder="{{ __('House, road and area details') }}" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">{{ old('address_line') }}</textarea>
                         </label>
                         <div class="relative text-sm font-bold text-slate-700 sm:col-span-2" data-district-combobox>
-                            <label for="checkout-district">জেলার নাম লিখুন <span class="text-rose-500">*</span></label>
-                            <input id="checkout-district" name="district_search" type="text" value="{{ old('district_search', $selectedQuote['district'] ?? '') }}" required autocomplete="off" placeholder="জেলা লিখে নির্বাচন করুন" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="checkout-district-options" data-district-search class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
+                            <label for="checkout-district">{{ __('Enter District Name') }} <span class="text-rose-500">*</span></label>
+                            <input id="checkout-district" name="district_search" type="text" value="{{ old('district_search', $selectedQuote['district'] ?? '') }}" required autocomplete="off" placeholder="{{ __('Type and select a district') }}" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="checkout-district-options" data-district-search class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
                             <input type="hidden" name="shipping_region_id" value="{{ old('shipping_region_id') }}" data-shipping-region>
                             <div id="checkout-district-options" data-district-options role="listbox" class="absolute inset-x-0 top-full z-30 mt-1 hidden max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
                                 @foreach ($districtRegions as $quote)
@@ -58,31 +58,31 @@
                                 @endforeach
                             </div>
                             @if ($regions->isEmpty())
-                                <span class="mt-2 block text-xs text-rose-600">এই কার্টের Shipping Class-এর জন্য কোনো সক্রিয় Region rate পাওয়া যায়নি।</span>
+                                <span class="mt-2 block text-xs text-rose-600">{{ __('No active region rate was found for this cart’s shipping class.') }}</span>
                             @endif
                         </div>
                         <label class="text-sm font-bold text-slate-700 sm:col-span-2">
-                            থানা/উপজেলা লিখুন <span class="text-rose-500">*</span>
-                            <input name="thana" value="{{ old('thana') }}" required maxlength="120" autocomplete="address-level3" placeholder="থানা বা উপজেলার নাম" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
-                            <span class="mt-2 block text-xs font-normal text-slate-500">ডেলিভারি লোকেশন নিশ্চিত করতে লিখুন; চার্জ জেলা অনুযায়ী হিসাব হবে।</span>
+                            {{ __('Enter Thana / Upazila') }} <span class="text-rose-500">*</span>
+                            <input name="thana" value="{{ old('thana') }}" required maxlength="120" autocomplete="address-level3" placeholder="{{ __('Thana or Upazila name') }}" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
+                            <span class="mt-2 block text-xs font-normal text-slate-500">{{ __('Enter it to confirm the delivery location; charges are calculated by district.') }}</span>
                         </label>
                     </div>
                 </div>
 
                 <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-                    <h2 class="text-xl font-black text-slate-950">পেমেন্ট</h2>
+                    <h2 class="text-xl font-black text-slate-950">{{ __('Payment') }}</h2>
                     <div class="mt-5">
                         @include('storefront.partials.payment-methods')
                     </div>
                     <label class="mt-5 block text-sm font-bold text-slate-700">
-                        অর্ডার নোট (ঐচ্ছিক)
+                        {{ __('Order Note') }} <span class="font-medium text-slate-400">({{ __('Optional') }})</span>
                         <textarea name="notes" rows="3" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-medium outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">{{ old('notes') }}</textarea>
                     </label>
                 </div>
             </div>
 
             <aside class="h-fit rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-28">
-                <h2 class="text-xl font-black text-slate-950">আপনার অর্ডার</h2>
+                <h2 class="text-xl font-black text-slate-950">{{ __('Your Order') }}</h2>
                 <div class="mt-5 max-h-72 space-y-4 overflow-auto pr-1">
                     @foreach ($lines as $line)
                         <div class="flex gap-3 border-b border-slate-100 pb-4 last:border-0">
@@ -99,17 +99,17 @@
                 </div>
 
                 <div class="mt-5 space-y-3 border-t border-slate-200 pt-5 text-sm">
-                    <div class="flex justify-between"><span class="text-slate-500">সাবটোটাল</span><span class="font-bold">৳{{ number_format($subtotal, 0) }}</span></div>
-                    <div class="flex justify-between"><span class="text-slate-500">ডেলিভারি</span><span class="font-bold text-orange-600" data-shipping-amount>{{ $selectedQuote ? '৳'.number_format($selectedQuote['amount'], 0) : 'জেলা নির্বাচন করুন' }}</span></div>
-                    <div class="flex justify-between border-t border-slate-100 pt-3 text-base"><span class="font-black text-slate-900">সর্বমোট</span><span class="font-black text-slate-900" data-order-total>{{ $selectedQuote ? '৳'.number_format($subtotal + $selectedQuote['amount'], 0) : 'জেলা নির্বাচন করুন' }}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">{{ __('Subtotal') }}</span><span class="font-bold">৳{{ number_format($subtotal, 0) }}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">{{ __('Delivery') }}</span><span class="font-bold text-orange-600" data-shipping-amount>{{ $selectedQuote ? '৳'.number_format($selectedQuote['amount'], 0) : __('Select District') }}</span></div>
+                    <div class="flex justify-between border-t border-slate-100 pt-3 text-base"><span class="font-black text-slate-900">{{ __('Grand Total') }}</span><span class="font-black text-slate-900" data-order-total>{{ $selectedQuote ? '৳'.number_format($subtotal + $selectedQuote['amount'], 0) : __('Select District') }}</span></div>
                 </div>
 
                 @if ($checkoutNote)
                     <div class="prose prose-sm mt-4 max-w-none rounded-xl bg-slate-50 p-4 text-xs text-slate-500">{!! $checkoutNote !!}</div>
                 @endif
 
-                <button data-checkout-submit class="mt-6 h-12 w-full rounded-xl bg-orange-500 px-5 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50">অর্ডার নিশ্চিত করুন</button>
-                <a href="{{ route('store.cart.index') }}" class="mt-4 block text-center text-sm font-bold text-slate-500 hover:text-orange-600">কার্টে ফিরে যান</a>
+                <button data-checkout-submit class="mt-6 h-12 w-full rounded-xl bg-orange-500 px-5 text-sm font-black text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50">{{ __('Confirm Order') }}</button>
+                <a href="{{ route('store.cart.index') }}" class="mt-4 block text-center text-sm font-bold text-slate-500 hover:text-orange-600">{{ __('Back to Cart') }}</a>
             </aside>
         </form>
     </section>
@@ -130,13 +130,16 @@
             const quotes = JSON.parse(quotesElement.textContent || '{}');
             const quoteList = Object.values(quotes);
             const subtotal = Number(form.dataset.subtotal || 0);
-            const money = value => `৳${new Intl.NumberFormat('bn-BD', { maximumFractionDigits: 0 }).format(value)}`;
+            const locale = @js(app()->isLocale('bn') ? 'bn-BD' : 'en-US');
+            const selectDistrictText = @js(__('Select District'));
+            const noRateText = @js(__('No delivery rate was found for this district.'));
+            const money = value => `৳${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value)}`;
             const districtLabel = quote => String(quote?.district || quote?.name || '').trim();
             const districtQuotes = () => {
                 const seen = new Set();
 
                 return quoteList.filter(quote => {
-                    const key = districtLabel(quote).toLocaleLowerCase('bn-BD');
+                    const key = districtLabel(quote).toLocaleLowerCase(locale);
                     if (! key || seen.has(key)) return false;
                     seen.add(key);
 
@@ -148,8 +151,8 @@
                 districtSearch.setAttribute('aria-expanded', 'false');
             };
             const renderOptions = (filter = '') => {
-                const query = filter.trim().toLocaleLowerCase('bn-BD');
-                const matches = districtQuotes().filter(quote => districtLabel(quote).toLocaleLowerCase('bn-BD').includes(query));
+                const query = filter.trim().toLocaleLowerCase(locale);
+                const matches = districtQuotes().filter(quote => districtLabel(quote).toLocaleLowerCase(locale).includes(query));
                 districtOptions.replaceChildren();
                 matches.forEach(quote => {
                     const button = document.createElement('button');
@@ -170,14 +173,14 @@
                 if (! matches.length) {
                     const empty = document.createElement('p');
                     empty.className = 'px-3 py-3 text-xs font-semibold text-rose-600';
-                    empty.textContent = 'এই জেলার জন্য ডেলিভারি রেট পাওয়া যায়নি।';
+                    empty.textContent = noRateText;
                     districtOptions.append(empty);
                 }
             };
             const update = () => {
                 const quote = quotes[region.value];
-                form.querySelector('[data-shipping-amount]').textContent = quote ? money(Number(quote.amount)) : 'জেলা নির্বাচন করুন';
-                form.querySelector('[data-order-total]').textContent = quote ? money(subtotal + Number(quote.amount)) : 'জেলা নির্বাচন করুন';
+                form.querySelector('[data-shipping-amount]').textContent = quote ? money(Number(quote.amount)) : selectDistrictText;
+                form.querySelector('[data-order-total]').textContent = quote ? money(subtotal + Number(quote.amount)) : selectDistrictText;
                 submit.disabled = ! quote;
             };
             const selectDistrict = quote => {
@@ -194,8 +197,8 @@
                 districtSearch.setAttribute('aria-expanded', 'true');
             });
             districtSearch.addEventListener('input', () => {
-                const value = districtSearch.value.trim().toLocaleLowerCase('bn-BD');
-                const exact = districtQuotes().find(quote => districtLabel(quote).toLocaleLowerCase('bn-BD') === value);
+                const value = districtSearch.value.trim().toLocaleLowerCase(locale);
+                const exact = districtQuotes().find(quote => districtLabel(quote).toLocaleLowerCase(locale) === value);
                 region.value = exact ? String(exact.region_id) : '';
                 renderOptions(districtSearch.value);
                 districtOptions.classList.remove('hidden');

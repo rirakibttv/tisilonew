@@ -14,15 +14,15 @@
         data-delay="{{ max(0, $activePopupOffer->display_delay_seconds) * 1000 }}"
         hidden
     >
-        <button class="tisilo-popup-offer__backdrop" type="button" data-popup-dismiss aria-label="Close offer"></button>
+        <button class="tisilo-popup-offer__backdrop" type="button" data-popup-dismiss aria-label="{{ __('Close Offer') }}"></button>
 
         <section
             class="tisilo-popup-offer__dialog"
             role="dialog"
             aria-modal="true"
-            @if(filled($activePopupOffer->title)) aria-labelledby="tisilo-popup-title-{{ $activePopupOffer->id }}" @else aria-label="Special offer" @endif
+            @if(filled($activePopupOffer->title)) aria-labelledby="tisilo-popup-title-{{ $activePopupOffer->id }}" @else aria-label="{{ __('Special Offer') }}" @endif
         >
-            <button class="tisilo-popup-offer__close" type="button" data-popup-dismiss aria-label="Close offer">&times;</button>
+            <button class="tisilo-popup-offer__close" type="button" data-popup-dismiss aria-label="{{ __('Close Offer') }}">&times;</button>
 
             @if(filled($activePopupOffer->link_url))
                 <a class="tisilo-popup-offer__artwork-link" href="{{ $activePopupOffer->link_url }}" data-popup-accept>

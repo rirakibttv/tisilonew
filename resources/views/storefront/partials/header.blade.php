@@ -19,15 +19,32 @@
             @endforelse
         </div>
         <div class="flex items-center justify-center gap-3 text-center font-semibold">
-            <span class="hidden xl:inline">{{ $generalSettings['top_headline'] ?? 'সারাদেশে দ্রুত ডেলিভারি' }}</span>
+            <span class="hidden xl:inline">{{ __($generalSettings['top_headline'] ?? 'Fast delivery nationwide') }}</span>
             <a href="tel:{{ $hotline }}" class="transition hover:text-blue-100">
-                Phone: {{ $hotline }}
+                {{ __('Phone') }}: {{ $hotline }}
             </a>
         </div>
-        <div class="flex items-center justify-end gap-4 font-semibold">
-            <a href="{{ url('/seller') }}" class="transition hover:text-blue-100">Seller Central</a>
-            <a href="{{ route('store.blog') }}" class="transition hover:text-blue-100">Blog</a>
-            <a href="{{ route('store.about') }}" class="transition hover:text-blue-100">About Us</a>
+        <div class="flex items-center justify-end gap-3 font-semibold">
+            <a href="{{ url('/seller') }}" class="transition hover:text-blue-100">{{ __('Seller Central') }}</a>
+            <form action="{{ route('store.language.update') }}" method="POST" class="relative flex items-center" data-language-form>
+                @csrf
+                <label for="desktop-language" class="sr-only">{{ __('Language') }}</label>
+                <span class="pointer-events-none absolute left-2.5 text-blue-100">@svg('heroicon-o-language', 'size-4')</span>
+                <select
+                    id="desktop-language"
+                    name="locale"
+                    class="h-7 cursor-pointer appearance-none rounded-lg border border-white/30 bg-white/10 py-0 pl-8 pr-7 text-xs font-bold text-white outline-none transition hover:bg-white/20 focus:border-white focus:ring-2 focus:ring-white/30"
+                    data-language-select
+                    aria-label="{{ __('Language') }}"
+                >
+                    <option value="bn" class="text-slate-900" @selected(app()->isLocale('bn'))>বাংলা</option>
+                    <option value="en" class="text-slate-900" @selected(app()->isLocale('en'))>English</option>
+                </select>
+                <span class="pointer-events-none absolute right-2 text-blue-100">@svg('heroicon-o-chevron-down', 'size-3')</span>
+                <noscript><button type="submit" class="ml-1 underline">OK</button></noscript>
+            </form>
+            <a href="{{ route('store.blog') }}" class="transition hover:text-blue-100">{{ __('Blog') }}</a>
+            <a href="{{ route('store.about') }}" class="transition hover:text-blue-100">{{ __('About Us') }}</a>
         </div>
     </div>
 </div>
@@ -36,14 +53,16 @@
 <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/98 shadow-xs backdrop-blur-md">
     <div class="storefront-shell flex min-h-[74px] items-center gap-3 lg:grid lg:grid-cols-[250px_minmax(320px,1fr)_auto] lg:gap-3">
         <!-- Mobile Menu Trigger -->
-        <button type="button" class="grid size-10 place-items-center rounded-lg border border-slate-200 text-slate-700 md:hidden hover:bg-slate-50 transition" data-mobile-menu-button aria-label="Open Navigation Menu">
+        <button type="button" class="grid size-10 place-items-center rounded-lg border border-slate-200 text-slate-700 md:hidden hover:bg-slate-50 transition" data-mobile-menu-button aria-label="{{ __('Open Navigation Menu') }}">
             @svg('heroicon-o-bars-3', 'size-6')
         </button>
 
         <!-- Brand Logo -->
         <a href="{{ route('store.home') }}" class="flex min-w-0 shrink-0 items-center lg:w-[250px]" aria-label="{{ $generalSettings['site_name'] ?? 'Tisilo' }}">
             @if(filled($generalSettings['dark_logo'] ?? null))
-                @php($headerLogo = $generalSettings['dark_logo'])
+                @php
+                    $headerLogo = $generalSettings['dark_logo'];
+                @endphp
                 <img src="{{ asset('storage/'.ltrim($headerLogo, '/')) }}?v={{ substr(sha1($headerLogo), 0, 12) }}" alt="{{ $generalSettings['site_name'] ?? 'Tisilo' }}" class="h-11 w-[190px] object-fill sm:h-[58px] sm:w-[245px]">
             @else
                 <span class="font-serif text-4xl font-bold italic leading-none tracking-tight text-red-700 sm:text-6xl">{{ $generalSettings['site_name'] ?? 'Tisilo' }}</span>
@@ -52,17 +71,17 @@
 
         <!-- Desktop Search Bar -->
         <form action="{{ route('store.shop.index') }}" method="GET" class="relative hidden min-w-0 flex-1 md:block">
-            <label for="desktop-search" class="sr-only">Search Product</label>
+            <label for="desktop-search" class="sr-only">{{ __('Search Product') }}</label>
             <div class="relative flex items-center">
                 <input
                     id="desktop-search"
                     name="q"
                     value="{{ $search ?? request('q') }}"
                     type="search"
-                    placeholder="Search Product..."
+                    placeholder="{{ __('Search Product...') }}"
                     class="h-11 w-full rounded-full border-2 border-purple-600 bg-white pl-5 pr-16 text-sm font-medium text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-purple-700 focus:ring-4 focus:ring-purple-100"
                 >
-                <button type="submit" class="absolute bottom-1 right-1 top-1 grid w-14 place-items-center rounded-full bg-purple-700 text-white transition hover:bg-purple-800" aria-label="Search">
+                <button type="submit" class="absolute bottom-1 right-1 top-1 grid w-14 place-items-center rounded-full bg-purple-700 text-white transition hover:bg-purple-800" aria-label="{{ __('Search') }}">
                     @svg('heroicon-o-magnifying-glass', 'size-5')
                 </button>
             </div>
@@ -77,7 +96,7 @@
 
             <!-- Cart Dialog with Live Preview -->
             <div class="relative group" id="cart-qty">
-                <a href="{{ route('store.cart.index') }}" class="relative flex min-h-11 items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3 text-slate-700 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700" aria-label="কার্ট">
+                <a href="{{ route('store.cart.index') }}" class="relative flex min-h-11 items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3 text-slate-700 transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700" aria-label="{{ __('Cart') }}">
                     <span class="relative">
                         @svg('heroicon-o-shopping-bag', 'size-6 text-purple-700')
                         @if($cartCount > 0)
@@ -85,7 +104,7 @@
                         @endif
                     </span>
                     <div class="hidden text-left text-sm leading-tight xl:block">
-                        <span class="block text-xs font-semibold text-slate-400">আপনার কার্ট</span>
+                        <span class="block text-xs font-semibold text-slate-400">{{ __('Your Cart') }}</span>
                         <span class="font-black text-slate-900">৳{{ number_format($cartSubtotal, 2) }}</span>
                     </div>
                 </a>
@@ -93,23 +112,23 @@
                 <!-- Hover Cart Popup -->
                 <div class="invisible absolute right-0 top-full mt-2 w-72 rounded-2xl border border-slate-100 bg-white p-4 shadow-xl opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100 z-50">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                        <span class="text-sm font-bold uppercase tracking-wider text-slate-500">অর্ডার সামারি</span>
-                        <span class="text-sm font-bold text-purple-700">{{ $cartCount }} টি পণ্য</span>
+                        <span class="text-sm font-bold uppercase tracking-wider text-slate-500">{{ __('Order Summary') }}</span>
+                        <span class="text-sm font-bold text-purple-700">{{ __(':count items', ['count' => $cartCount]) }}</span>
                     </div>
                     <div class="py-4 text-center">
-                        <p class="text-base font-black text-slate-900">সর্বমোট : ৳{{ number_format($cartSubtotal, 2) }}</p>
+                        <p class="text-base font-black text-slate-900">{{ __('Total') }}: ৳{{ number_format($cartSubtotal, 2) }}</p>
                     </div>
                     <div class="grid grid-cols-2 gap-2 pt-2">
-                        <a href="{{ route('store.cart.index') }}" class="rounded-xl border border-slate-200 py-2.5 text-center text-sm font-bold text-slate-700 transition hover:bg-slate-50">কার্ট দেখুন</a>
-                        <a href="{{ route('store.checkout.index') }}" class="rounded-xl bg-purple-700 py-2.5 text-center text-sm font-bold text-white shadow-sm transition hover:bg-purple-800">অর্ডার করুন</a>
+                        <a href="{{ route('store.cart.index') }}" class="rounded-xl border border-slate-200 py-2.5 text-center text-sm font-bold text-slate-700 transition hover:bg-slate-50">{{ __('View Cart') }}</a>
+                        <a href="{{ route('store.checkout.index') }}" class="rounded-xl bg-purple-700 py-2.5 text-center text-sm font-bold text-white shadow-sm transition hover:bg-purple-800">{{ __('Order Now') }}</a>
                     </div>
                 </div>
             </div>
 
             <!-- Login / Account Button -->
-            <a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="hidden items-center gap-2 rounded-xl px-2 py-2 text-sm font-bold text-slate-700 transition hover:bg-purple-50 hover:text-purple-700 sm:flex" aria-label="Account">
+            <a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="hidden items-center gap-2 rounded-xl px-2 py-2 text-sm font-bold text-slate-700 transition hover:bg-purple-50 hover:text-purple-700 sm:flex" aria-label="{{ __('Account') }}">
                 @svg('heroicon-o-user', 'size-5 text-slate-600')
-                <span class="hidden whitespace-nowrap xl:inline">আমার অ্যাকাউন্ট</span>
+                <span class="hidden whitespace-nowrap xl:inline">{{ __('My Account') }}</span>
             </a>
         </div>
     </div>
@@ -121,10 +140,10 @@
                 name="q"
                 value="{{ $search ?? request('q') }}"
                 type="search"
-                placeholder="Search Product ... "
+                placeholder="{{ __('Search Product...') }}"
                 class="h-10 w-full rounded-full border border-purple-400/60 bg-white pl-4 pr-12 text-sm outline-none focus:border-purple-700 focus:ring-2 focus:ring-purple-100"
             >
-            <button type="submit" class="absolute right-1 top-1 bottom-1 px-3.5 rounded-full bg-purple-700 text-white flex items-center justify-center" aria-label="Search">
+            <button type="submit" class="absolute right-1 top-1 bottom-1 px-3.5 rounded-full bg-purple-700 text-white flex items-center justify-center" aria-label="{{ __('Search') }}">
                 @svg('heroicon-o-magnifying-glass', 'size-4')
             </button>
         </form>
@@ -132,21 +151,21 @@
 </header>
 
 <!-- Supermarket Navigation Menu Bar -->
-<nav class="hidden border-b border-slate-200 bg-white md:block" aria-label="Store navigation">
+<nav class="hidden border-b border-slate-200 bg-white md:block" aria-label="{{ __('Store Navigation') }}">
     <div class="storefront-shell grid grid-cols-[270px_minmax(0,1fr)] gap-4">
         <a href="{{ route('store.home') }}#categories" class="flex h-12 items-center gap-3 rounded-t-xl bg-gradient-to-r from-purple-800 to-fuchsia-600 px-5 text-sm font-black uppercase tracking-wide text-white transition hover:from-purple-900 hover:to-fuchsia-700" id="all-categories-button">
             @svg('heroicon-o-bars-3', 'size-4')
-            <span>Categories</span>
+            <span>{{ __('Categories') }}</span>
         </a>
 
         <div class="flex h-12 items-center justify-between">
             <div class="flex h-full items-center gap-7 text-sm font-bold text-slate-800">
-                <a href="{{ route('store.home') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.home') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">Home</a>
-                <a href="{{ route('store.shop.index') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.shop.index', 'store.products.index') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">Shop</a>
+                <a href="{{ route('store.home') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.home') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">{{ __('Home') }}</a>
+                <a href="{{ route('store.shop.index') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.shop.index', 'store.products.index') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">{{ __('Shop') }}</a>
             </div>
 
             <a href="{{ route('store.contact') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.contact') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">
-                Contact
+                {{ __('Contact') }}
             </a>
         </div>
     </div>
@@ -162,21 +181,21 @@
             <span class="grid size-8 place-items-center rounded-lg bg-white/15 text-lg font-black">T</span>
             <span class="font-black tracking-tight text-lg">{{ strtoupper($generalSettings['site_name'] ?? 'Tisilo') }}</span>
         </div>
-        <button type="button" class="grid size-8 place-items-center rounded-full bg-white/10 hover:bg-white/20 transition" data-drawer-close aria-label="Close menu">
+        <button type="button" class="grid size-8 place-items-center rounded-full bg-white/10 hover:bg-white/20 transition" data-drawer-close aria-label="{{ __('Close menu') }}">
             @svg('heroicon-o-x-mark', 'size-5')
         </button>
     </div>
 
     <!-- Quick Tabs / Links -->
     <div class="flex border-b border-slate-100 bg-slate-50 text-sm font-bold text-slate-600">
-        <a href="{{ route('store.home') }}" class="flex-1 py-3 text-center border-r border-slate-200 hover:text-purple-700">Home</a>
-        <a href="{{ route('store.shop.index') }}" class="flex-1 py-3 text-center border-r border-slate-200 hover:text-purple-700">Shop</a>
-        <a href="{{ route('store.contact') }}" class="flex-1 py-3 text-center hover:text-purple-700">Contact</a>
+        <a href="{{ route('store.home') }}" class="flex-1 py-3 text-center border-r border-slate-200 hover:text-purple-700">{{ __('Home') }}</a>
+        <a href="{{ route('store.shop.index') }}" class="flex-1 py-3 text-center border-r border-slate-200 hover:text-purple-700">{{ __('Shop') }}</a>
+        <a href="{{ route('store.contact') }}" class="flex-1 py-3 text-center hover:text-purple-700">{{ __('Contact') }}</a>
     </div>
 
     <!-- Multi-level Categories in Drawer -->
     <div class="flex-1 overflow-y-auto p-4 space-y-1" id="mobile-drawer-categories">
-        <p class="px-2 py-1.5 text-xs font-black uppercase tracking-wider text-purple-700">Categories</p>
+        <p class="px-2 py-1.5 text-xs font-black uppercase tracking-wider text-purple-700">{{ __('Categories') }}</p>
         @foreach($categories ?? [] as $category)
             <div class="rounded-xl border border-slate-100 overflow-hidden bg-white" data-drawer-parent>
                 <div class="flex items-center justify-between p-3 hover:bg-purple-50/50 transition">
@@ -189,7 +208,7 @@
                         <span>{{ $category->name }}</span>
                     </a>
                     @if($category->children && $category->children->count() > 0)
-                        <button type="button" class="p-1 text-slate-400 hover:text-purple-700" data-drawer-toggle aria-label="Toggle subcategories">
+                        <button type="button" class="p-1 text-slate-400 hover:text-purple-700" data-drawer-toggle aria-label="{{ __('Toggle Subcategories') }}">
                             @svg('heroicon-o-chevron-down', 'size-4 transition-transform duration-200')
                         </button>
                     @endif
@@ -221,9 +240,27 @@
 
     <!-- Drawer Footer -->
     <div class="border-t border-slate-200 p-4 bg-slate-50">
+        <form action="{{ route('store.language.update') }}" method="POST" class="mb-3" data-language-form>
+            @csrf
+            <label for="mobile-language" class="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">{{ __('Language') }}</label>
+            <div class="relative">
+                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-purple-700">@svg('heroicon-o-language', 'size-5')</span>
+                <select
+                    id="mobile-language"
+                    name="locale"
+                    class="h-11 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white pl-11 pr-10 text-sm font-bold text-slate-700 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                    data-language-select
+                >
+                    <option value="bn" @selected(app()->isLocale('bn'))>বাংলা</option>
+                    <option value="en" @selected(app()->isLocale('en'))>English</option>
+                </select>
+                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">@svg('heroicon-o-chevron-down', 'size-4')</span>
+            </div>
+            <noscript><button type="submit" class="mt-2 w-full rounded-lg bg-purple-100 py-2 text-sm font-bold text-purple-700">OK</button></noscript>
+        </form>
         <a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="flex items-center justify-center gap-2 rounded-xl bg-purple-700 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-purple-800">
             @svg('heroicon-o-user', 'size-4')
-            <span>{{ auth()->check() ? 'আমার প্রোফাইল' : 'লগইন / সাইন আপ' }}</span>
+            <span>{{ auth()->check() ? __('My Profile') : __('Login / Sign Up') }}</span>
         </a>
     </div>
 </aside>

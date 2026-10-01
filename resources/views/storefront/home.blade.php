@@ -1,11 +1,11 @@
 @extends('layouts.storefront')
 
 @php
-    $homePageTitle = ($generalSettings['site_name'] ?? 'Tisilo').' — আপনার প্রয়োজনের সবকিছু, এক সুপারমার্কেটে';
+    $homePageTitle = ($generalSettings['site_name'] ?? 'Tisilo').' — '.__('Everything you need, in one supermarket');
     $homeMetaDescription = \App\Support\SeoMetadata::description(
         $generalSettings['footer_about_text'] ?? null,
         $generalSettings['top_headline'] ?? null,
-        'বিশ্বস্ত বিক্রেতা, মানসম্মত পণ্য, নিরাপদ পেমেন্ট এবং সারাদেশে দ্রুত ডেলিভারির আধুনিক অনলাইন মার্কেটপ্লেস।',
+        __('A modern online marketplace with trusted sellers, quality products, secure payments and fast nationwide delivery.'),
     );
 @endphp
 @section('title', $homePageTitle)
@@ -64,7 +64,7 @@
                                 @endif
                             </li>
                         @empty
-                            <li class="px-4 py-3 text-center text-sm text-slate-400">কোনো ক্যাটাগরি নেই</li>
+                            <li class="px-4 py-3 text-center text-sm text-slate-400">{{ __('No categories available') }}</li>
                         @endforelse
                     </ul>
                 </div>
@@ -112,17 +112,17 @@
                             ⭐ Biggest Online Supermarket
                         </span>
                         <h1 class="mt-5 max-w-[720px] text-4xl font-black leading-[1.15] sm:text-5xl lg:text-6xl">
-                            আপনার প্রয়োজনের সবকিছু, এক সুপারমার্কেটে
+                            {{ __('Everything you need, in one supermarket') }}
                         </h1>
                         <p class="mt-4 max-w-xl text-sm leading-relaxed text-purple-100/90 sm:text-base">
-                            বিশেষ ছাড়, ক্যাশ অন ডেলিভারি এবং সারাদেশে দ্রুত ডেলিভারি সুবিধা উপভোগ করুন।
+                            {{ __('Enjoy special discounts, cash on delivery and fast nationwide delivery.') }}
                         </p>
                         <div class="mt-8 flex flex-wrap gap-3">
                             <a href="{{ route('store.products.index') }}" class="rounded-xl bg-fuchsia-600 px-7 py-3.5 text-xs font-black text-white shadow-lg shadow-fuchsia-800/30 transition hover:bg-fuchsia-500 sm:text-sm">
-                                এখনই কিনুন
+                                {{ __('Shop Now') }}
                             </a>
                             <a href="#hot-deal" class="rounded-xl border border-white/25 bg-white/10 px-6 py-3.5 text-xs font-bold text-white transition hover:bg-white/20 sm:text-sm">
-                                আজকের ডিল
+                                {{ __('Today’s Deals') }}
                             </a>
                         </div>
                     </div>
@@ -136,14 +136,14 @@
                             🔥 Hot Offer - 25% Discount
                         </span>
                         <h2 class="mt-4 text-3xl font-black leading-tight sm:text-5xl">
-                            প্রিমিয়াম কোয়ালিটি কালেকশন
+                            {{ __('Premium Quality Collection') }}
                         </h2>
                         <p class="mt-3 text-sm sm:text-base text-rose-100/90 leading-relaxed">
-                            সেরা মানের বেডশীট, ফ্যাশন ও হোম অ্যাপ্লায়েন্স অবিশ্বাস্য মূল্যে।
+                            {{ __('Premium bed sheets, fashion and home appliances at incredible prices.') }}
                         </p>
                         <div class="mt-6 flex flex-wrap gap-3">
                             <a href="{{ route('store.products.index') }}" class="rounded-xl bg-rose-600 px-6 py-3 text-xs sm:text-sm font-black text-white shadow-lg shadow-rose-600/30 transition hover:bg-rose-700">
-                                অফার দেখুন
+                                {{ __('View Offers') }}
                             </a>
                         </div>
                     </div>
@@ -153,10 +153,10 @@
 
                 <!-- Slider Arrows -->
                 @if($sliders->isEmpty() || $sliders->count() > 1)
-                    <button type="button" class="absolute left-3 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-purple-950/65 text-white transition hover:bg-purple-950" id="hero-prev" aria-label="Previous Slide">
+                    <button type="button" class="absolute left-3 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-purple-950/65 text-white transition hover:bg-purple-950" id="hero-prev" aria-label="{{ __('Previous Slide') }}">
                         @svg('heroicon-o-chevron-left', 'size-5')
                     </button>
-                    <button type="button" class="absolute right-3 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-purple-950/65 text-white transition hover:bg-purple-950" id="hero-next" aria-label="Next Slide">
+                    <button type="button" class="absolute right-3 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-purple-950/65 text-white transition hover:bg-purple-950" id="hero-next" aria-label="{{ __('Next Slide') }}">
                         @svg('heroicon-o-chevron-right', 'size-5')
                     </button>
                 @endif
@@ -169,7 +169,7 @@
                                 type="button"
                                 class="size-2.5 rounded-full transition-all {{ $loop->first ? 'w-6 bg-white' : 'bg-white/50' }}"
                                 data-slide-index="{{ $loop->index }}"
-                                aria-label="Slide {{ $loop->iteration }}"
+                                aria-label="{{ __('Slide :number', ['number' => $loop->iteration]) }}"
                             ></button>
                         @endforeach
                     </div>
@@ -182,10 +182,10 @@
     <section class="storefront-shell pt-2">
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
             @foreach ([
-                ['heroicon-o-truck', 'দ্রুত ডেলিভারি', 'সারাদেশে বিশ্বস্ত কুরিয়ারে ডেলিভারি'],
-                ['heroicon-o-shield-check', 'ক্যাশ অন ডেলিভারি', 'পণ্য দেখে টাকা পরিশোধের সুবিধা'],
-                ['heroicon-o-arrow-path', 'সহজ রিটার্ন', 'ত্রুটিপূর্ণ পণ্যে দ্রুত এক্সচেঞ্জ'],
-                ['heroicon-o-chat-bubble-left-right', '২৪/৭ গ্রাহক সেবা', 'হোয়াটসঅ্যাপ ও ফোনে সহায়তা'],
+                ['heroicon-o-truck', __('Fast Delivery'), __('Delivery nationwide through trusted couriers')],
+                ['heroicon-o-shield-check', __('Cash on Delivery'), __('Pay after receiving your product')],
+                ['heroicon-o-arrow-path', __('Easy Returns'), __('Quick exchange for defective products')],
+                ['heroicon-o-chat-bubble-left-right', __('24/7 Customer Service'), __('Support through WhatsApp and phone')],
             ] as [$icon, $title, $description])
                 <div class="flex items-center gap-3.5 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
                     <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-purple-50 text-purple-700">@svg($icon, 'size-6')</span>
@@ -212,13 +212,13 @@
                             @svg('heroicon-o-bolt', 'size-6')
                         </span>
                         <div>
-                            <p class="text-xs font-black uppercase tracking-[.18em] text-rose-50">Limited Time Offer</p>
-                            <h2 class="text-xl font-black sm:text-2xl">Flash Sale</h2>
+                            <p class="text-xs font-black uppercase tracking-[.18em] text-rose-50">{{ __('Limited Time Offer') }}</p>
+                            <h2 class="text-xl font-black sm:text-2xl">{{ __('Flash Sale') }}</h2>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2" data-countdown-timer data-end-time="{{ $flashSale->ends_at->toIso8601String() }}">
-                        <span class="hidden text-sm font-bold text-white/90 sm:inline">অফার শেষ হতে বাকি:</span>
+                        <span class="hidden text-sm font-bold text-white/90 sm:inline">{{ __('Offer ends in') }}:</span>
                         <div class="flex items-center gap-1 text-sm font-black text-slate-900">
                             <span class="grid min-w-8 place-items-center rounded-lg bg-white px-2 py-1 shadow-xs" data-countdown-days>00</span>
                             <span class="font-bold text-white">:</span>
@@ -244,17 +244,17 @@
     <section class="storefront-shell pt-2">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <a href="{{ route('store.products.index') }}" class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-purple-800 to-indigo-900 p-6 sm:p-8 text-white shadow-xs transition hover:shadow-md">
-                <span class="rounded-full bg-white/20 px-3 py-1 text-xs font-black uppercase tracking-wider text-purple-100">Special Promo</span>
-                <h3 class="mt-3 text-xl sm:text-2xl font-black">সুপার ডিসকাউন্ট ডিল</h3>
-                <p class="mt-1 text-sm text-purple-200 sm:text-base">সারাদেশে ক্যাশ অন ডেলিভারি সুবিধা</p>
-                <span class="mt-4 inline-flex items-center gap-1 text-sm font-black text-amber-300 group-hover:underline">শপ করুন →</span>
+                <span class="rounded-full bg-white/20 px-3 py-1 text-xs font-black uppercase tracking-wider text-purple-100">{{ __('Special Promo') }}</span>
+                <h3 class="mt-3 text-xl sm:text-2xl font-black">{{ __('Super Discount Deal') }}</h3>
+                <p class="mt-1 text-sm text-purple-200 sm:text-base">{{ __('Cash on delivery available nationwide') }}</p>
+                <span class="mt-4 inline-flex items-center gap-1 text-sm font-black text-amber-300 group-hover:underline">{{ __('Shop Now') }} →</span>
             </a>
 
             <a href="{{ route('store.products.index') }}" class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-900 to-slate-800 p-6 sm:p-8 text-white shadow-xs transition hover:shadow-md">
-                <span class="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-black uppercase tracking-wider text-amber-300">New Arrivals</span>
-                <h3 class="mt-3 text-xl sm:text-2xl font-black">নতুন ট্রেন্ডি কালেকশন</h3>
-                <p class="mt-1 text-sm text-slate-300 sm:text-base">শতভাগ কোয়ালিটি ও কালার গ্যারান্টি</p>
-                <span class="mt-4 inline-flex items-center gap-1 text-sm font-black text-amber-300 group-hover:underline">সব কালেকশন →</span>
+                <span class="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-black uppercase tracking-wider text-amber-300">{{ __('New Arrivals') }}</span>
+                <h3 class="mt-3 text-xl sm:text-2xl font-black">{{ __('New Trendy Collection') }}</h3>
+                <p class="mt-1 text-sm text-slate-300 sm:text-base">{{ __('Quality and color guaranteed') }}</p>
+                <span class="mt-4 inline-flex items-center gap-1 text-sm font-black text-amber-300 group-hover:underline">{{ __('All Collections') }} →</span>
             </a>
         </div>
     </section>
@@ -264,12 +264,12 @@
         <div class="border-b-2 border-purple-700 pb-3 flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <span class="grid size-6 place-items-center rounded-md bg-purple-700 text-white text-xs">@svg('heroicon-o-squares-2x2', 'size-3.5')</span>
-                <h2 class="text-lg sm:text-xl font-black text-slate-900">Categories</h2>
+                <h2 class="text-lg sm:text-xl font-black text-slate-900">{{ __('Categories') }}</h2>
             </div>
-            <a href="{{ route('store.products.index') }}" class="text-sm font-bold text-purple-700 hover:text-purple-800">সব ক্যাটাগরি দেখুন →</a>
+            <a href="{{ route('store.products.index') }}" class="text-sm font-bold text-purple-700 hover:text-purple-800">{{ __('View All Categories') }} →</a>
         </div>
 
-        <div data-category-carousel class="storefront-category-carousel mt-6" aria-label="Product categories">
+        <div data-category-carousel class="storefront-category-carousel mt-6" aria-label="{{ __('Product Categories') }}">
             <div class="storefront-category-track">
                 @foreach([false, true] as $isDuplicate)
                     <div class="storefront-category-group" @if($isDuplicate) aria-hidden="true" @endif>
@@ -305,12 +305,12 @@
     <section class="storefront-shell pt-2">
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-900 p-6 sm:p-10 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
             <div class="max-w-xl">
-                <span class="rounded-full bg-amber-400 px-3 py-1 text-xs font-black uppercase tracking-wider text-slate-950">Special Deals</span>
-                <h3 class="mt-3 text-2xl sm:text-3xl font-black">উৎসবের বিশেষ ডিসকাউন্ট অফার</h3>
-                <p class="mt-1 text-sm text-purple-100">সেরা পণ্য সেরা মূল্যে আপনার হাতের মুঠোয়। স্টক সীমিত!</p>
+                <span class="rounded-full bg-amber-400 px-3 py-1 text-xs font-black uppercase tracking-wider text-slate-950">{{ __('Special Deals') }}</span>
+                <h3 class="mt-3 text-2xl sm:text-3xl font-black">{{ __('Festive Special Discount Offer') }}</h3>
+                <p class="mt-1 text-sm text-purple-100">{{ __('The best products at the best prices. Limited stock!') }}</p>
             </div>
             <a href="{{ route('store.products.index') }}" class="shrink-0 rounded-xl bg-amber-400 px-6 py-3.5 text-sm font-black text-slate-950 shadow-md transition hover:bg-amber-300 sm:text-base">
-                অর্ডার করতে ক্লিক করুন
+                {{ __('Click to Order') }}
             </a>
         </div>
     </section>
@@ -327,12 +327,12 @@
                     <span class="grid size-7 place-items-center rounded-lg bg-rose-500 text-white">
                         @svg('heroicon-o-fire', 'size-4.5')
                     </span>
-                    <h2 class="text-xl font-black text-slate-950">Hot Deal</h2>
+                    <h2 class="text-xl font-black text-slate-950">{{ __('Hot Deal') }}</h2>
                 </div>
 
                 <!-- Live Countdown Timer -->
                 <div class="flex items-center gap-2" id="hot-deal-timer" data-end-time="{{ $hotDealEndDate }}">
-                    <span class="hidden text-sm font-bold text-slate-500 sm:inline">অফার শেষ হতে বাকি:</span>
+                    <span class="hidden text-sm font-bold text-slate-500 sm:inline">{{ __('Offer ends in') }}:</span>
                     <div class="flex items-center gap-1 text-sm font-black text-white">
                         <span class="grid min-w-8 place-items-center rounded-lg bg-purple-700 px-2 py-1 shadow-xs" id="timer-days">00</span>
                         <span class="text-purple-700 font-bold">:</span>
@@ -351,7 +351,7 @@
                     @include('storefront.components.product-card', ['card' => $card])
                 @empty
                     <div class="col-span-full py-12 text-center text-slate-400">
-                        কোনো হট ডিল প্রোডাক্ট পাওয়া যায়নি।
+                        {{ __('No hot deal products found.') }}
                     </div>
                 @endforelse
             </div>
@@ -376,7 +376,7 @@
                         <h2 class="text-lg sm:text-xl font-black text-slate-900">{{ $cat->name }}</h2>
                     </div>
                     <a href="{{ $cat->permalink }}" class="inline-flex items-center gap-1 rounded-lg bg-purple-50 px-3 py-1.5 text-sm font-bold text-purple-700 transition hover:bg-purple-100">
-                        View More →
+                        {{ __('View More') }} →
                     </a>
                 </div>
 
@@ -394,7 +394,7 @@
         <section class="storefront-shell pt-2">
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                 <div class="border-b border-slate-100 pb-4">
-                    <h2 class="text-lg font-black text-slate-900">Top Brands</h2>
+                    <h2 class="text-lg font-black text-slate-900">{{ __('Top Brands') }}</h2>
                 </div>
                 <div class="mt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-8">
                     @foreach($brands as $brand)

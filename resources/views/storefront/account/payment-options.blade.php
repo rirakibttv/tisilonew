@@ -1,13 +1,13 @@
 @extends('storefront.account.layout')
 
-@section('title', 'Payment Option — Tisilo')
+@section('title', __('Payment Option').' — Tisilo')
 
 @section('account-content')
     <div class="rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-100 p-5 sm:p-6">
-            <p class="text-xs font-black uppercase tracking-[0.15em] text-violet-600">Manage My Account</p>
-            <h1 class="mt-1 text-2xl font-black text-slate-950">Payment Option</h1>
-            <p class="mt-2 text-sm text-slate-500">চেকআউটে আগে থেকে নির্বাচিত থাকবে এমন পেমেন্ট পদ্ধতি ঠিক করুন। কোনো কার্ড বা গোপন তথ্য এখানে সংরক্ষণ করা হয় না।</p>
+            <p class="text-xs font-black uppercase tracking-[0.15em] text-violet-600">{{ __('Manage My Account') }}</p>
+            <h1 class="mt-1 text-2xl font-black text-slate-950">{{ __('Payment Option') }}</h1>
+            <p class="mt-2 text-sm text-slate-500">{{ __('Choose the payment method preselected at checkout. No card or sensitive information is stored here.') }}</p>
         </div>
         <form method="POST" action="{{ route('store.account.payment-options.update') }}" class="p-5 sm:p-6">
             @csrf
@@ -21,11 +21,11 @@
                         <span class="mt-1 block text-sm leading-6 text-slate-500">{{ $method['description'] }}</span>
                     </label>
                 @empty
-                    <div class="col-span-full rounded-2xl bg-amber-50 p-5 text-sm font-bold text-amber-700">বর্তমানে কোনো পেমেন্ট পদ্ধতি সক্রিয় নেই।</div>
+                    <div class="col-span-full rounded-2xl bg-amber-50 p-5 text-sm font-bold text-amber-700">{{ __('No payment method is currently active.') }}</div>
                 @endforelse
             </div>
             @error('default_method')<p class="mt-3 text-sm font-bold text-rose-600">{{ $message }}</p>@enderror
-            @if(count($methods))<button class="mt-5 rounded-xl bg-violet-600 px-6 py-3 text-sm font-black text-white">Save payment option</button>@endif
+            @if(count($methods))<button class="mt-5 rounded-xl bg-violet-600 px-6 py-3 text-sm font-black text-white">{{ __('Save Payment Option') }}</button>@endif
         </form>
     </div>
 @endsection

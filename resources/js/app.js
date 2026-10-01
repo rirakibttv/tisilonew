@@ -161,7 +161,8 @@ document.querySelectorAll('[data-catalog-infinite]').forEach((catalog) => {
         const totalProducts = Number(catalog.dataset.totalProducts || loadedProducts);
 
         if (endMessage) {
-            endMessage.textContent = `সব ${new Intl.NumberFormat('bn-BD').format(totalProducts)}টি পণ্য লোড হয়েছে`;
+            const formattedCount = new Intl.NumberFormat(catalog.dataset.numberLocale || 'en-US').format(totalProducts);
+            endMessage.textContent = (catalog.dataset.allLoadedTemplate || 'All __COUNT__ products loaded').replace('__COUNT__', formattedCount);
         }
     };
 

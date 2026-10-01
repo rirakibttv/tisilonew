@@ -17,21 +17,21 @@
                 <p class="truncate text-base font-black">{{ auth()->user()->name }}</p>
                 <p class="mt-0.5 truncate text-xs text-violet-100">{{ auth()->user()->phone ?: auth()->user()->email }}</p>
             </div>
-            <a href="{{ route('store.account.dashboard') }}" aria-label="Dashboard overview" class="grid size-9 shrink-0 place-items-center rounded-xl bg-white/15 hover:bg-white/25">@svg('heroicon-o-squares-2x2', 'size-5')</a>
+            <a href="{{ route('store.account.dashboard') }}" aria-label="{{ __('Dashboard Overview') }}" class="grid size-9 shrink-0 place-items-center rounded-xl bg-white/15 hover:bg-white/25">@svg('heroicon-o-squares-2x2', 'size-5')</a>
         </div>
     </div>
 
     <details class="group lg:hidden">
         <summary class="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm font-black text-slate-800 [&::-webkit-details-marker]:hidden">
-            Account menu
+            {{ __('Account Menu') }}
             @svg('heroicon-o-chevron-down', 'size-4 transition group-open:rotate-180')
         </summary>
-        <nav class="max-h-[65vh] overflow-y-auto border-t border-slate-100 p-3" aria-label="Customer account navigation">
+        <nav class="max-h-[65vh] overflow-y-auto border-t border-slate-100 p-3" aria-label="{{ __('Customer Account Navigation') }}">
             @include('storefront.account.partials.navigation-menu')
         </nav>
     </details>
 
-    <nav class="hidden max-h-[calc(100vh-150px)] overflow-y-auto p-3 lg:block" aria-label="Customer account navigation">
+    <nav class="hidden max-h-[calc(100vh-150px)] overflow-y-auto p-3 lg:block" aria-label="{{ __('Customer Account Navigation') }}">
         @include('storefront.account.partials.navigation-menu')
     </nav>
 </aside>

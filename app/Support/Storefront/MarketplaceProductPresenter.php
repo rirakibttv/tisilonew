@@ -45,7 +45,7 @@ class MarketplaceProductPresenter
             $productVariationId = null;
             $vendorListingItemId = $lowestOffer['id'];
             $canPurchase = true;
-            $stockLabel = $available > 0 ? $available.'টি স্টকে' : 'অর্ডারযোগ্য';
+            $stockLabel = $available > 0 ? __(':count in stock', ['count' => $available]) : __('Available to order');
         } else {
             $activeVariations = $product->variations->where('status', true);
             $pricedVariations = $activeVariations->filter(
@@ -83,8 +83,8 @@ class MarketplaceProductPresenter
                     && $price > 0;
                 $productVariationId = $canPurchase ? $lowestVariation->getKey() : null;
                 $stockLabel = $available > 0
-                    ? $available.'টি স্টকে'
-                    : ($hasBackorder ? 'প্রি-অর্ডার' : 'স্টক নেই');
+                    ? __(':count in stock', ['count' => $available])
+                    : ($hasBackorder ? __('Pre-order') : __('Out of Stock'));
             } else {
                 $available = max(0, (int) $product->stock_quantity);
                 $hasUnlimitedStock = ! $product->manage_stock && $product->stock_status !== 'out_of_stock';
@@ -94,10 +94,10 @@ class MarketplaceProductPresenter
                     && ($hasUnlimitedStock || $available > 0 || $isBackorder);
                 $productVariationId = null;
                 $stockLabel = match (true) {
-                    $product->manage_stock && $available > 0 => $available.'টি স্টকে',
-                    $isBackorder => 'প্রি-অর্ডার',
-                    $hasUnlimitedStock => 'স্টকে আছে',
-                    default => 'স্টক নেই',
+                    $product->manage_stock && $available > 0 => __(':count in stock', ['count' => $available]),
+                    $isBackorder => __('Pre-order'),
+                    $hasUnlimitedStock => __('In Stock'),
+                    default => __('Out of Stock'),
                 };
             }
         }

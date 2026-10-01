@@ -1,6 +1,6 @@
 @extends('layouts.storefront')
 
-@section('title', 'আমার অ্যাকাউন্ট — Tisilo')
+@section('title', __('My Account').' — Tisilo')
 
 @section('content')
     <section class="storefront-shell py-10">
@@ -15,11 +15,11 @@
                 <p class="mt-1 break-all text-sm text-slate-500">{{ auth()->user()->email }}</p>
                 <p class="mt-1 text-sm text-slate-500">{{ auth()->user()->phone }}</p>
                 <div class="mt-6 grid gap-2">
-                    <a href="{{ route('store.wishlist.index') }}" class="rounded-xl bg-orange-50 px-4 py-3 text-sm font-bold text-orange-700">আমার উইশলিস্ট</a>
-                    <a href="{{ route('store.products.index') }}" class="rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50">কেনাকাটা চালিয়ে যান</a>
+                    <a href="{{ route('store.wishlist.index') }}" class="rounded-xl bg-orange-50 px-4 py-3 text-sm font-bold text-orange-700">{{ __('My Wishlist') }}</a>
+                    <a href="{{ route('store.products.index') }}" class="rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50">{{ __('Continue Shopping') }}</a>
                     <form method="POST" action="{{ route('store.account.logout') }}">
                         @csrf
-                        <button class="w-full rounded-xl px-4 py-3 text-left text-sm font-bold text-rose-600 hover:bg-rose-50">লগআউট</button>
+                        <button class="w-full rounded-xl px-4 py-3 text-left text-sm font-bold text-rose-600 hover:bg-rose-50">{{ __('Log Out') }}</button>
                     </form>
                 </div>
             </aside>
@@ -27,10 +27,10 @@
             <div>
                 <div class="flex items-end justify-between gap-4">
                     <div>
-                        <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">My account</p>
-                        <h2 class="mt-2 text-3xl font-black text-slate-950">সাম্প্রতিক অর্ডার</h2>
+                        <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">{{ __('My Account') }}</p>
+                        <h2 class="mt-2 text-3xl font-black text-slate-950">{{ __('Recent Orders') }}</h2>
                     </div>
-                    <a href="{{ route('store.cart.index') }}" class="text-sm font-black text-orange-600">কার্ট দেখুন →</a>
+                    <a href="{{ route('store.cart.index') }}" class="text-sm font-black text-orange-600">{{ __('View Cart') }} →</a>
                 </div>
 
                 <div class="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -38,16 +38,16 @@
                         <div class="grid gap-3 border-b border-slate-100 p-5 last:border-0 sm:grid-cols-[1fr_auto_auto] sm:items-center">
                             <div>
                                 <p class="font-black text-slate-900">{{ $order->order_number }}</p>
-                                <p class="mt-1 text-xs text-slate-500">{{ $order->items_count }}টি পণ্য · {{ $order->placed_at?->format('d M Y') }}</p>
+                                <p class="mt-1 text-xs text-slate-500">{{ __(':count items', ['count' => $order->items_count]) }} · {{ $order->placed_at?->format('d M Y') }}</p>
                             </div>
-                            <span class="w-fit rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">{{ $order->status->label() }}</span>
+                            <span class="w-fit rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">{{ __($order->status->label()) }}</span>
                             <p class="font-black text-slate-950">৳{{ number_format((float) $order->total_amount, 0) }}</p>
                         </div>
                     @empty
                         <div class="px-6 py-16 text-center">
                             @svg('heroicon-o-shopping-bag', 'mx-auto size-12 text-slate-300')
-                            <p class="mt-4 font-black text-slate-800">এখনো কোনো অর্ডার নেই</p>
-                            <a href="{{ route('store.products.index') }}" class="mt-4 inline-flex rounded-xl bg-orange-500 px-5 py-3 text-sm font-bold text-white">পণ্য দেখুন</a>
+                            <p class="mt-4 font-black text-slate-800">{{ __('No orders yet') }}</p>
+                            <a href="{{ route('store.products.index') }}" class="mt-4 inline-flex rounded-xl bg-orange-500 px-5 py-3 text-sm font-bold text-white">{{ __('View Products') }}</a>
                         </div>
                     @endforelse
                 </div>

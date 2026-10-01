@@ -3,6 +3,8 @@ const campaignData = document.getElementById('campaign-checkout-data');
 
 if (campaignForm && campaignData) {
     const data = JSON.parse(campaignData.textContent);
+    const messages = data.messages || {};
+    const locale = data.locale === 'bn' ? 'bn-BD' : 'en-US';
     const product = campaignForm.elements.product_id;
     const variation = campaignForm.elements.product_variation_id;
     const quantity = campaignForm.elements.quantity;
@@ -15,7 +17,7 @@ if (campaignForm && campaignData) {
     const status = campaignForm.querySelector('[data-quote-status]');
     const retry = campaignForm.querySelector('[data-quote-retry]');
     const preview = campaignForm.dataset.preview === '1';
-    const money = value => `৳${Number(value).toLocaleString('bn-BD', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    const money = value => `৳${Number(value).toLocaleString(locale, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     let subtotal = Number(data.subtotal);
     let regions = data.regions;
     let ready = !data.error && regions.length > 0;
@@ -32,7 +34,7 @@ if (campaignForm && campaignData) {
         const seen = new Set();
 
         return regions.filter(item => {
-            const key = districtLabel(item).toLocaleLowerCase('bn-BD');
+            const key = districtLabel(item).toLocaleLowerCase(locale);
             if (!key || seen.has(key)) return false;
             seen.add(key);
 
@@ -45,8 +47,8 @@ if (campaignForm && campaignData) {
     };
     const renderDistrictOptions = (filter = '') => {
         if (!districtOptions) return;
-        const query = filter.trim().toLocaleLowerCase('bn-BD');
-        const matches = districtQuotes().filter(item => districtLabel(item).toLocaleLowerCase('bn-BD').includes(query));
+        const query = filter.trim().toLocaleLowerCase(locale);
+        const matches = districtQuotes().filter(item => districtLabel(item).toLocaleLowerCase(locale).includes(query));
         districtOptions.replaceChildren();
         matches.forEach(item => {
             const button = document.createElement('button');
@@ -69,7 +71,7 @@ if (campaignForm && campaignData) {
         if (!matches.length) {
             const empty = document.createElement('p');
             empty.className = 'px-3 py-3 text-xs text-rose-600';
-            empty.textContent = 'এই জেলার জন্য ডেলিভারি রেট পাওয়া যায়নি।';
+            empty.textContent = messages.districtUnavailable || 'No delivery rate was found for this district.';
             districtOptions.append(empty);
         }
     };
@@ -122,7 +124,7 @@ if (campaignForm && campaignData) {
         if (item.available < 1) {
             const stock = document.createElement('span');
             stock.className = 'mt-1 block text-[10px] font-bold text-rose-600';
-            stock.textContent = 'স্টক নেই';
+            stock.textContent = messages.outOfStock || 'Out of Stock';
             button.append(stock);
         }
 
@@ -133,7 +135,7 @@ if (campaignForm && campaignData) {
         variation.replaceChildren();
         variationOptions?.replaceChildren();
         selected.variations.forEach(item => {
-            const option = new Option(`${item.label} — ${money(item.price)}${item.available < 1 ? ' (স্টক নেই)' : ''}`, item.id);
+            const option = new Option(`${item.label} — ${money(item.price)}${item.available < 1 ? ` (${messages.outOfStock || 'Out of Stock'})` : ''}`, item.id);
             option.disabled = item.available < 1;
             variation.add(option);
             variationOptions?.append(variationButton(item));
@@ -146,8 +148,8 @@ if (campaignForm && campaignData) {
     const updateTotals = () => {
         const quote = regions.find(item => String(item.region_id) === region.value);
         campaignForm.querySelector('[data-campaign-subtotal]').textContent = money(subtotal);
-        campaignForm.querySelector('[data-campaign-shipping]').textContent = ready && quote ? money(quote.amount) : 'জেলা নির্বাচন করুন';
-        campaignForm.querySelector('[data-campaign-total]').textContent = ready && quote ? money(subtotal + Number(quote.amount)) : 'জেলা নির্বাচন করুন';
+        campaignForm.querySelector('[data-campaign-shipping]').textContent = ready && quote ? money(quote.amount) : (messages.selectDistrict || 'Select District');
+        campaignForm.querySelector('[data-campaign-total]').textContent = ready && quote ? money(subtotal + Number(quote.amount)) : (messages.selectDistrict || 'Select District');
         submit.disabled = preview || !ready || !quote || submitting;
     };
     const updateProduct = (resetVariation = false) => {
@@ -186,7 +188,7 @@ if (campaignForm && campaignData) {
             if (currentSequence !== sequence) return;
             if (!response.ok) {
                 const errors = Object.values(payload.errors || {}).flat();
-                throw new Error(errors[0] || 'হিসাব যাচাই করা যায়নি। আবার চেষ্টা করুন।');
+                throw new Error(errors[0] || messages.quoteFailed || 'The calculation could not be verified. Please try again.');
             }
             subtotal = Number(payload.subtotal);
             const option = selectedProduct().variable ? selectedOption() : selectedProduct();
@@ -199,7 +201,7 @@ if (campaignForm && campaignData) {
             const previousDistrict = districtSearch.value;
             renderDistrictOptions(previousDistrict);
             const previousQuote = regions.find(item => String(item.region_id) === previousRegion);
-            const matchingDistrict = districtQuotes().find(item => districtLabel(item).toLocaleLowerCase('bn-BD') === previousDistrict.trim().toLocaleLowerCase('bn-BD'));
+            const matchingDistrict = districtQuotes().find(item => districtLabel(item).toLocaleLowerCase(locale) === previousDistrict.trim().toLocaleLowerCase(locale));
             if (previousQuote) {
                 region.value = previousRegion;
                 districtSearch.value = districtLabel(previousQuote);
@@ -210,13 +212,13 @@ if (campaignForm && campaignData) {
                 region.value = '';
             }
             ready = regions.length > 0;
-            status.textContent = ready ? '' : 'নির্বাচিত পণ্যের জন্য কোনো সক্রিয় ডেলিভারি রেট নেই।';
+            status.textContent = ready ? '' : (messages.noActiveRate || 'No active delivery rate is available for the selected product.');
             retry.hidden = ready;
             updateTotals();
         } catch (error) {
             if (error.name === 'AbortError' || currentSequence !== sequence) return;
             ready = false;
-            status.textContent = error instanceof SyntaxError ? 'সংযোগে সমস্যা হয়েছে। আবার চেষ্টা করুন বা পেজ রিফ্রেশ করুন।' : error.message;
+            status.textContent = error instanceof SyntaxError ? (messages.connectionError || 'There was a connection problem. Please try again or refresh the page.') : error.message;
             retry.hidden = false;
             updateTotals();
         }
@@ -228,7 +230,7 @@ if (campaignForm && campaignData) {
         clearTimeout(timer);
         ready = false;
         retry.hidden = true;
-        status.textContent = 'মূল্য ও ডেলিভারি চার্জ যাচাই হচ্ছে…';
+        status.textContent = messages.checking || 'Checking price and delivery charge…';
         updateProduct();
         timer = setTimeout(() => refreshQuote(current), 200);
     };
@@ -248,7 +250,7 @@ if (campaignForm && campaignData) {
         districtSearch.setAttribute('aria-expanded', 'true');
     });
     districtSearch?.addEventListener('input', () => {
-        const exact = districtQuotes().find(item => districtLabel(item).toLocaleLowerCase('bn-BD') === districtSearch.value.trim().toLocaleLowerCase('bn-BD'));
+        const exact = districtQuotes().find(item => districtLabel(item).toLocaleLowerCase(locale) === districtSearch.value.trim().toLocaleLowerCase(locale));
         region.value = exact ? String(exact.region_id) : '';
         renderDistrictOptions(districtSearch.value);
         districtOptions?.classList.remove('hidden');
@@ -295,11 +297,11 @@ if (campaignForm && campaignData) {
         }
         submitting = true;
         submit.disabled = true;
-        submit.textContent = 'অর্ডার জমা হচ্ছে…';
+        submit.textContent = messages.submitting || 'Submitting Order…';
     });
     window.addEventListener('pageshow', () => {
         submitting = false;
-        submit.textContent = 'অর্ডার নিশ্চিত করুন';
+        submit.textContent = messages.confirmOrder || 'Confirm Order';
         updateTotals();
     });
     updateProduct();

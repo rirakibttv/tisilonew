@@ -12,6 +12,7 @@ use App\Models\ProductVariation;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -19,13 +20,23 @@ class StorefrontTest extends TestCase
 {
     use DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Http::fake([
+            'graph.facebook.com/*' => Http::response(['events_received' => 1], 200),
+            '*' => Http::response([], 200),
+        ]);
+    }
+
     public function test_homepage_and_catalog_are_available(): void
     {
         $this->get('/')
             ->assertOk()
             ->assertSee('TISILO')
             ->assertSee('আপনার প্রয়োজনের সবকিছু')
-            ->assertSee('Seller Central')
+            ->assertSee('সেলার সেন্ট্রাল')
             ->assertDontSee('>Sellers</a>', false)
             ->assertSee('data-product-grid', false);
 
@@ -37,6 +48,50 @@ class StorefrontTest extends TestCase
         $this->get('/shop')
             ->assertOk()
             ->assertSee('Tisilo Shop');
+    }
+
+    public function test_visitor_can_switch_storefront_between_bangla_and_english(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<html lang="bn">', false)
+            ->assertSee('data-language-select', false)
+            ->assertSee('সেলার সেন্ট্রাল')
+            ->assertSee('বাংলা');
+
+        $this->from('/shop')
+            ->post(route('store.language.update'), ['locale' => 'en'])
+            ->assertRedirect('/shop')
+            ->assertSessionHas('storefront_locale', 'en');
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<html lang="en">', false)
+            ->assertSee('Seller Central')
+            ->assertSee('My Account');
+
+        $this->get('/shop')
+            ->assertOk()
+            ->assertSee('Filter Products')
+            ->assertSee('Price Range')
+            ->assertSee('Stock Status')
+            ->assertSee('All Products')
+            ->assertDontSee('পণ্য ফিল্টার করুন');
+
+        $this->from('/shop')
+            ->post(route('store.language.update'), ['locale' => 'bn'])
+            ->assertRedirect('/shop')
+            ->assertSessionHas('storefront_locale', 'bn');
+
+        $this->get('/shop')
+            ->assertOk()
+            ->assertSee('পণ্য ফিল্টার করুন')
+            ->assertSee('মূল্যসীমা')
+            ->assertSee('স্টক অবস্থা')
+            ->assertSee('সব পণ্য');
+
+        $this->post(route('store.language.update'), ['locale' => 'fr'])
+            ->assertSessionHasErrors('locale');
     }
 
     public function test_product_grids_have_five_pixel_gap_and_no_padding(): void
@@ -215,8 +270,8 @@ class StorefrontTest extends TestCase
             ->assertSee('data-product-card-stock', false)
             ->assertSee('7টি স্টকে')
             ->assertSee('data-product-card-actions', false)
-            ->assertSee('Add to Cart')
-            ->assertSee('Order Now')
+            ->assertSee('কার্টে যোগ করুন')
+            ->assertSee('অর্ডার করুন')
             ->assertSee('name="redirect_to" value="cart"', false)
             ->assertSee('name="redirect_to" value="checkout"', false);
 
@@ -224,6 +279,19 @@ class StorefrontTest extends TestCase
             ->assertOk()
             ->assertSee('★ 4.5')
             ->assertSee('(2 রিভিউ)');
+
+        $this->withSession(['storefront_locale' => 'en'])
+            ->get(route('store.shop.index', ['q' => 'Trusted Card Product '.$token]))
+            ->assertOk()
+            ->assertSee('Add to Cart')
+            ->assertSee('Order Now')
+            ->assertSee('7 in stock')
+            ->assertSee('(2 reviews)');
+
+        $this->get(route('store.products.show', $product))
+            ->assertOk()
+            ->assertSee('★ 4.5')
+            ->assertSee('(2 reviews)');
     }
 
     public function test_every_storefront_product_collection_uses_the_shared_product_card(): void

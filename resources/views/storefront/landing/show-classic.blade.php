@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="{{ app()->getLocale() }}">
 <head>
     @php
         $title = \App\Support\SeoMetadata::title($landingPage->headline, $landingPage->header_title ?: $landingPage->name);
@@ -63,12 +63,12 @@
 </head>
 <body class="bg-white text-slate-900 antialiased">
     @if($preview)
-        <div class="bg-amber-400 px-4 py-2 text-center text-xs font-black text-slate-950">PREVIEW MODE — এই page এখনো public campaign হিসেবে প্রকাশিত নয়</div>
+        <div class="bg-amber-400 px-4 py-2 text-center text-xs font-black text-slate-950">{{ __('PREVIEW MODE — This page has not been published as a public campaign yet.') }}</div>
     @endif
 
     <header class="bg-gradient-to-r from-[#053b19] via-[#079433] to-[#053b19] text-white shadow-md">
         <div class="storefront-shell grid min-h-24 items-center gap-4 py-4 md:grid-cols-[180px_minmax(0,1fr)_auto]">
-            <a href="{{ route('store.home') }}" class="justify-self-center md:justify-self-start" aria-label="Tisilo homepage">
+            <a href="{{ route('store.home') }}" class="justify-self-center md:justify-self-start" aria-label="{{ __('Tisilo homepage') }}">
                 @if($logoUrl)
                     <img src="{{ $logoUrl }}" alt="{{ $generalSettings['site_name'] ?? 'Tisilo' }}" class="h-10 w-auto object-contain">
                 @else
@@ -76,11 +76,11 @@
                 @endif
             </a>
             <p class="text-center text-lg font-black sm:text-xl">{{ $headerTitle }}</p>
-            <div id="campaign-countdown" data-deadline="{{ $deadline }}" class="grid grid-cols-4 gap-1.5" aria-label="অফারের সময় বাকি">
+            <div id="campaign-countdown" data-deadline="{{ $deadline }}" class="grid grid-cols-4 gap-1.5" aria-label="{{ __('Offer time remaining') }}">
                 @foreach([['days', 'Days'], ['hours', 'Hours'], ['minutes', 'Minutes'], ['seconds', 'Seconds']] as [$part, $label])
                     <div class="min-w-16 rounded-xl border border-dashed border-white/80 bg-white/5 px-2 py-2 text-center">
                         <strong data-countdown-{{ $part }} class="block text-base leading-none">00</strong>
-                        <span class="mt-1 block text-[9px] font-semibold text-amber-200">{{ $label }}</span>
+                        <span class="mt-1 block text-[9px] font-semibold text-amber-200">{{ __($label) }}</span>
                     </div>
                 @endforeach
             </div>
@@ -97,7 +97,7 @@
                     <p class="max-w-xl whitespace-pre-line text-2xl font-semibold leading-relaxed sm:text-3xl">{{ $landingPage->subheadline ?: $primaryProduct->short_description }}</p>
                 </div>
                 <div class="text-center">
-                    <a href="#order-now" class="campaign-bg inline-flex min-h-14 items-center justify-center rounded-md border-2 border-amber-500 px-8 py-3 text-lg font-black text-white shadow-lg transition hover:-translate-y-0.5">অর্ডার করতে ক্লিক করুন 🛒</a>
+                    <a href="#order-now" class="campaign-bg inline-flex min-h-14 items-center justify-center rounded-md border-2 border-amber-500 px-8 py-3 text-lg font-black text-white shadow-lg transition hover:-translate-y-0.5">{{ __('Click to Order') }} 🛒</a>
                 </div>
             </div>
             <div class="overflow-hidden bg-slate-100 shadow-sm">
@@ -111,10 +111,10 @@
 
         <section class="border-b-[18px] border-rose-100 bg-gradient-to-b from-[#fff7b7] to-[#ffe8d1] px-4 py-10 sm:px-6">
             <div class="mx-auto max-w-2xl text-center">
-                <p class="border border-dashed border-fuchsia-300 bg-fuchsia-50/80 px-5 py-4 text-lg font-bold leading-relaxed">আমাদের থেকে বিস্তারিত জানতে এই নাম্বারে কল করুন<br><a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="text-2xl font-black">{{ $phone }}</a></p>
+                <p class="border border-dashed border-fuchsia-300 bg-fuchsia-50/80 px-5 py-4 text-lg font-bold leading-relaxed">{{ __('Call this number to learn more') }}<br><a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="text-2xl font-black">{{ $phone }}</a></p>
                 <div class="mt-6 grid gap-4 sm:grid-cols-2">
-                    <a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="rounded-md border-2 border-white bg-rose-600 px-6 py-4 text-lg font-black text-white shadow-sm">☎ আমাদের কল করুন</a>
-                    <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" class="rounded-md border-2 border-white bg-emerald-700 px-6 py-4 text-lg font-black text-white shadow-sm">◉ হোয়াটসঅ্যাপ</a>
+                    <a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}" class="rounded-md border-2 border-white bg-rose-600 px-6 py-4 text-lg font-black text-white shadow-sm">☎ {{ __('Call Us') }}</a>
+                    <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" class="rounded-md border-2 border-white bg-emerald-700 px-6 py-4 text-lg font-black text-white shadow-sm">◉ {{ __('WhatsApp') }}</a>
                 </div>
             </div>
         </section>
@@ -135,9 +135,9 @@
             <div class="campaign-green-border rounded-md border-4 bg-white p-3 sm:p-6">
                 <h2 class="rounded-md bg-[#28633a] px-5 py-3 text-center font-serif text-2xl font-black text-white shadow-md">{{ $landingPage->offer_title ?: $headerTitle }}</h2>
                 @if($galleryImages->isNotEmpty())
-                    <div class="mt-5 grid gap-2 sm:grid-cols-3">@foreach($galleryImages as $image)<img src="{{ $image }}" alt="{{ $primaryProduct->name }} ছবি {{ $loop->iteration }}" loading="lazy" class="aspect-square w-full object-cover">@endforeach</div>
+                    <div class="mt-5 grid gap-2 sm:grid-cols-3">@foreach($galleryImages as $image)<img src="{{ $image }}" alt="{{ __(':product image :number', ['product' => $primaryProduct->name, 'number' => $loop->iteration]) }}" loading="lazy" class="aspect-square w-full object-cover">@endforeach</div>
                 @endif
-                <div class="mt-4 text-center"><a href="#order-now" class="campaign-bg inline-flex rounded-md border-2 border-amber-500 px-7 py-3 text-lg font-black text-white shadow-lg">অর্ডার করতে ক্লিক করুন 🛒</a></div>
+                <div class="mt-4 text-center"><a href="#order-now" class="campaign-bg inline-flex rounded-md border-2 border-amber-500 px-7 py-3 text-lg font-black text-white shadow-lg">{{ __('Click to Order') }} 🛒</a></div>
             </div>
         </section>
 
@@ -148,22 +148,22 @@
         @include('storefront.landing.checkout-classic')
 
         <section class="storefront-shell pb-12">
-            <h2 class="campaign-green-bg px-5 py-3 text-center text-2xl font-black text-white">কাস্টমার রিভিউ</h2>
+            <h2 class="campaign-green-bg px-5 py-3 text-center text-2xl font-black text-white">{{ __('Customer Reviews') }}</h2>
             @if($reviewImages->isNotEmpty())
-                <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">@foreach($reviewImages as $image)<img src="{{ $image }}" alt="কাস্টমার রিভিউ ছবি {{ $loop->iteration }}" loading="lazy" class="aspect-square w-full object-cover">@endforeach</div>
+                <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">@foreach($reviewImages as $image)<img src="{{ $image }}" alt="{{ __('Customer review image :number', ['number' => $loop->iteration]) }}" loading="lazy" class="aspect-square w-full object-cover">@endforeach</div>
             @endif
             @if(count($landingPage->reviews ?? []))
-                <div class="mt-6 grid gap-4 md:grid-cols-3">@foreach($landingPage->reviews as $review)<figure class="rounded-xl border border-slate-200 p-5"><div class="text-amber-500">{{ str_repeat('★', (int) ($review['rating'] ?? 5)) }}</div><blockquote class="mt-3 text-sm leading-6 text-slate-600">“{{ $review['quote'] ?? '' }}”</blockquote><figcaption class="mt-3 font-black">{{ $review['name'] ?? 'Verified Customer' }}</figcaption></figure>@endforeach</div>
+                <div class="mt-6 grid gap-4 md:grid-cols-3">@foreach($landingPage->reviews as $review)<figure class="rounded-xl border border-slate-200 p-5"><div class="text-amber-500">{{ str_repeat('★', (int) ($review['rating'] ?? 5)) }}</div><blockquote class="mt-3 text-sm leading-6 text-slate-600">“{{ $review['quote'] ?? '' }}”</blockquote><figcaption class="mt-3 font-black">{{ $review['name'] ?? __('Verified Customer') }}</figcaption></figure>@endforeach</div>
             @endif
-            <div class="mt-6 text-center"><a href="#order-now" class="campaign-bg inline-flex rounded-md border-2 border-amber-500 px-7 py-3 text-lg font-black text-white shadow-lg">অর্ডার করতে ক্লিক করুন 🛒</a></div>
+            <div class="mt-6 text-center"><a href="#order-now" class="campaign-bg inline-flex rounded-md border-2 border-amber-500 px-7 py-3 text-lg font-black text-white shadow-lg">{{ __('Click to Order') }} 🛒</a></div>
         </section>
 
         @if(count($landingPage->faqs ?? []))
-            <section class="storefront-shell pb-14"><h2 class="campaign-green-bg px-5 py-3 text-center text-2xl font-black text-white">সাধারণ প্রশ্ন ও উত্তর</h2><div class="mt-5 space-y-3">@foreach($landingPage->faqs as $faq)<details class="rounded-xl border border-slate-200 p-5"><summary class="cursor-pointer font-black">{{ $faq['question'] ?? '' }}</summary><p class="mt-3 text-sm leading-7 text-slate-600">{{ $faq['answer'] ?? '' }}</p></details>@endforeach</div></section>
+            <section class="storefront-shell pb-14"><h2 class="campaign-green-bg px-5 py-3 text-center text-2xl font-black text-white">{{ __('Frequently Asked Questions') }}</h2><div class="mt-5 space-y-3">@foreach($landingPage->faqs as $faq)<details class="rounded-xl border border-slate-200 p-5"><summary class="cursor-pointer font-black">{{ $faq['question'] ?? '' }}</summary><p class="mt-3 text-sm leading-7 text-slate-600">{{ $faq['answer'] ?? '' }}</p></details>@endforeach</div></section>
         @endif
     </main>
 
-    <footer class="campaign-green-bg px-4 py-7 text-center text-sm text-white"><p class="font-black">{{ $generalSettings['site_name'] ?? 'Tisilo' }}</p><p class="mt-1 text-white/80">নিরাপদ অর্ডার · ক্যাশ অন ডেলিভারি · সারাদেশে ডেলিভারি</p></footer>
+    <footer class="campaign-green-bg px-4 py-7 text-center text-sm text-white"><p class="font-black">{{ $generalSettings['site_name'] ?? 'Tisilo' }}</p><p class="mt-1 text-white/80">{{ __('Secure Order · Cash on Delivery · Nationwide Delivery') }}</p></footer>
     <a href="#order-now" data-campaign-sticky-cta class="campaign-bg fixed inset-x-4 bottom-4 z-40 grid h-14 place-items-center rounded-xl text-sm font-black text-white shadow-2xl md:hidden">{{ $landingPage->cta_text }}</a>
 
     @include('storefront.partials.visitor-analytics')
