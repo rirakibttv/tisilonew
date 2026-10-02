@@ -37,6 +37,7 @@ class StorefrontTest extends TestCase
             ->assertSee('TISILO')
             ->assertSee('Everything you need, in one supermarket')
             ->assertSee('Seller Central')
+            ->assertSee('data-whatsapp-brand-icon', false)
             ->assertDontSee('>Sellers</a>', false)
             ->assertSee('data-product-grid', false);
 
@@ -76,7 +77,11 @@ class StorefrontTest extends TestCase
             ->assertSee('aria-controls="desktop-category-menu"', false)
             ->assertSee('aria-expanded="false"', false)
             ->assertSee('data-desktop-category-menu-panel', false)
+            ->assertSee('group/desktop-cat', false)
+            ->assertSee('min-h-[45px]', false)
+            ->assertSee('group-hover/desktop-cat:block', false)
             ->assertSee('All Categories')
+            ->assertDontSee('Browse Categories')
             ->assertSee($category->name)
             ->assertSee($subcategory->name)
             ->assertSee('href="'.$category->permalink.'"', false)

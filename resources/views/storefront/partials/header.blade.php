@@ -90,7 +90,11 @@
         <!-- Right Header Items -->
         <div class="ml-auto flex items-center gap-2 sm:gap-3">
             <a href="{{ $whatsappLink }}" target="_blank" rel="noopener" class="hidden items-center gap-2 px-2 text-sm font-bold leading-tight text-slate-700 transition hover:text-green-600 lg:flex">
-                <span class="grid size-9 place-items-center rounded-full bg-green-50 text-green-600">@svg('heroicon-o-chat-bubble-left-right', 'size-5')</span>
+                <span class="grid size-9 place-items-center rounded-full bg-green-50 text-green-600">
+                    <svg class="size-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-whatsapp-brand-icon>
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479s1.065 2.875 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.981.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.002-5.45 4.436-9.893 9.891-9.893a9.82 9.82 0 0 1 7.021 2.91 9.82 9.82 0 0 1 2.898 7.027c-.003 5.45-4.435 9.893-9.895 9.893m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.3-1.652a11.86 11.86 0 0 0 5.69 1.449h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+                    </svg>
+                </span>
                 <span><span class="block text-xs text-slate-400">WhatsApp</span>{{ $whatsapp }}</span>
             </a>
 
@@ -153,19 +157,76 @@
 <!-- Supermarket Navigation Menu Bar -->
 <nav class="sticky top-[74px] z-30 hidden border-b border-slate-200 bg-white/98 shadow-sm backdrop-blur-md md:block" aria-label="{{ __('Store Navigation') }}" data-storefront-category-navigation>
     <div class="storefront-shell grid grid-cols-[270px_minmax(0,1fr)] gap-4">
-        <button
-            type="button"
-            class="flex h-12 w-full items-center gap-3 rounded-t-xl bg-gradient-to-r from-purple-800 to-fuchsia-600 px-5 text-left text-sm font-black uppercase tracking-wide text-white transition hover:from-purple-900 hover:to-fuchsia-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-200"
-            id="all-categories-button"
-            data-desktop-category-menu-button
-            aria-controls="desktop-category-menu"
-            aria-expanded="false"
-            aria-haspopup="true"
-        >
-            @svg('heroicon-o-bars-3', 'size-4')
-            <span>{{ __('All Categories') }}</span>
-            @svg('heroicon-o-chevron-down', 'ml-auto size-4 transition-transform duration-200', ['data-desktop-category-menu-chevron' => true])
-        </button>
+        <div class="relative">
+            <button
+                type="button"
+                class="flex h-12 w-full items-center gap-3 rounded-t-xl bg-gradient-to-r from-purple-800 to-fuchsia-600 px-5 text-left text-sm font-black uppercase tracking-wide text-white transition hover:from-purple-900 hover:to-fuchsia-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-200"
+                id="all-categories-button"
+                data-desktop-category-menu-button
+                aria-controls="desktop-category-menu"
+                aria-expanded="false"
+                aria-haspopup="true"
+            >
+                @svg('heroicon-o-bars-3', 'size-4')
+                <span>{{ __('All Categories') }}</span>
+                @svg('heroicon-o-chevron-down', 'ml-auto size-4 transition-transform duration-200', ['data-desktop-category-menu-chevron' => true])
+            </button>
+
+            <div
+                id="desktop-category-menu"
+                class="invisible pointer-events-none absolute left-0 top-full z-50 w-full translate-y-2 rounded-b-2xl border-x border-b border-slate-200 bg-white opacity-0 shadow-xl transition duration-200"
+                data-desktop-category-menu-panel
+                aria-hidden="true"
+            >
+                <ul class="relative divide-y divide-slate-100 text-sm font-semibold text-slate-700">
+                    @forelse($categories ?? [] as $category)
+                        <li class="group/desktop-cat relative">
+                            <a href="{{ $category->permalink }}" class="flex min-h-[45px] items-center justify-between px-4 py-2 transition hover:bg-purple-50 hover:text-purple-700">
+                                <span class="flex min-w-0 items-center gap-3">
+                                    @if($category->image)
+                                        <span class="grid size-7 shrink-0 place-items-center overflow-hidden rounded-md p-0">
+                                            <img src="{{ asset('storage/'.ltrim($category->image, '/')) }}" alt="{{ $category->name }}" class="block size-full scale-125 object-cover" loading="lazy">
+                                        </span>
+                                    @else
+                                        <span class="grid size-6 shrink-0 place-items-center rounded-md bg-purple-100 text-xs font-black uppercase text-purple-700">{{ mb_substr($category->name, 0, 1) }}</span>
+                                    @endif
+                                    <span class="truncate">{{ $category->name }}</span>
+                                </span>
+                                @if($category->children && $category->children->isNotEmpty())
+                                    @svg('heroicon-o-chevron-right', 'size-3.5 shrink-0 text-slate-400 transition group-hover/desktop-cat:text-purple-700')
+                                @endif
+                            </a>
+
+                            @if($category->children && $category->children->isNotEmpty())
+                                <div class="invisible absolute left-full top-0 z-50 ml-1.5 hidden w-72 rounded-2xl border border-slate-200 bg-white p-3 opacity-0 shadow-xl transition-all duration-200 group-hover/desktop-cat:visible group-hover/desktop-cat:block group-hover/desktop-cat:opacity-100 group-focus-within/desktop-cat:visible group-focus-within/desktop-cat:block group-focus-within/desktop-cat:opacity-100">
+                                    <p class="border-b border-slate-100 px-2 pb-2 text-xs font-black uppercase tracking-wider text-purple-700">{{ $category->name }}</p>
+                                    <div class="mt-2 max-h-[360px] space-y-2 overflow-y-auto pr-1">
+                                        @foreach($category->children as $subcat)
+                                            <div class="rounded-lg p-2 transition hover:bg-purple-50/50">
+                                                <a href="{{ $subcat->permalink }}" class="block text-sm font-bold text-slate-800 hover:text-purple-700">
+                                                    {{ $subcat->name }}
+                                                </a>
+                                                @if($subcat->children && $subcat->children->isNotEmpty())
+                                                    <div class="mt-1 flex flex-wrap gap-1.5 border-l border-purple-200 pl-2">
+                                                        @foreach($subcat->children as $child)
+                                                            <a href="{{ $child->permalink }}" class="text-xs text-slate-500 hover:text-purple-700 hover:underline">
+                                                                {{ $child->name }}
+                                                            </a>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        </li>
+                    @empty
+                        <li class="px-4 py-3 text-center text-sm text-slate-400">{{ __('No categories available') }}</li>
+                    @endforelse
+                </ul>
+            </div>
+        </div>
 
         <div class="flex h-12 items-center justify-between">
             <div class="flex h-full items-center gap-7 text-sm font-bold text-slate-800">
@@ -179,66 +240,6 @@
         </div>
     </div>
 
-    <div
-        id="desktop-category-menu"
-        class="invisible pointer-events-none absolute left-1/2 top-full z-50 mt-px max-h-[calc(100vh-132px)] w-[calc(100%-10px)] max-w-[1600px] -translate-x-1/2 translate-y-2 overflow-y-auto rounded-b-2xl border border-slate-200 bg-white opacity-0 shadow-2xl transition duration-200"
-        data-desktop-category-menu-panel
-        aria-hidden="true"
-    >
-        <div class="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white/95 px-5 py-3 backdrop-blur-md">
-            <div>
-                <p class="text-base font-black text-slate-900">{{ __('Browse Categories') }}</p>
-                <p class="text-xs font-medium text-slate-500">{{ __('Choose from our product departments') }}</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <a href="{{ route('store.home') }}#categories" class="rounded-lg px-3 py-2 text-xs font-black text-purple-700 transition hover:bg-purple-50">
-                    {{ __('View All Categories') }}
-                </a>
-                <button type="button" class="grid size-9 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700" data-desktop-category-menu-close aria-label="{{ __('Close menu') }}">
-                    @svg('heroicon-o-x-mark', 'size-5')
-                </button>
-            </div>
-        </div>
-
-        <div class="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            @forelse($categories ?? [] as $category)
-                <section class="rounded-xl border border-slate-100 bg-slate-50/70 p-3 transition hover:border-purple-200 hover:bg-purple-50/40">
-                    <a href="{{ $category->permalink }}" class="group flex items-center gap-3 rounded-lg text-slate-900 transition hover:text-purple-700">
-                        @if($category->image)
-                            <img src="{{ asset('storage/'.ltrim($category->image, '/')) }}" alt="{{ $category->name }}" class="size-11 shrink-0 rounded-lg object-cover ring-1 ring-slate-200">
-                        @else
-                            <span class="grid size-11 shrink-0 place-items-center rounded-lg bg-purple-100 text-base font-black text-purple-700">{{ mb_substr($category->name, 0, 1) }}</span>
-                        @endif
-                        <span class="min-w-0 flex-1 truncate text-sm font-black">{{ $category->name }}</span>
-                        @svg('heroicon-o-chevron-right', 'size-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-purple-700')
-                    </a>
-
-                    @if($category->children && $category->children->isNotEmpty())
-                        <div class="mt-3 grid gap-x-3 gap-y-2 border-t border-slate-200/80 pt-3 sm:grid-cols-2">
-                            @foreach($category->children as $subcat)
-                                <div class="min-w-0">
-                                    <a href="{{ $subcat->permalink }}" class="block truncate text-xs font-bold text-slate-700 transition hover:text-purple-700">
-                                        {{ $subcat->name }}
-                                    </a>
-                                    @if($subcat->children && $subcat->children->isNotEmpty())
-                                        <div class="mt-1 space-y-1 border-l border-purple-200 pl-2">
-                                            @foreach($subcat->children as $child)
-                                                <a href="{{ $child->permalink }}" class="block truncate text-[11px] font-medium text-slate-500 transition hover:text-purple-700">
-                                                    {{ $child->name }}
-                                                </a>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </section>
-            @empty
-                <p class="col-span-full rounded-xl bg-slate-50 px-4 py-8 text-center text-sm font-semibold text-slate-500">{{ __('No categories available') }}</p>
-            @endforelse
-        </div>
-    </div>
 </nav>
 
 <!-- Mobile Navigation & Category Drawer Backdrop -->
