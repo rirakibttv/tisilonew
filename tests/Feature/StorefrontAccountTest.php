@@ -32,7 +32,10 @@ class StorefrontAccountTest extends TestCase
             'status' => 'published',
         ]);
 
-        $response = $this->withSession(['store_wishlist' => [$product->id, 0]])
+        $response = $this->withSession([
+            'store_wishlist' => [$product->id, 0],
+            'storefront_locale' => 'bn',
+        ])
             ->post(route('store.account.store'), [
                 'name' => 'Store Customer',
                 'email' => "customer-{$token}@example.test",
@@ -73,7 +76,8 @@ class StorefrontAccountTest extends TestCase
             'status' => 'published',
         ]);
 
-        $this->get(route('store.home'))
+        $this->withSession(['storefront_locale' => 'bn'])
+            ->get(route('store.home'))
             ->assertOk()
             ->assertSee(route('store.account.login'), false)
             ->assertSee(route('store.wishlist.index'), false)

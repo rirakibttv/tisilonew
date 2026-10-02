@@ -44,6 +44,7 @@ class CheckoutTest extends TestCase
 
     public function test_customer_can_checkout_and_create_a_pending_order(): void
     {
+        $this->withSession(['storefront_locale' => 'bn']);
         $this->shippingSettings();
         $product = $this->product('Checkout Product', 1250, 10);
 
@@ -96,6 +97,7 @@ class CheckoutTest extends TestCase
 
     public function test_checkout_shows_cod_and_bkash_and_completes_a_bkash_payment(): void
     {
+        $this->withSession(['storefront_locale' => 'bn']);
         $this->enableBkash();
         $this->shippingSettings();
         $product = $this->product('bKash Checkout Product', 1250, 10);

@@ -37,8 +37,8 @@
                     data-language-select
                     aria-label="{{ __('Language') }}"
                 >
-                    <option value="bn" class="text-slate-900" @selected(app()->isLocale('bn'))>বাংলা</option>
                     <option value="en" class="text-slate-900" @selected(app()->isLocale('en'))>English</option>
+                    <option value="bn" class="text-slate-900" @selected(app()->isLocale('bn'))>বাংলা</option>
                 </select>
                 <span class="pointer-events-none absolute right-2 text-blue-100">@svg('heroicon-o-chevron-down', 'size-3')</span>
                 <noscript><button type="submit" class="ml-1 underline">OK</button></noscript>
@@ -151,12 +151,21 @@
 </header>
 
 <!-- Supermarket Navigation Menu Bar -->
-<nav class="hidden border-b border-slate-200 bg-white md:block" aria-label="{{ __('Store Navigation') }}">
+<nav class="sticky top-[74px] z-30 hidden border-b border-slate-200 bg-white/98 shadow-sm backdrop-blur-md md:block" aria-label="{{ __('Store Navigation') }}" data-storefront-category-navigation>
     <div class="storefront-shell grid grid-cols-[270px_minmax(0,1fr)] gap-4">
-        <a href="{{ route('store.home') }}#categories" class="flex h-12 items-center gap-3 rounded-t-xl bg-gradient-to-r from-purple-800 to-fuchsia-600 px-5 text-sm font-black uppercase tracking-wide text-white transition hover:from-purple-900 hover:to-fuchsia-700" id="all-categories-button">
+        <button
+            type="button"
+            class="flex h-12 w-full items-center gap-3 rounded-t-xl bg-gradient-to-r from-purple-800 to-fuchsia-600 px-5 text-left text-sm font-black uppercase tracking-wide text-white transition hover:from-purple-900 hover:to-fuchsia-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-purple-200"
+            id="all-categories-button"
+            data-desktop-category-menu-button
+            aria-controls="desktop-category-menu"
+            aria-expanded="false"
+            aria-haspopup="true"
+        >
             @svg('heroicon-o-bars-3', 'size-4')
-            <span>{{ __('Categories') }}</span>
-        </a>
+            <span>{{ __('All Categories') }}</span>
+            @svg('heroicon-o-chevron-down', 'ml-auto size-4 transition-transform duration-200', ['data-desktop-category-menu-chevron' => true])
+        </button>
 
         <div class="flex h-12 items-center justify-between">
             <div class="flex h-full items-center gap-7 text-sm font-bold text-slate-800">
@@ -167,6 +176,67 @@
             <a href="{{ route('store.contact') }}" class="flex h-full items-center border-b-2 transition hover:text-purple-700 {{ request()->routeIs('store.contact') ? 'border-purple-700 text-purple-700' : 'border-transparent' }}">
                 {{ __('Contact') }}
             </a>
+        </div>
+    </div>
+
+    <div
+        id="desktop-category-menu"
+        class="invisible pointer-events-none absolute left-1/2 top-full z-50 mt-px max-h-[calc(100vh-132px)] w-[calc(100%-10px)] max-w-[1600px] -translate-x-1/2 translate-y-2 overflow-y-auto rounded-b-2xl border border-slate-200 bg-white opacity-0 shadow-2xl transition duration-200"
+        data-desktop-category-menu-panel
+        aria-hidden="true"
+    >
+        <div class="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white/95 px-5 py-3 backdrop-blur-md">
+            <div>
+                <p class="text-base font-black text-slate-900">{{ __('Browse Categories') }}</p>
+                <p class="text-xs font-medium text-slate-500">{{ __('Choose from our product departments') }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('store.home') }}#categories" class="rounded-lg px-3 py-2 text-xs font-black text-purple-700 transition hover:bg-purple-50">
+                    {{ __('View All Categories') }}
+                </a>
+                <button type="button" class="grid size-9 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700" data-desktop-category-menu-close aria-label="{{ __('Close menu') }}">
+                    @svg('heroicon-o-x-mark', 'size-5')
+                </button>
+            </div>
+        </div>
+
+        <div class="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            @forelse($categories ?? [] as $category)
+                <section class="rounded-xl border border-slate-100 bg-slate-50/70 p-3 transition hover:border-purple-200 hover:bg-purple-50/40">
+                    <a href="{{ $category->permalink }}" class="group flex items-center gap-3 rounded-lg text-slate-900 transition hover:text-purple-700">
+                        @if($category->image)
+                            <img src="{{ asset('storage/'.ltrim($category->image, '/')) }}" alt="{{ $category->name }}" class="size-11 shrink-0 rounded-lg object-cover ring-1 ring-slate-200">
+                        @else
+                            <span class="grid size-11 shrink-0 place-items-center rounded-lg bg-purple-100 text-base font-black text-purple-700">{{ mb_substr($category->name, 0, 1) }}</span>
+                        @endif
+                        <span class="min-w-0 flex-1 truncate text-sm font-black">{{ $category->name }}</span>
+                        @svg('heroicon-o-chevron-right', 'size-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-purple-700')
+                    </a>
+
+                    @if($category->children && $category->children->isNotEmpty())
+                        <div class="mt-3 grid gap-x-3 gap-y-2 border-t border-slate-200/80 pt-3 sm:grid-cols-2">
+                            @foreach($category->children as $subcat)
+                                <div class="min-w-0">
+                                    <a href="{{ $subcat->permalink }}" class="block truncate text-xs font-bold text-slate-700 transition hover:text-purple-700">
+                                        {{ $subcat->name }}
+                                    </a>
+                                    @if($subcat->children && $subcat->children->isNotEmpty())
+                                        <div class="mt-1 space-y-1 border-l border-purple-200 pl-2">
+                                            @foreach($subcat->children as $child)
+                                                <a href="{{ $child->permalink }}" class="block truncate text-[11px] font-medium text-slate-500 transition hover:text-purple-700">
+                                                    {{ $child->name }}
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </section>
+            @empty
+                <p class="col-span-full rounded-xl bg-slate-50 px-4 py-8 text-center text-sm font-semibold text-slate-500">{{ __('No categories available') }}</p>
+            @endforelse
         </div>
     </div>
 </nav>
@@ -251,8 +321,8 @@
                     class="h-11 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white pl-11 pr-10 text-sm font-bold text-slate-700 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
                     data-language-select
                 >
-                    <option value="bn" @selected(app()->isLocale('bn'))>বাংলা</option>
                     <option value="en" @selected(app()->isLocale('en'))>English</option>
+                    <option value="bn" @selected(app()->isLocale('bn'))>বাংলা</option>
                 </select>
                 <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400">@svg('heroicon-o-chevron-down', 'size-4')</span>
             </div>

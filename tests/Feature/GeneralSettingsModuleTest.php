@@ -176,7 +176,7 @@ class GeneralSettingsModuleTest extends TestCase
             'search_console_verification' => 'google-site-verification=verification-token',
         ]);
 
-        $response = $this->get('/');
+        $response = $this->withSession(['storefront_locale' => 'bn'])->get('/');
 
         $response->assertOk()
             ->assertSee('<title>Tisilo Enterprise — আপনার প্রয়োজনের সবকিছু, এক সুপারমার্কেটে</title>', false)

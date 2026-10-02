@@ -35,8 +35,8 @@ class StorefrontTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('TISILO')
-            ->assertSee('আপনার প্রয়োজনের সবকিছু')
-            ->assertSee('সেলার সেন্ট্রাল')
+            ->assertSee('Everything you need, in one supermarket')
+            ->assertSee('Seller Central')
             ->assertDontSee('>Sellers</a>', false)
             ->assertSee('data-product-grid', false);
 
@@ -50,25 +50,47 @@ class StorefrontTest extends TestCase
             ->assertSee('Tisilo Shop');
     }
 
+    public function test_desktop_category_navigation_stays_sticky_and_opens_a_category_menu(): void
+    {
+        $token = Str::lower(Str::random(8));
+        $category = Category::query()->create([
+            'name' => 'Sticky Category '.$token,
+            'slug' => 'sticky-category-'.$token,
+            'status' => true,
+            'sort_order' => 1,
+        ]);
+        $subcategory = Category::query()->create([
+            'parent_id' => $category->id,
+            'name' => 'Sticky Subcategory '.$token,
+            'slug' => 'sticky-subcategory-'.$token,
+            'status' => true,
+            'sort_order' => 1,
+        ]);
+
+        $this->withSession(['storefront_locale' => 'en'])
+            ->get('/')
+            ->assertOk()
+            ->assertSee('sticky top-[74px]', false)
+            ->assertSee('data-storefront-category-navigation', false)
+            ->assertSee('data-desktop-category-menu-button', false)
+            ->assertSee('aria-controls="desktop-category-menu"', false)
+            ->assertSee('aria-expanded="false"', false)
+            ->assertSee('data-desktop-category-menu-panel', false)
+            ->assertSee('All Categories')
+            ->assertSee($category->name)
+            ->assertSee($subcategory->name)
+            ->assertSee('href="'.$category->permalink.'"', false)
+            ->assertSee('href="'.$subcategory->permalink.'"', false);
+    }
+
     public function test_visitor_can_switch_storefront_between_bangla_and_english(): void
     {
         $this->get('/')
             ->assertOk()
-            ->assertSee('<html lang="bn">', false)
-            ->assertSee('data-language-select', false)
-            ->assertSee('সেলার সেন্ট্রাল')
-            ->assertSee('বাংলা');
-
-        $this->from('/shop')
-            ->post(route('store.language.update'), ['locale' => 'en'])
-            ->assertRedirect('/shop')
-            ->assertSessionHas('storefront_locale', 'en');
-
-        $this->get('/')
-            ->assertOk()
             ->assertSee('<html lang="en">', false)
+            ->assertSee('data-language-select', false)
             ->assertSee('Seller Central')
-            ->assertSee('My Account');
+            ->assertSee('English');
 
         $this->get('/shop')
             ->assertOk()
@@ -83,12 +105,28 @@ class StorefrontTest extends TestCase
             ->assertRedirect('/shop')
             ->assertSessionHas('storefront_locale', 'bn');
 
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<html lang="bn">', false)
+            ->assertSee('সেলার সেন্ট্রাল')
+            ->assertSee('আমার অ্যাকাউন্ট');
+
         $this->get('/shop')
             ->assertOk()
             ->assertSee('পণ্য ফিল্টার করুন')
             ->assertSee('মূল্যসীমা')
             ->assertSee('স্টক অবস্থা')
             ->assertSee('সব পণ্য');
+
+        $this->from('/shop')
+            ->post(route('store.language.update'), ['locale' => 'en'])
+            ->assertRedirect('/shop')
+            ->assertSessionHas('storefront_locale', 'en');
+
+        $this->get('/shop')
+            ->assertOk()
+            ->assertSee('Filter Products')
+            ->assertDontSee('পণ্য ফিল্টার করুন');
 
         $this->post(route('store.language.update'), ['locale' => 'fr'])
             ->assertSessionHasErrors('locale');
@@ -258,7 +296,8 @@ class StorefrontTest extends TestCase
             'status' => 'pending',
         ]);
 
-        $response = $this->get(route('store.shop.index', ['q' => 'Trusted Card Product '.$token]));
+        $response = $this->withSession(['storefront_locale' => 'bn'])
+            ->get(route('store.shop.index', ['q' => 'Trusted Card Product '.$token]));
 
         $response->assertOk()
             ->assertSee('data-product-card="'.$product->id.'"', false)
@@ -325,7 +364,7 @@ class StorefrontTest extends TestCase
         $this->get(route('store.products.show', $product->slug))
             ->assertOk()
             ->assertSee('Storefront Test Product')
-            ->assertSee('কার্টে যোগ করুন');
+            ->assertSee('Add to Cart');
 
         $this->post(route('store.cart.store'), [
             'product_id' => $product->id,

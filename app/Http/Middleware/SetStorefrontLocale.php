@@ -9,6 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SetStorefrontLocale
 {
+    private const DEFAULT_LOCALE = 'en';
+
     /**
      * Apply the visitor's saved storefront language to the current request.
      */
@@ -20,10 +22,10 @@ class SetStorefrontLocale
             return $next($request);
         }
 
-        $locale = $request->session()->get('storefront_locale', 'bn');
+        $locale = $request->session()->get('storefront_locale', self::DEFAULT_LOCALE);
 
         if (! in_array($locale, ['bn', 'en'], true)) {
-            $locale = 'bn';
+            $locale = self::DEFAULT_LOCALE;
             $request->session()->forget('storefront_locale');
         }
 
