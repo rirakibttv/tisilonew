@@ -1,26 +1,6 @@
-<section class="border-b border-purple-100 bg-gradient-to-r from-purple-950 via-purple-800 to-indigo-800 text-white">
-    <div class="storefront-shell py-8">
-        <nav class="text-xs font-semibold text-purple-200" aria-label="{{ __('Breadcrumb') }}">
-            <a href="{{ route('store.home') }}" class="hover:text-white">{{ __('Home') }}</a>
-            <span class="mx-2">/</span>
-            <a href="{{ route('store.shop.index') }}" class="hover:text-white">{{ __('Shop') }}</a>
-            @if ($selectedCategory)
-                <span class="mx-2">/</span>
-                <span class="text-white">{{ $selectedCategory->name }}</span>
-            @endif
-        </nav>
-        <div class="mt-2 flex flex-wrap items-end justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-black sm:text-4xl">{{ $selectedCategory?->name ?? 'Tisilo Shop' }}</h1>
-                <p class="mt-1.5 text-sm text-purple-100">{{ __('Find your favorite from :count products', ['count' => number_format($products->total())]) }}</p>
-            </div>
-            <span class="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold">{{ __('Secure shopping · Nationwide delivery') }}</span>
-        </div>
-    </div>
-</section>
-
 @php
     $catalogUrl = $selectedCategory?->permalink ?? route('store.shop.index');
+    $catalogHeading = $selectedCategory?->name ?? 'Tisilo Shop';
     $selectedCategoryPath = $selectedCategory?->hierarchicalPath() ?? request('category');
     $activeAttributeValues = collect($attributeFilters)->flatten()->count();
     $activeFilterCount = (int) request()->filled('q')
@@ -43,7 +23,22 @@
         : $categories->whereNull('parent_id');
 @endphp
 
-<section class="storefront-shell py-5" data-catalog-page>
+<section class="storefront-shell py-3" data-catalog-page>
+    <nav class="mb-2 flex min-h-9 flex-wrap items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-xs" aria-label="{{ __('Breadcrumb') }}" data-catalog-breadcrumb>
+        <a href="{{ route('store.home') }}" class="inline-flex items-center gap-1.5 transition hover:text-purple-700">
+            @svg('heroicon-o-home', 'size-4')
+            <span>{{ __('Home') }}</span>
+        </a>
+        @svg('heroicon-o-chevron-right', 'size-3.5 text-slate-400')
+        @if ($selectedCategory)
+            <a href="{{ route('store.shop.index') }}" class="transition hover:text-purple-700">{{ __('Shop') }}</a>
+            @svg('heroicon-o-chevron-right', 'size-3.5 text-slate-400')
+            <span class="font-bold text-slate-900" aria-current="page">{{ $selectedCategory->name }}</span>
+        @else
+            <span class="font-bold text-slate-900" aria-current="page">{{ __('Shop') }}</span>
+        @endif
+    </nav>
+
     <button type="button" data-catalog-filter-overlay class="fixed inset-0 z-40 hidden bg-slate-950/50 backdrop-blur-[2px] lg:hidden" aria-label="{{ __('Close filters') }}"></button>
 
     <div class="flex items-start gap-4">
@@ -213,22 +208,22 @@
         </aside>
 
         <main class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <div class="flex min-h-12 flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-xs" data-catalog-toolbar>
                 <div class="flex min-w-0 items-center gap-3">
-                    <button type="button" data-catalog-filter-open class="relative grid size-10 shrink-0 place-items-center rounded-xl bg-purple-50 text-purple-700 lg:hidden" aria-label="{{ __('Open filters') }}">
+                    <button type="button" data-catalog-filter-open class="relative grid size-9 shrink-0 place-items-center rounded-lg bg-purple-50 text-purple-700 lg:hidden" aria-label="{{ __('Open filters') }}">
                         @svg('heroicon-o-funnel', 'size-5')
                         @if ($activeFilterCount)
                             <span class="absolute -right-1 -top-1 grid size-5 place-items-center rounded-full bg-rose-500 text-[10px] font-black text-white">{{ $activeFilterCount }}</span>
                         @endif
                     </button>
-                    <div class="min-w-0">
-                        <h2 class="truncate text-base font-black text-slate-900">{{ $selectedCategory?->name ?? __('All Products') }}</h2>
-                        <p class="text-xs font-semibold text-slate-500"><span class="text-purple-700">{{ number_format($products->total()) }}</span> {{ __('products found') }}</p>
+                    <div class="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                        <h1 class="truncate text-base font-black text-slate-900">{{ $catalogHeading }}</h1>
+                        <p class="text-xs font-semibold text-slate-500">(<span class="text-purple-700">{{ number_format($products->total()) }}</span> {{ __('products found') }})</p>
                     </div>
                 </div>
                 <label class="flex items-center gap-2 text-xs font-bold text-slate-500">
                     <span class="hidden sm:inline">{{ __('Sort by') }}:</span>
-                    <select name="sort" form="catalog-filter-form" data-catalog-sort class="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 pr-8 text-sm font-bold text-slate-700 outline-none focus:border-purple-500">
+                    <select name="sort" form="catalog-filter-form" data-catalog-sort class="h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 pr-8 text-sm font-bold text-slate-700 outline-none focus:border-purple-500">
                         <option value="latest" @selected($sort === 'latest')>{{ __('Latest') }}</option>
                         <option value="price_low" @selected($sort === 'price_low')>{{ __('Price: Low to High') }}</option>
                         <option value="price_high" @selected($sort === 'price_high')>{{ __('Price: High to Low') }}</option>
