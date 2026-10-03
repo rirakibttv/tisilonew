@@ -579,12 +579,6 @@ class ProductForm
                         Toggle::make('featured')
                             ->label('Featured Product')
                             ->default(false),
-
-                        TextInput::make('sort_order')
-                            ->label('Sort Order')
-                            ->numeric()
-                            ->default(0)
-                            ->minValue(0),
                     ]),
 
             ]);

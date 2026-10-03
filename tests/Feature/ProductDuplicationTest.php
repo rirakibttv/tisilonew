@@ -154,6 +154,32 @@ class ProductDuplicationTest extends TestCase
             ->assertSee('VariationsRelationManager', false);
     }
 
+    public function test_product_edit_actions_replace_the_product_sort_order_field_in_publishing(): void
+    {
+        Filament::setCurrentPanel('admin');
+        $admin = User::factory()->create([
+            'role' => UserRole::Admin,
+            'status' => UserStatus::Active,
+        ]);
+        $product = Product::query()->create([
+            'name' => 'Publishing Action Product',
+            'slug' => 'publishing-action-product',
+            'product_type' => 'simple',
+            'regular_price' => 500,
+            'stock_quantity' => 3,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/products/'.$product->getKey().'/edit')
+            ->assertOk()
+            ->assertSee('Publishing')
+            ->assertSee('Save Changes')
+            ->assertSee('Cancel')
+            ->assertDontSee('Sort Order');
+    }
+
     public function test_all_products_keeps_new_uploads_on_top_with_their_permanent_serial_number(): void
     {
         Filament::setCurrentPanel('admin');

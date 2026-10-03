@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use App\Filament\Resources\Products\ProductResource;
 use App\Models\Attribute;
+use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
@@ -10,6 +12,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -369,11 +372,19 @@ class ProfessionalProductForm
                     ->label('Featured Product')
                     ->default(false),
 
-                TextInput::make('sort_order')
-                    ->label('Sort Order')
-                    ->numeric()
-                    ->default(0)
-                    ->minValue(0),
+                Actions::make([
+                    Action::make('saveProductChanges')
+                        ->label('Save Changes')
+                        ->submit('save')
+                        ->keyBindings(['mod+s']),
+
+                    Action::make('cancelProductChanges')
+                        ->label('Cancel')
+                        ->url(fn (): string => ProductResource::getUrl('index'))
+                        ->color('gray'),
+                ])
+                    ->fullWidth()
+                    ->visible(fn (string $operation): bool => $operation === 'edit'),
             ]);
     }
 

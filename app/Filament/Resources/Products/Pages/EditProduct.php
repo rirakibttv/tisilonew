@@ -19,6 +19,15 @@ class EditProduct extends EditRecord
         ];
     }
 
+    /**
+     * The edit actions are rendered inside the Publishing section so they stay
+     * beside the product's publication controls.
+     */
+    protected function getFormActions(): array
+    {
+        return [];
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         /*
