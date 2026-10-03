@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -29,6 +30,31 @@ class Category extends Model
             'show_on_homepage' => 'boolean',
             'sort_order' => 'integer',
         ];
+    }
+
+    /**
+     * The shared storefront navigation tree used by every public page.
+     *
+     * @return Collection<int, self>
+     */
+    public static function storefrontNavigation(): Collection
+    {
+        return static::query()
+            ->where('status', true)
+            ->whereNull('parent_id')
+            ->with([
+                'children' => fn ($query) => $query
+                    ->where('status', true)
+                    ->orderBy('sort_order')
+                    ->orderBy('name'),
+                'children.children' => fn ($query) => $query
+                    ->where('status', true)
+                    ->orderBy('sort_order')
+                    ->orderBy('name'),
+            ])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
     }
 
     /**

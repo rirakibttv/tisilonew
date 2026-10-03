@@ -22,16 +22,7 @@ class HomeController extends Controller
     {
         $search = $request->string('q')->toString();
 
-        $categories = Category::query()
-            ->where('status', true)
-            ->whereNull('parent_id')
-            ->with([
-                'children' => fn ($query) => $query->where('status', true)->orderBy('sort_order')->orderBy('name'),
-                'children.children' => fn ($query) => $query->where('status', true)->orderBy('sort_order')->orderBy('name'),
-            ])
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $categories = Category::storefrontNavigation();
 
         $productEagerLoads = [
             'brand:id,name,slug',

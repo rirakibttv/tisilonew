@@ -6,6 +6,7 @@
     $whatsapp = $contactSettings['whatsapp'] ?? $hotline;
     $whatsappLink = 'https://wa.me/88' . ltrim(preg_replace('/[^0-9]/', '', $whatsapp), '88');
     $activeSocialLinks = collect($socialLinks ?? [])->where('status', true)->take(4);
+    $menuCategories = $navigationCategories ?? collect();
 @endphp
 
 <!-- Top Info Bar -->
@@ -179,7 +180,7 @@
                 aria-hidden="true"
             >
                 <ul class="relative divide-y divide-slate-100 text-sm font-semibold text-slate-700">
-                    @forelse($categories ?? [] as $category)
+                    @forelse($menuCategories as $category)
                         <li class="group/desktop-cat relative">
                             <a href="{{ $category->permalink }}" class="flex min-h-[45px] items-center justify-between px-4 py-2 transition hover:bg-purple-50 hover:text-purple-700">
                                 <span class="flex min-w-0 items-center gap-3">
@@ -267,7 +268,7 @@
     <!-- Multi-level Categories in Drawer -->
     <div class="flex-1 overflow-y-auto p-4 space-y-1" id="mobile-drawer-categories">
         <p class="px-2 py-1.5 text-xs font-black uppercase tracking-wider text-purple-700">{{ __('Categories') }}</p>
-        @foreach($categories ?? [] as $category)
+        @foreach($menuCategories as $category)
             <div class="rounded-xl border border-slate-100 overflow-hidden bg-white" data-drawer-parent>
                 <div class="flex items-center justify-between p-3 hover:bg-purple-50/50 transition">
                     <a href="{{ $category->permalink }}" class="flex items-center gap-2.5 text-sm font-bold text-slate-800 hover:text-purple-700">

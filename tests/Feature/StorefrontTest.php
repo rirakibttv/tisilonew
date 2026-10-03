@@ -88,6 +88,56 @@ class StorefrontTest extends TestCase
             ->assertSee('href="'.$subcategory->permalink.'"', false);
     }
 
+    public function test_shop_header_uses_the_homepage_main_category_tree_instead_of_filter_categories(): void
+    {
+        $token = Str::lower(Str::random(8));
+        $category = Category::query()->create([
+            'name' => 'Navigation Root '.$token,
+            'slug' => 'navigation-root-'.$token,
+            'status' => true,
+            'sort_order' => 1,
+        ]);
+        $subcategory = Category::query()->create([
+            'parent_id' => $category->id,
+            'name' => 'Navigation Child '.$token,
+            'slug' => 'navigation-child-'.$token,
+            'status' => true,
+            'sort_order' => 1,
+        ]);
+
+        foreach (['/', '/shop'] as $url) {
+            $response = $this->withSession(['storefront_locale' => 'en'])
+                ->get($url)
+                ->assertOk();
+
+            $document = new \DOMDocument;
+            $loaded = $document->loadHTML(
+                (string) $response->getContent(),
+                LIBXML_NOERROR | LIBXML_NOWARNING,
+            );
+
+            $this->assertTrue($loaded);
+
+            $xpath = new \DOMXPath($document);
+            $topLevelLinks = $xpath->query('//*[@id="desktop-category-menu"]/ul/li/a');
+            $allMenuLinks = $xpath->query('//*[@id="desktop-category-menu"]//a');
+            $topLevelHrefs = [];
+            $allMenuHrefs = [];
+
+            foreach ($topLevelLinks ?: [] as $link) {
+                $topLevelHrefs[] = $link->getAttribute('href');
+            }
+
+            foreach ($allMenuLinks ?: [] as $link) {
+                $allMenuHrefs[] = $link->getAttribute('href');
+            }
+
+            $this->assertContains($category->permalink, $topLevelHrefs);
+            $this->assertNotContains($subcategory->permalink, $topLevelHrefs);
+            $this->assertContains($subcategory->permalink, $allMenuHrefs);
+        }
+    }
+
     public function test_visitor_can_switch_storefront_between_bangla_and_english(): void
     {
         $this->get('/')

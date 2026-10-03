@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\PopupOffer;
 use App\Models\SiteSetting;
@@ -37,6 +38,18 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Order::observe(OrderObserver::class);
+
+        View::composer('storefront.partials.header', function (IlluminateView $view): void {
+            try {
+                $view->with(
+                    'navigationCategories',
+                    Schema::hasTable('categories') ? Category::storefrontNavigation() : collect(),
+                );
+            } catch (Throwable $exception) {
+                report($exception);
+                $view->with('navigationCategories', collect());
+            }
+        });
 
         try {
             if (! Schema::hasTable('site_settings')) {
