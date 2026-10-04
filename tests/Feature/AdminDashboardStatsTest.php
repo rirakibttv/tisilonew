@@ -5,12 +5,14 @@ namespace Tests\Feature;
 use App\Enums\OrderStatus;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Enums\VendorListingStatus;
 use App\Enums\VendorStatus;
 use App\Filament\Pages\Dashboard;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Vendor;
+use App\Models\VendorListing;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Str;
@@ -42,7 +44,7 @@ class AdminDashboardStatsTest extends TestCase
         ]);
         $oldOrder->forceFill(['placed_at' => now()->subDays(2)])->saveQuietly();
 
-        Product::query()->create([
+        $todayProduct = Product::query()->create([
             'name' => 'Today Pending Product',
             'slug' => 'today-pending-product-'.$suffix,
             'status' => 'pending',
@@ -85,6 +87,24 @@ class AdminDashboardStatsTest extends TestCase
         ]);
         $this->moveCreatedAt($approvedVendor, now()->subDays(2));
 
+        VendorListing::query()->create([
+            'vendor_id' => $owner->ownedVendors()->firstOrFail()->getKey(),
+            'product_id' => $todayProduct->getKey(),
+            'status' => VendorListingStatus::Pending,
+        ]);
+        $recentVendorProduct = VendorListing::query()->create([
+            'vendor_id' => $owner->ownedVendors()->firstOrFail()->getKey(),
+            'product_id' => $recentProduct->getKey(),
+            'status' => VendorListingStatus::Approved,
+        ]);
+        $this->moveCreatedAt($recentVendorProduct, now()->subDays(3));
+        $oldVendorProduct = VendorListing::query()->create([
+            'vendor_id' => $owner->ownedVendors()->firstOrFail()->getKey(),
+            'product_id' => $oldProduct->getKey(),
+            'status' => VendorListingStatus::Draft,
+        ]);
+        $this->moveCreatedAt($oldVendorProduct, now()->subDays(8));
+
         User::factory()->create([
             'role' => UserRole::Customer,
             'status' => UserStatus::Active,
@@ -115,6 +135,10 @@ class AdminDashboardStatsTest extends TestCase
             'Pending Vendor',
             'Approved Vendor',
             'Total Vendor',
+            "Today's Vendor New Product",
+            'Vendor New Products',
+            'Vendor Pending Products',
+            'Vendor All Products',
             "Today's New Customer",
             'Active Customers',
             'Inactive Customers',
@@ -134,6 +158,10 @@ class AdminDashboardStatsTest extends TestCase
             'Pending Vendor' => 2,
             'Approved Vendor' => 1,
             'Total Vendor' => 3,
+            "Today's Vendor New Product" => 1,
+            'Vendor New Products' => 2,
+            'Vendor Pending Products' => 1,
+            'Vendor All Products' => 3,
             "Today's New Customer" => 1,
             'Active Customers' => 2,
             'Inactive Customers' => 1,

@@ -5,12 +5,14 @@ namespace App\Filament\Pages;
 use App\Enums\OrderStatus;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Enums\VendorListingStatus;
 use App\Enums\VendorStatus;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Vendor;
+use App\Models\VendorListing;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Collection;
@@ -36,6 +38,7 @@ class Dashboard extends BaseDashboard
         $hasOrders = Schema::hasTable('orders');
         $hasProducts = Schema::hasTable('products');
         $hasVendors = Schema::hasTable('vendors');
+        $hasVendorListings = Schema::hasTable('vendor_listings');
         $hasUsers = Schema::hasTable('users');
         $hasCategories = Schema::hasTable('categories');
 
@@ -93,6 +96,24 @@ class Dashboard extends BaseDashboard
                 ->selectRaw(
                     'COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS approved_vendors',
                     [VendorStatus::Active->value],
+                )
+                ->first()
+            : null;
+
+        $vendorProductMetrics = $hasVendorListings
+            ? VendorListing::query()
+                ->selectRaw('COUNT(*) AS all_products')
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END), 0) AS todays_new_products',
+                    [$todayStartsAt, $tomorrowStartsAt],
+                )
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END), 0) AS new_products',
+                    [$newProductWindowStartsAt, $tomorrowStartsAt],
+                )
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS pending_products',
+                    [VendorListingStatus::Pending->value],
                 )
                 ->first()
             : null;
@@ -157,6 +178,11 @@ class Dashboard extends BaseDashboard
                 ['label' => 'Pending Vendor', 'value' => number_format((int) ($vendorMetrics?->pending_vendors ?? 0)), 'icon' => 'heroicon-o-inbox', 'tone' => 'violet'],
                 ['label' => 'Approved Vendor', 'value' => number_format((int) ($vendorMetrics?->approved_vendors ?? 0)), 'icon' => 'heroicon-o-shield-check', 'tone' => 'sky'],
                 ['label' => 'Total Vendor', 'value' => number_format((int) ($vendorMetrics?->total_vendors ?? 0)), 'icon' => 'heroicon-o-building-storefront', 'tone' => 'amber'],
+
+                ['label' => "Today's Vendor New Product", 'value' => number_format((int) ($vendorProductMetrics?->todays_new_products ?? 0)), 'icon' => 'heroicon-o-plus-circle', 'tone' => 'indigo'],
+                ['label' => 'Vendor New Products', 'value' => number_format((int) ($vendorProductMetrics?->new_products ?? 0)), 'icon' => 'heroicon-o-sparkles', 'tone' => 'violet'],
+                ['label' => 'Vendor Pending Products', 'value' => number_format((int) ($vendorProductMetrics?->pending_products ?? 0)), 'icon' => 'heroicon-o-exclamation-triangle', 'tone' => 'sky'],
+                ['label' => 'Vendor All Products', 'value' => number_format((int) ($vendorProductMetrics?->all_products ?? 0)), 'icon' => 'heroicon-o-cube', 'tone' => 'amber'],
 
                 ['label' => "Today's New Customer", 'value' => number_format((int) ($customerMetrics?->todays_new_customers ?? 0)), 'icon' => 'heroicon-o-user-plus', 'tone' => 'indigo'],
                 ['label' => 'Active Customers', 'value' => number_format((int) ($customerMetrics?->active_customers ?? 0)), 'icon' => 'heroicon-o-check-badge', 'tone' => 'violet'],
