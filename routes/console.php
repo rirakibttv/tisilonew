@@ -11,3 +11,7 @@ Artisan::command('inspire', function () {
 Schedule::command('queue:work --stop-when-empty --queue=integrations,default --tries=5 --timeout=30')
     ->everyMinute()
     ->withoutOverlapping();
+
+Schedule::command('shipping:sync-statuses --limit=100')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping();

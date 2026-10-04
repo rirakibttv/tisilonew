@@ -292,6 +292,7 @@ class PosSystem extends Page
         $order->update([
             'status' => OrderStatus::Confirmed,
             'confirmed_at' => now(),
+            'confirmed_by' => auth()->id(),
         ]);
 
         $this->lastOrderNumber = $order->order_number;

@@ -41,9 +41,12 @@ class Order extends Model
         'billing_address',
         'marketing_attribution',
         'tracking_number',
+        'shipping_status',
+        'shipping_status_synced_at',
         'notes',
         'placed_at',
         'confirmed_at',
+        'confirmed_by',
         'fulfilled_at',
     ];
 
@@ -63,6 +66,7 @@ class Order extends Model
             'marketing_attribution' => 'array',
             'placed_at' => 'datetime',
             'confirmed_at' => 'datetime',
+            'shipping_status_synced_at' => 'datetime',
             'fulfilled_at' => 'datetime',
         ];
     }
@@ -112,6 +116,11 @@ class Order extends Model
     public function shippingPartner(): BelongsTo
     {
         return $this->belongsTo(ShippingPartner::class);
+    }
+
+    public function confirmedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'confirmed_by');
     }
 
     public function items(): HasMany

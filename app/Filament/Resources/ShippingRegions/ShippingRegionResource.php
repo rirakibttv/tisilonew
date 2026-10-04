@@ -57,6 +57,15 @@ class ShippingRegionResource extends Resource
                 TextInput::make('sort_order')->numeric()->minValue(0)->default(0),
                 Toggle::make('is_active')->label('Active')->default(true),
             ]),
+            Section::make('Pathao API Location Mapping')
+                ->description('Pathao দিয়ে shipment তৈরি করতে এই region-এর City, Zone ও Area ID প্রয়োজন। Steadfast-এর জন্য এগুলো লাগবে না।')
+                ->columns(3)
+                ->collapsed()
+                ->schema([
+                    TextInput::make('pathao_city_id')->label('Pathao City ID')->numeric()->minValue(1),
+                    TextInput::make('pathao_zone_id')->label('Pathao Zone ID')->numeric()->minValue(1),
+                    TextInput::make('pathao_area_id')->label('Pathao Area ID')->numeric()->minValue(1),
+                ]),
             Section::make('Shipping Class Rates')
                 ->description('For each product class, configure its courier partner and delivery charges for this Upazila. Delivery time is managed from Shipping Partner.')
                 ->schema([
