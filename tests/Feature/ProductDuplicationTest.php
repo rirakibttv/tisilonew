@@ -213,4 +213,60 @@ class ProductDuplicationTest extends TestCase
             ->assertTableColumnStateSet('id', $olderProduct->id, $olderProduct)
             ->assertTableColumnStateSet('id', $newerProduct->id, $newerProduct);
     }
+
+    public function test_all_products_table_is_compact_and_displays_simple_or_variable_sale_prices(): void
+    {
+        Filament::setCurrentPanel('admin');
+        $admin = User::factory()->create([
+            'role' => UserRole::Admin,
+            'status' => UserStatus::Active,
+        ]);
+        $longName = str_repeat('A', 110);
+        $simpleProduct = Product::query()->create([
+            'name' => $longName,
+            'slug' => 'compact-simple-product',
+            'product_type' => 'simple',
+            'regular_price' => 1000,
+            'sale_price' => 850,
+            'stock_quantity' => 3,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+        $variableProduct = Product::query()->create([
+            'name' => 'Compact Variable Product',
+            'slug' => 'compact-variable-product',
+            'product_type' => 'variable',
+            'regular_price' => 0,
+            'stock_quantity' => 0,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+        ProductVariation::query()->create([
+            'product_id' => $variableProduct->id,
+            'regular_price' => 1200,
+            'sale_price' => 950,
+            'stock_quantity' => 2,
+            'stock_status' => 'in_stock',
+            'status' => true,
+        ]);
+        ProductVariation::query()->create([
+            'product_id' => $variableProduct->id,
+            'regular_price' => 1600,
+            'sale_price' => 1350,
+            'stock_quantity' => 2,
+            'stock_status' => 'in_stock',
+            'status' => true,
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(ListProducts::class)
+            ->assertTableColumnDoesNotExist('shippingClass.name')
+            ->assertTableColumnDoesNotExist('sku')
+            ->assertTableColumnDoesNotExist('regular_price')
+            ->assertTableColumnDoesNotExist('stock_quantity')
+            ->assertTableColumnExists('stock_status')
+            ->assertTableColumnStateSet('name', [str_repeat('A', 51), str_repeat('A', 51)], $simpleProduct)
+            ->assertTableColumnStateSet('sale_price', ['BDT 850.00'], $simpleProduct)
+            ->assertTableColumnStateSet('sale_price', ['Min: BDT 950.00', 'Max: BDT 1,350.00'], $variableProduct);
+    }
 }

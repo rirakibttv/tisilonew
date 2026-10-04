@@ -2,10 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\OrderStatus;
 use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use App\Enums\VendorStatus;
 use App\Models\Category;
-use App\Models\InventoryStock;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Vendor;
@@ -31,20 +33,88 @@ class Dashboard extends BaseDashboard
     /** @return array<string, mixed> */
     protected function getViewData(): array
     {
+        $hasOrders = Schema::hasTable('orders');
         $hasProducts = Schema::hasTable('products');
         $hasVendors = Schema::hasTable('vendors');
         $hasUsers = Schema::hasTable('users');
-        $hasInventory = Schema::hasTable('inventory_stocks');
         $hasCategories = Schema::hasTable('categories');
 
-        $productCount = $hasProducts ? Product::query()->count() : 0;
-        $activeVendors = $hasVendors
-            ? Vendor::query()->where('status', VendorStatus::Active->value)->count()
-            : 0;
-        $customerCount = $hasUsers
-            ? User::query()->where('role', UserRole::Customer->value)->count()
-            : 0;
-        $stockUnits = $hasInventory ? (int) InventoryStock::query()->sum('quantity') : 0;
+        $todayStartsAt = now()->startOfDay();
+        $tomorrowStartsAt = $todayStartsAt->copy()->addDay();
+        $newProductWindowStartsAt = $todayStartsAt->copy()->subDays(6);
+
+        $orderMetrics = $hasOrders
+            ? Order::query()
+                ->selectRaw('COUNT(*) AS total_orders')
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN placed_at >= ? AND placed_at < ? THEN 1 ELSE 0 END), 0) AS todays_total_orders',
+                    [$todayStartsAt, $tomorrowStartsAt],
+                )
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS pending_orders',
+                    [OrderStatus::Pending->value],
+                )
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS confirmed_orders',
+                    [OrderStatus::Confirmed->value],
+                )
+                ->first()
+            : null;
+
+        $productMetrics = $hasProducts
+            ? Product::query()
+                ->selectRaw('COUNT(*) AS all_products')
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END), 0) AS todays_new_products',
+                    [$todayStartsAt, $tomorrowStartsAt],
+                )
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END), 0) AS new_products',
+                    [$newProductWindowStartsAt, $tomorrowStartsAt],
+                )
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS pending_products',
+                    ['pending'],
+                )
+                ->first()
+            : null;
+
+        $vendorMetrics = $hasVendors
+            ? Vendor::query()
+                ->selectRaw('COUNT(*) AS total_vendors')
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END), 0) AS todays_new_vendor_requests',
+                    [$todayStartsAt, $tomorrowStartsAt],
+                )
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS pending_vendors',
+                    [VendorStatus::Pending->value],
+                )
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS approved_vendors',
+                    [VendorStatus::Active->value],
+                )
+                ->first()
+            : null;
+
+        $customerMetrics = $hasUsers
+            ? User::query()
+                ->where('role', UserRole::Customer->value)
+                ->selectRaw('COUNT(*) AS total_customers')
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END), 0) AS todays_new_customers',
+                    [$todayStartsAt, $tomorrowStartsAt],
+                )
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS active_customers',
+                    [UserStatus::Active->value],
+                )
+                ->selectRaw(
+                    'COALESCE(SUM(CASE WHEN status = ? THEN 1 ELSE 0 END), 0) AS inactive_customers',
+                    [UserStatus::Inactive->value],
+                )
+                ->first()
+            : null;
 
         $recentProducts = $hasProducts
             ? Product::query()->with('category:id,name')->latest()->limit(5)->get()
@@ -73,10 +143,25 @@ class Dashboard extends BaseDashboard
 
         return [
             'stats' => [
-                ['label' => 'Total Products', 'value' => number_format($productCount), 'icon' => 'heroicon-o-shopping-bag', 'tone' => 'indigo'],
-                ['label' => 'Active Vendors', 'value' => number_format($activeVendors), 'icon' => 'heroicon-o-building-storefront', 'tone' => 'violet'],
-                ['label' => 'Total Customers', 'value' => number_format($customerCount), 'icon' => 'heroicon-o-user-group', 'tone' => 'sky'],
-                ['label' => 'Stock Units', 'value' => number_format($stockUnits), 'icon' => 'heroicon-o-cube', 'tone' => 'amber'],
+                ['label' => "Today's Total Order", 'value' => number_format((int) ($orderMetrics?->todays_total_orders ?? 0)), 'icon' => 'heroicon-o-shopping-cart', 'tone' => 'indigo'],
+                ['label' => 'Pending Order', 'value' => number_format((int) ($orderMetrics?->pending_orders ?? 0)), 'icon' => 'heroicon-o-archive-box', 'tone' => 'violet'],
+                ['label' => 'Confirmed Order', 'value' => number_format((int) ($orderMetrics?->confirmed_orders ?? 0)), 'icon' => 'heroicon-o-check-circle', 'tone' => 'sky'],
+                ['label' => 'Total Order', 'value' => number_format((int) ($orderMetrics?->total_orders ?? 0)), 'icon' => 'heroicon-o-clipboard-document-list', 'tone' => 'amber'],
+
+                ['label' => "Today's New Product", 'value' => number_format((int) ($productMetrics?->todays_new_products ?? 0)), 'icon' => 'heroicon-o-plus-circle', 'tone' => 'indigo'],
+                ['label' => 'New Products', 'value' => number_format((int) ($productMetrics?->new_products ?? 0)), 'icon' => 'heroicon-o-sparkles', 'tone' => 'violet'],
+                ['label' => 'Pending Products', 'value' => number_format((int) ($productMetrics?->pending_products ?? 0)), 'icon' => 'heroicon-o-exclamation-triangle', 'tone' => 'sky'],
+                ['label' => 'All Products', 'value' => number_format((int) ($productMetrics?->all_products ?? 0)), 'icon' => 'heroicon-o-shopping-bag', 'tone' => 'amber'],
+
+                ['label' => "Today's New Vendor Request", 'value' => number_format((int) ($vendorMetrics?->todays_new_vendor_requests ?? 0)), 'icon' => 'heroicon-o-document-check', 'tone' => 'indigo'],
+                ['label' => 'Pending Vendor', 'value' => number_format((int) ($vendorMetrics?->pending_vendors ?? 0)), 'icon' => 'heroicon-o-inbox', 'tone' => 'violet'],
+                ['label' => 'Approved Vendor', 'value' => number_format((int) ($vendorMetrics?->approved_vendors ?? 0)), 'icon' => 'heroicon-o-shield-check', 'tone' => 'sky'],
+                ['label' => 'Total Vendor', 'value' => number_format((int) ($vendorMetrics?->total_vendors ?? 0)), 'icon' => 'heroicon-o-building-storefront', 'tone' => 'amber'],
+
+                ['label' => "Today's New Customer", 'value' => number_format((int) ($customerMetrics?->todays_new_customers ?? 0)), 'icon' => 'heroicon-o-user-plus', 'tone' => 'indigo'],
+                ['label' => 'Active Customers', 'value' => number_format((int) ($customerMetrics?->active_customers ?? 0)), 'icon' => 'heroicon-o-check-badge', 'tone' => 'violet'],
+                ['label' => 'Inactive Customers', 'value' => number_format((int) ($customerMetrics?->inactive_customers ?? 0)), 'icon' => 'heroicon-o-x-circle', 'tone' => 'sky'],
+                ['label' => 'Total Customers', 'value' => number_format((int) ($customerMetrics?->total_customers ?? 0)), 'icon' => 'heroicon-o-user-group', 'tone' => 'amber'],
             ],
             'recentProducts' => $recentProducts,
             'recentCustomers' => $recentCustomers,

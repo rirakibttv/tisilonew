@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Products\Tables;
 
+use App\Models\Product;
+use App\Models\ProductVariation;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\IconColumn;
@@ -10,12 +12,19 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProductsTable
 {
+    private const PRODUCT_NAME_LINE_LENGTH = 51;
+
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->addSelect([
+                'minimum_variation_price' => self::variationPriceAggregate('MIN'),
+                'maximum_variation_price' => self::variationPriceAggregate('MAX'),
+            ]))
             ->columns([
                 TextColumn::make('id')
                     ->label('SL')
@@ -33,6 +42,12 @@ class ProductsTable
 
                 TextColumn::make('name')
                     ->label('Product')
+                    ->state(fn (Product $record): array => self::productNameLines($record->name))
+                    ->listWithLineBreaks()
+                    ->width(360)
+                    ->tooltip(fn (Product $record): ?string => mb_strlen($record->name) > (self::PRODUCT_NAME_LINE_LENGTH * 2)
+                        ? $record->name
+                        : null)
                     ->searchable()
                     ->sortable(),
 
@@ -56,30 +71,10 @@ class ProductsTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('shippingClass.name')
-                    ->label('Shipping Class')
-                    ->badge()
-                    ->sortable()
-                    ->toggleable(),
-
-                TextColumn::make('sku')
-                    ->label('SKU')
-                    ->searchable()
-                    ->toggleable(),
-
-                TextColumn::make('regular_price')
-                    ->label('Regular Price')
-                    ->money('BDT')
-                    ->sortable(),
-
                 TextColumn::make('sale_price')
                     ->label('Sale Price')
-                    ->money('BDT')
-                    ->sortable(),
-
-                TextColumn::make('stock_quantity')
-                    ->label('Stock')
-                    ->sortable(),
+                    ->state(fn (Product $record): array => self::salePriceLines($record))
+                    ->listWithLineBreaks(),
 
                 TextColumn::make('stock_status')
                     ->label('Stock Status')
@@ -164,5 +159,57 @@ class ProductsTable
             ->defaultSort('id', 'desc')
             ->paginationPageOptions([25, 50, 100])
             ->defaultPaginationPageOption(50);
+    }
+
+    private static function variationPriceAggregate(string $aggregate): Builder
+    {
+        return ProductVariation::query()
+            ->selectRaw("{$aggregate}(COALESCE(NULLIF(sale_price, 0), regular_price))")
+            ->whereColumn('product_variations.product_id', 'products.id')
+            ->where('status', true);
+    }
+
+    /** @return array<int, string> */
+    private static function productNameLines(string $name): array
+    {
+        $name = trim((string) preg_replace('/\s+/u', ' ', $name));
+        $maximumLength = self::PRODUCT_NAME_LINE_LENGTH * 2;
+        $name = mb_substr($name, 0, $maximumLength);
+
+        return collect([0, self::PRODUCT_NAME_LINE_LENGTH])
+            ->map(fn (int $offset): string => trim(mb_substr($name, $offset, self::PRODUCT_NAME_LINE_LENGTH)))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    /** @return array<int, string> */
+    private static function salePriceLines(Product $product): array
+    {
+        if ($product->product_type !== 'variable') {
+            return [self::formatPrice($product->sale_price)];
+        }
+
+        $minimumPrice = $product->getAttribute('minimum_variation_price');
+        $maximumPrice = $product->getAttribute('maximum_variation_price');
+
+        if (! is_numeric($minimumPrice) && ! is_numeric($maximumPrice)) {
+            return ['—'];
+        }
+
+        $minimumPrice = is_numeric($minimumPrice) ? $minimumPrice : $maximumPrice;
+        $maximumPrice = is_numeric($maximumPrice) ? $maximumPrice : $minimumPrice;
+
+        return [
+            'Min: '.self::formatPrice($minimumPrice),
+            'Max: '.self::formatPrice($maximumPrice),
+        ];
+    }
+
+    private static function formatPrice(mixed $price): string
+    {
+        return is_numeric($price)
+            ? 'BDT '.number_format((float) $price, 2)
+            : '—';
     }
 }
