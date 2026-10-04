@@ -24,12 +24,17 @@ class Dashboard extends BaseDashboard
 
     public function getTitle(): string|Htmlable
     {
-        return 'Hi! Welcome To Dashboard';
+        return 'Hi! Welcome To Tisilo enterprise marketplace Dashboard';
+    }
+
+    public function getHeading(): string|Htmlable|null
+    {
+        return null;
     }
 
     public function getSubheading(): ?string
     {
-        return 'Home → Marketplace Dashboard';
+        return null;
     }
 
     /** @return array<string, mixed> */

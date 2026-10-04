@@ -180,6 +180,11 @@ class AdminDashboardStatsTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin')
             ->assertOk()
+            ->assertDontSeeText('Hi! Welcome To Dashboard')
+            ->assertDontSeeText('Home → Marketplace Dashboard')
+            ->assertSeeText('Tisilo enterprise marketplace')
+            ->assertSeeText("Congratulations {$admin->name} 🎉")
+            ->assertSeeText('Your marketplace control center is ready. Keep building a trusted shopping experience.')
             ->assertSeeTextInOrder(array_keys($after));
     }
 
