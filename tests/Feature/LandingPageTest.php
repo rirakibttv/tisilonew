@@ -221,6 +221,9 @@ class LandingPageTest extends TestCase
             ->assertSee('value="bkash"', false)
             ->assertSee('bKash')
             ->assertSee(route('store.landing.order', $campaign), false)
+            ->assertSee('data-campaign-product-details', false)
+            ->assertSee('data-campaign-customer-information', false)
+            ->assertSee('lg:grid-cols-[minmax(0,3fr)_minmax(360px,2fr)]', false)
             ->assertDontSee('name="terms"', false)
             ->assertDontSee('আমি অর্ডার, ডেলিভারি ও রিটার্ন সংক্রান্ত শর্তাবলিতে সম্মত।');
         $token = session('landing_checkout.'.$campaign->id.'.token');

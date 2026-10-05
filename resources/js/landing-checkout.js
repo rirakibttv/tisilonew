@@ -63,14 +63,14 @@ if (campaignForm && campaignData) {
             label.className = 'font-semibold';
             label.textContent = districtLabel(item);
             const price = document.createElement('span');
-            price.className = 'text-xs text-slate-500';
+            price.className = 'text-sm text-slate-500';
             price.textContent = money(item.amount);
             button.append(label, price);
             districtOptions.append(button);
         });
         if (!matches.length) {
             const empty = document.createElement('p');
-            empty.className = 'px-3 py-3 text-xs text-rose-600';
+            empty.className = 'px-3 py-3 text-sm text-rose-600';
             empty.textContent = messages.districtUnavailable || 'No delivery rate was found for this district.';
             districtOptions.append(empty);
         }
@@ -112,18 +112,18 @@ if (campaignForm && campaignData) {
         }
 
         const label = document.createElement('span');
-        label.className = 'min-w-0 flex-1 break-words text-xs font-bold leading-5';
+        label.className = 'min-w-0 flex-1 break-words text-sm font-bold leading-5';
         label.textContent = item.label;
         button.append(label);
 
         const price = document.createElement('span');
-        price.className = 'campaign-text shrink-0 pr-8 text-sm font-black';
+        price.className = 'campaign-text shrink-0 pr-8 text-base font-black';
         price.textContent = money(item.price);
         button.append(price);
 
         if (item.available < 1) {
             const stock = document.createElement('span');
-            stock.className = 'mt-1 block text-[10px] font-bold text-rose-600';
+            stock.className = 'mt-1 block text-xs font-bold text-rose-600';
             stock.textContent = messages.outOfStock || 'Out of Stock';
             button.append(stock);
         }

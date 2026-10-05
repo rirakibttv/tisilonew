@@ -16,7 +16,7 @@
             >
             <span>
                 <span class="block font-black text-slate-900">{{ $details['label'] }}</span>
-                <span class="mt-1 block text-xs font-normal leading-5 text-slate-500">{{ $details['description'] }}</span>
+                <span class="mt-1 block text-sm font-normal leading-5 text-slate-500">{{ $details['description'] }}</span>
             </span>
         </label>
     @empty
