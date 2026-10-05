@@ -161,6 +161,8 @@
         @if(count($landingPage->faqs ?? []))
             <section class="storefront-shell pb-14"><h2 class="campaign-green-bg px-5 py-3 text-center text-2xl font-black text-white">{{ __('Frequently Asked Questions') }}</h2><div class="mt-5 space-y-3">@foreach($landingPage->faqs as $faq)<details class="rounded-xl border border-slate-200 p-5"><summary class="cursor-pointer font-black">{{ $faq['question'] ?? '' }}</summary><p class="mt-3 text-sm leading-7 text-slate-600">{{ $faq['answer'] ?? '' }}</p></details>@endforeach</div></section>
         @endif
+
+        @include('storefront.landing.related-products')
     </main>
 
     <footer class="campaign-green-bg px-4 py-7 text-center text-sm text-white"><p class="font-black">{{ $generalSettings['site_name'] ?? 'Tisilo' }}</p><p class="mt-1 text-white/80">{{ __('Secure Order · Cash on Delivery · Nationwide Delivery') }}</p></footer>

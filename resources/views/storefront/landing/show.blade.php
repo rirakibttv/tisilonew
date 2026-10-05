@@ -182,6 +182,8 @@
                 </div>
             </section>
         @endif
+
+        @include('storefront.landing.related-products')
     </main>
 
     <footer class="bg-slate-950 px-4 py-10 text-center text-sm text-slate-400">

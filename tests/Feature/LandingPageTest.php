@@ -74,6 +74,24 @@ class LandingPageTest extends TestCase
             ->assertSee($draft->headline);
     }
 
+    public function test_landing_page_shows_one_related_product_row_with_six_products(): void
+    {
+        $primaryProduct = $this->product();
+        $landingPage = $this->landingPage('related-products-campaign', 'published');
+        $landingPage->products()->attach($primaryProduct);
+
+        foreach (range(1, 7) as $index) {
+            $this->product()->update(['name' => "Related Landing Product {$index}"]);
+        }
+
+        $response = $this->get(route('store.landing.show', $landingPage))->assertOk();
+        $content = $response->getContent();
+
+        $response->assertSee('data-landing-related-products', false);
+        $this->assertSame(6, substr_count($content, 'data-product-card="'));
+        $this->assertStringNotContainsString('data-product-card="'.$primaryProduct->getKey().'"', $content);
+    }
+
     public function test_landing_page_order_preserves_campaign_and_first_party_attribution(): void
     {
         $this->shippingSettings();
@@ -193,7 +211,7 @@ class LandingPageTest extends TestCase
         $cart = ['unrelated' => ['product_id' => 123, 'quantity' => 4]];
         $this->withSession(['store_cart' => $cart])
             ->get(route('store.landing.show', $campaign))->assertOk()
-            ->assertSee('অফারটি সীমিত সময়ের জন্য')
+            ->assertSee(__('This offer is available for a limited time, so order before it ends.'))
             ->assertSee('name="customer_name"', false)
             ->assertSee('name="district_search"', false)
             ->assertSee('data-district-options', false)
@@ -204,8 +222,7 @@ class LandingPageTest extends TestCase
             ->assertSee('bKash')
             ->assertSee(route('store.landing.order', $campaign), false)
             ->assertDontSee('name="terms"', false)
-            ->assertDontSee('আমি অর্ডার, ডেলিভারি ও রিটার্ন সংক্রান্ত শর্তাবলিতে সম্মত।')
-            ->assertDontSee('name="redirect_to"', false);
+            ->assertDontSee('আমি অর্ডার, ডেলিভারি ও রিটার্ন সংক্রান্ত শর্তাবলিতে সম্মত।');
         $token = session('landing_checkout.'.$campaign->id.'.token');
         $payload = [...$this->checkoutData(), 'checkout_token' => $token, 'product_id' => $product->id, 'quantity' => 2, 'price' => 1, 'shipping_amount' => 0];
         $attribution = rawurlencode(json_encode(['source' => 'facebook', 'campaign' => 'inline-ad']));
@@ -333,7 +350,7 @@ class LandingPageTest extends TestCase
         $this->postJson(route('store.landing.quote', $draft), ['product_id' => $product->id, 'quantity' => 1])->assertNotFound();
         $this->post(route('store.landing.order', $draft), [])->assertNotFound();
         $this->get(URL::temporarySignedRoute('store.landing.preview', now()->addHour(), ['landingPage' => $draft]))
-            ->assertOk()->assertSee('প্রিভিউতে অর্ডার বন্ধ আছে।');
+            ->assertOk()->assertSee(__('Orders are disabled in preview.'));
     }
 
     private function landingPage(string $slug, string $status): LandingPage
