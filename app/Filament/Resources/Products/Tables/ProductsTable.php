@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ProductsTable
 {
-    private const PRODUCT_NAME_LINE_LENGTH = 51;
+    private const PRODUCT_NAME_LINE_LENGTH = 50;
 
     public static function configure(Table $table): Table
     {

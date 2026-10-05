@@ -265,7 +265,7 @@ class ProductDuplicationTest extends TestCase
             ->assertTableColumnDoesNotExist('regular_price')
             ->assertTableColumnDoesNotExist('stock_quantity')
             ->assertTableColumnExists('stock_status')
-            ->assertTableColumnStateSet('name', [str_repeat('A', 51), str_repeat('A', 51)], $simpleProduct)
+            ->assertTableColumnStateSet('name', [str_repeat('A', 50), str_repeat('A', 50)], $simpleProduct)
             ->assertTableColumnStateSet('sale_price', ['BDT 850.00'], $simpleProduct)
             ->assertTableColumnStateSet('sale_price', ['Min: BDT 950.00', 'Max: BDT 1,350.00'], $variableProduct);
     }
