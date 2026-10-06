@@ -118,6 +118,10 @@ class GoogleAndCloudflareIntegrationTest extends TestCase
         $this->assertSame('tisilo', $performance['rows'][0]['query']);
         $this->assertTrue($service->submitSitemap('{}', 'sc-domain:tisilo.com', 'https://www.tisilo.com/sitemap.xml')['submitted']);
         Http::assertSent(fn (HttpRequest $request): bool => $request->hasHeader('Authorization', 'Bearer search-oauth-token'));
+        Http::assertSent(fn (HttpRequest $request): bool => $request->method() === 'PUT'
+            && $request->url() === 'https://www.googleapis.com/webmasters/v3/sites/sc-domain%3Atisilo.com/sitemaps/https%3A%2F%2Fwww.tisilo.com%2Fsitemap.xml'
+            && $request->body() === ''
+        );
     }
 
     public function test_cloudflare_sync_reads_zone_settings_dns_and_traffic_analytics(): void

@@ -27,9 +27,12 @@ class GoogleSearchConsoleService
     /** @return array<string, mixed> */
     public function submitSitemap(string $serviceAccountJson, string $propertyUrl, string $sitemapUrl): array
     {
-        $response = $this->client($serviceAccountJson)->put(
-            $this->sitePath($propertyUrl).'/sitemaps/'.rawurlencode($sitemapUrl),
-        );
+        $response = $this->client($serviceAccountJson)
+            ->withBody('')
+            ->send(
+                'PUT',
+                $this->sitePath($propertyUrl).'/sitemaps/'.rawurlencode($sitemapUrl),
+            );
 
         if (! $response->successful()) {
             $this->throwFailure($response, 'Search Console sitemap submission');
