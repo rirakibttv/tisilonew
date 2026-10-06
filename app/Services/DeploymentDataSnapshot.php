@@ -768,10 +768,13 @@ class DeploymentDataSnapshot
         $values = $setting->values ?? [];
 
         // Meta credentials and activation state belong to each deployment. Only the
-        // event policy is portable, so a catalog import cannot disable production CAPI.
-        return $setting->key === 'facebook_capi'
-            ? Arr::only($values, ['events'])
-            : $values;
+        // CAPI event policy is portable; the Commerce Catalog connection is entirely
+        // production-owned so a catalog import cannot replace its IDs or sync state.
+        return match ($setting->key) {
+            'facebook_capi' => Arr::only($values, ['events']),
+            'facebook_catalog' => [],
+            default => $values,
+        };
     }
 
     /**
@@ -781,13 +784,13 @@ class DeploymentDataSnapshot
      */
     private function importableSettingValues(string $key, array $incoming, array $existing): array
     {
-        if ($key !== 'facebook_capi') {
-            return $incoming;
-        }
-
-        return [
-            ...$incoming,
-            ...Arr::only($existing, ['enabled', 'pixel_id', 'api_version', 'test_event_code']),
-        ];
+        return match ($key) {
+            'facebook_capi' => [
+                ...$incoming,
+                ...Arr::only($existing, ['enabled', 'pixel_id', 'api_version', 'test_event_code']),
+            ],
+            'facebook_catalog' => $existing,
+            default => $incoming,
+        };
     }
 }

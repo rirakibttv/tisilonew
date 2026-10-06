@@ -99,6 +99,12 @@ class GeneralSettingsSeeder extends Seeder
                 'PageView', 'ViewContent', 'AddToCart', 'InitiateCheckout', 'AddPaymentInfo', 'Purchase',
                 'OrderConfirmed', 'OrderProcessing', 'OrderShipped', 'OrderDelivered', 'OrderCancelled', 'OrderRefunded',
             ]],
+            'facebook_catalog' => [
+                'enabled' => false,
+                'api_version' => 'v23.0',
+                'default_currency' => 'BDT',
+                'default_brand' => 'Tisilo',
+            ],
             'facebook_auto_post' => ['enabled' => false, 'post_on_product_publish' => false, 'api_version' => 'v23.0'],
             'google_analytics' => ['enabled' => false, 'enhanced_ecommerce' => true, 'anonymize_ip' => true],
             'google_tag_manager' => ['enabled' => false],

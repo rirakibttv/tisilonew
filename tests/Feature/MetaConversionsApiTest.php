@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Jobs\SendMetaConversionEvent;
+use App\Models\Category;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\SiteSetting;
 use App\Services\MetaConversionsApiService;
 use App\Services\VisitorAnalyticsService;
@@ -59,6 +61,44 @@ class MetaConversionsApiTest extends TestCase
             ->assertSee('https://connect.facebook.net/en_US/fbevents.js', false)
             ->assertSee('{ eventID: eventId }', false)
             ->assertDontSee('private-meta-token');
+    }
+
+    public function test_product_event_includes_the_tisilo_category_hierarchy(): void
+    {
+        $this->enableMeta(['ViewContent']);
+        Queue::fake();
+        $parent = Category::query()->create([
+            'name' => 'Home & Kitchen',
+            'slug' => 'meta-event-home-'.Str::lower(Str::random(8)),
+            'status' => true,
+        ]);
+        $child = Category::query()->create([
+            'parent_id' => $parent->id,
+            'name' => 'Bed Sheet',
+            'slug' => 'meta-event-bed-sheet-'.Str::lower(Str::random(8)),
+            'status' => true,
+        ]);
+        $product = Product::query()->create([
+            'name' => 'Tracked Category Product',
+            'slug' => 'tracked-category-product-'.Str::lower(Str::random(8)),
+            'category_id' => $child->id,
+            'regular_price' => 1200,
+            'status' => 'published',
+        ]);
+        $request = Request::create(route('store.products.show', $product), 'GET');
+
+        app(VisitorAnalyticsService::class)->record($request, [
+            'visitor_id' => (string) Str::uuid(),
+            'event_type' => 'product_view',
+            'event_id' => 'category-view-1',
+            'path' => '/products/'.$product->slug,
+            'product_id' => $product->id,
+        ]);
+
+        Queue::assertPushed(SendMetaConversionEvent::class, fn (SendMetaConversionEvent $job): bool => $job->eventName === 'ViewContent'
+            && $job->event['custom_data']['content_ids'] === [(string) $product->id]
+            && $job->event['custom_data']['content_category'] === 'Home & Kitchen › Bed Sheet'
+        );
     }
 
     public function test_purchase_is_queued_with_hashed_customer_and_complete_order_data(): void

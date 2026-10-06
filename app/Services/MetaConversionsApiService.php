@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Jobs\SendMetaConversionEvent;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\SiteSetting;
 use App\Models\VisitorEvent;
 use Illuminate\Http\Client\Response;
@@ -175,12 +176,16 @@ class MetaConversionsApiService
         }
 
         $metadata = $visitorEvent->metadata ?? [];
+        $product = $visitorEvent->product_id
+            ? Product::query()->with('category.parent.parent')->find($visitorEvent->product_id)
+            : null;
         $data = array_filter([
             'currency' => $metadata['currency'] ?? ($visitorEvent->value !== null ? 'BDT' : null),
             'value' => $visitorEvent->value !== null ? (float) $visitorEvent->value : null,
             'content_ids' => $visitorEvent->product_id ? [(string) $visitorEvent->product_id] : null,
             'content_type' => $visitorEvent->product_id ? 'product' : null,
-            'content_name' => $metadata['product_name'] ?? null,
+            'content_name' => $metadata['product_name'] ?? $product?->name,
+            'content_category' => $product?->category?->hierarchicalName(),
             'num_items' => isset($metadata['quantity']) ? (int) $metadata['quantity'] : null,
         ], fn (mixed $value): bool => $value !== null && $value !== [] && $value !== '');
 

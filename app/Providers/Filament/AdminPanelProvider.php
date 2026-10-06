@@ -358,6 +358,7 @@ class AdminPanelProvider extends PanelProvider
             ['sms', 'SMS Gateway', Heroicon::OutlinedChatBubbleLeftRight],
             ['courier', 'Courier API', Heroicon::OutlinedTruck],
             ['facebook_capi', 'Facebook CAPI', Heroicon::OutlinedShare],
+            ['facebook_catalog', 'Meta Catalog', Heroicon::OutlinedShoppingBag],
             ['facebook_auto_post', 'FB Auto Post', Heroicon::OutlinedPaperAirplane],
             ['search_console', 'Google Search Console', Heroicon::OutlinedMagnifyingGlass],
             ['fraud', 'Manage Fraud Checker', Heroicon::OutlinedShieldCheck],

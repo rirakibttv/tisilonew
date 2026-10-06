@@ -15,3 +15,7 @@ Schedule::command('queue:work --stop-when-empty --queue=integrations,default --t
 Schedule::command('shipping:sync-statuses --limit=100')
     ->everyFifteenMinutes()
     ->withoutOverlapping();
+
+Schedule::command('meta-catalog:sync')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping();

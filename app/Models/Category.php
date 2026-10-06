@@ -104,6 +104,12 @@ class Category extends Model
         return $hierarchy;
     }
 
+    /** @return array<int, self> */
+    public function hierarchyForCatalog(): array
+    {
+        return $this->hierarchy();
+    }
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_id');

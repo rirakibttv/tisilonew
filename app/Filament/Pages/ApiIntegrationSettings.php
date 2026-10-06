@@ -6,6 +6,7 @@ use App\Models\SiteSetting;
 use App\Services\CloudflareApiService;
 use App\Services\GoogleAnalyticsService;
 use App\Services\GoogleSearchConsoleService;
+use App\Services\MetaCatalogService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
@@ -17,6 +18,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
 
@@ -39,6 +41,7 @@ class ApiIntegrationSettings extends Page
         'sms' => 'SMS Gateway',
         'courier' => 'Courier API',
         'facebook_capi' => 'Facebook CAPI',
+        'facebook_catalog' => 'Meta Catalog',
         'facebook_auto_post' => 'FB Auto Post',
         'search_console' => 'Google Search Console',
         'fraud' => 'Manage Fraud Checker',
@@ -58,6 +61,11 @@ class ApiIntegrationSettings extends Page
             $values[$field] = null;
         }
 
+        if ($this->section === 'facebook_catalog') {
+            $values['feed_url'] = app(MetaCatalogService::class)->feedUrl()
+                ?? 'Save settings to generate the secure feed URL.';
+        }
+
         $this->form->fill($values);
     }
 
@@ -72,6 +80,7 @@ class ApiIntegrationSettings extends Page
             'cloudflare' => 'Read zone traffic and configuration, verify access, and purge CDN cache securely.',
             'google_analytics' => 'Send ecommerce events to GA4 and read verified reporting data back into Tisilo.',
             'search_console' => 'Read Google Search performance and submit the configured sitemap securely.',
+            'facebook_catalog' => 'Sync published products, inventory, pricing, images and Tisilo category hierarchy with Meta Commerce Catalog.',
             default => 'Credentials are encrypted. Saving settings never sends a test request, SMS, event, or social post.',
         };
     }
@@ -97,6 +106,11 @@ class ApiIntegrationSettings extends Page
             }
         }
 
+        if ($this->section === 'facebook_catalog'
+            && blank(SiteSetting::secretsFor('facebook_catalog')['feed_token'] ?? null)) {
+            $secretUpdates['feed_token'] = Str::random(64);
+        }
+
         SiteSetting::put(
             $this->settingKey(),
             [...SiteSetting::valuesFor($this->settingKey()), ...$values],
@@ -111,6 +125,11 @@ class ApiIntegrationSettings extends Page
         $fresh = SiteSetting::valuesFor($this->settingKey());
         foreach ($this->secretFields() as $field) {
             $fresh[$field] = null;
+        }
+
+        if ($this->section === 'facebook_catalog') {
+            $fresh['feed_url'] = app(MetaCatalogService::class)->feedUrl()
+                ?? 'Save settings to generate the secure feed URL.';
         }
         $this->form->fill($fresh);
     }
@@ -140,6 +159,7 @@ class ApiIntegrationSettings extends Page
                 'redx_access_token',
             ],
             'facebook_capi' => ['access_token'],
+            'facebook_catalog' => ['access_token'],
             'facebook_auto_post' => ['page_access_token'],
             'search_console' => ['search_console_service_account_json'],
             'fraud' => ['fraud_api_key', 'duplicate_order_api_key'],
@@ -158,6 +178,7 @@ class ApiIntegrationSettings extends Page
             'sms' => $this->smsComponents(),
             'courier' => $this->courierComponents(),
             'facebook_capi' => $this->facebookCapiComponents(),
+            'facebook_catalog' => $this->facebookCatalogComponents(),
             'facebook_auto_post' => $this->facebookAutoPostComponents(),
             'search_console' => $this->searchConsoleComponents(),
             'fraud' => $this->fraudComponents(),
@@ -171,6 +192,12 @@ class ApiIntegrationSettings extends Page
     protected function getHeaderActions(): array
     {
         return match ($this->section) {
+            'facebook_catalog' => [
+                Action::make('verifyMetaCatalog')->label('Verify Catalog')->icon('heroicon-o-signal')->action('verifyMetaCatalog'),
+                Action::make('syncMetaCatalog')->label('Sync Products & Categories')->icon('heroicon-o-arrow-path')->requiresConfirmation()
+                    ->modalDescription('Meta will fetch the secure Tisilo feed and update product, price, stock and category data in the configured catalog.')
+                    ->action('syncMetaCatalog'),
+            ],
             'search_console' => [
                 Action::make('verifySearchConsole')->label('Verify Access')->icon('heroicon-o-signal')->action('verifySearchConsole'),
                 Action::make('syncSearchConsole')->label('Sync Search Data')->icon('heroicon-o-arrow-down-tray')->action('syncSearchConsole'),
@@ -247,6 +274,40 @@ class ApiIntegrationSettings extends Page
             Notification::make()->success()->title('Sitemap submitted to Google')->body($sitemap)->send();
         } catch (Throwable $exception) {
             $this->integrationFailure('Sitemap submission failed', $exception);
+        }
+    }
+
+    public function verifyMetaCatalog(MetaCatalogService $catalog): void
+    {
+        try {
+            $result = $catalog->verify();
+            $this->storeIntegrationStatus('facebook_catalog', [
+                'catalog_name' => $result['name'] ?? null,
+                'remote_product_count' => (int) ($result['product_count'] ?? 0),
+                'last_verified_at' => now()->toIso8601String(),
+            ], 'access_token');
+            $this->fillMetaCatalogFeedUrl();
+
+            Notification::make()->success()->title('Meta Catalog access verified')
+                ->body(($result['name'] ?? 'Catalog').' · '.number_format((int) ($result['product_count'] ?? 0)).' items')->send();
+        } catch (Throwable $exception) {
+            $this->integrationFailure('Meta Catalog verification failed', $exception);
+        }
+    }
+
+    public function syncMetaCatalog(MetaCatalogService $catalog): void
+    {
+        try {
+            $result = $catalog->sync();
+            $fresh = SiteSetting::valuesFor('facebook_catalog');
+            $fresh['access_token'] = null;
+            $this->form->fill($fresh);
+            $this->fillMetaCatalogFeedUrl();
+
+            Notification::make()->success()->title('Meta Catalog sync queued')
+                ->body(number_format($result['itemCount']).' published products with category hierarchy were sent for ingestion.')->send();
+        } catch (Throwable $exception) {
+            $this->integrationFailure('Meta Catalog sync failed', $exception);
         }
     }
 
@@ -494,6 +555,38 @@ class ApiIntegrationSettings extends Page
     }
 
     /** @return array<mixed> */
+    private function facebookCatalogComponents(): array
+    {
+        return [
+            Section::make('Meta Commerce Catalog')
+                ->description('A secure scheduled feed keeps published products and the complete Tisilo category path synchronized. Product IDs match Pixel/CAPI content_ids for Dynamic Ads.')
+                ->columns(2)
+                ->schema([
+                    Toggle::make('enabled')->label('Enable catalog sync')->default(false),
+                    TextInput::make('catalog_id')->label('Meta Catalog ID')->regex('/^[0-9]{5,32}$/')->maxLength(32),
+                    Select::make('api_version')->options(['v23.0' => 'v23.0', 'v22.0' => 'v22.0', 'v21.0' => 'v21.0'])->default('v23.0'),
+                    TextInput::make('default_currency')->default('BDT')->regex('/^[A-Z]{3}$/')->maxLength(3),
+                    TextInput::make('default_brand')->default('Tisilo')->maxLength(191),
+                    $this->secretInput('access_token', 'Catalog Management Access Token')
+                        ->helperText('Use a Meta system-user token with Catalog Management permission. It is encrypted and never included in Git or the public feed.')
+                        ->columnSpanFull(),
+                    TextInput::make('feed_url')->label('Secure Product & Category Feed URL')->disabled()->dehydrated(false)->columnSpanFull()
+                        ->helperText('Generated after saving. Meta reads this URL; the embedded token prevents public catalog enumeration.'),
+                ]),
+            Section::make('Catalog Sync Status')->columns(4)->schema([
+                TextInput::make('catalog_name')->disabled(),
+                TextInput::make('feed_id')->label('Meta Feed ID')->disabled(),
+                TextInput::make('local_feed_item_count')->label('Local Feed Items')->disabled(),
+                TextInput::make('remote_product_count')->label('Meta Catalog Items')->disabled(),
+                TextInput::make('last_sync_status')->disabled(),
+                TextInput::make('last_verified_at')->disabled(),
+                TextInput::make('last_synced_at')->disabled(),
+                TextInput::make('last_upload_id')->label('Latest Upload ID')->disabled(),
+            ]),
+        ];
+    }
+
+    /** @return array<mixed> */
     private function facebookAutoPostComponents(): array
     {
         return [
@@ -708,6 +801,12 @@ class ApiIntegrationSettings extends Page
 
         Notification::make()->danger()->title($title)
             ->body($exception->getMessage())->persistent()->send();
+    }
+
+    private function fillMetaCatalogFeedUrl(): void
+    {
+        $this->data['feed_url'] = app(MetaCatalogService::class)->feedUrl()
+            ?? 'Save settings to generate the secure feed URL.';
     }
 
     /** @return array{0: array<string, mixed>, 1: string} */

@@ -23,6 +23,54 @@ class DeploymentDataSnapshotTest extends TestCase
 {
     use DatabaseTransactions;
 
+    public function test_meta_catalog_snapshot_never_overwrites_production_connection(): void
+    {
+        $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tisilo-meta-catalog-'.Str::random(10).'.json';
+        $service = app(DeploymentDataSnapshot::class);
+
+        try {
+            SiteSetting::put('facebook_catalog', [
+                'enabled' => false,
+                'catalog_id' => '111111111',
+                'feed_id' => 'local-feed',
+                'api_version' => 'v22.0',
+            ], [
+                'access_token' => 'local-token',
+                'feed_token' => 'local-feed-token',
+            ]);
+
+            $service->export($path);
+            $snapshot = json_decode(File::get($path), true, 512, JSON_THROW_ON_ERROR);
+            $catalog = collect($snapshot['site_settings'])->firstWhere('key', 'facebook_catalog');
+
+            $this->assertSame([], $catalog['values']);
+            $this->assertStringNotContainsString('local-token', File::get($path));
+            $this->assertStringNotContainsString('local-feed-token', File::get($path));
+
+            SiteSetting::put('facebook_catalog', [
+                'enabled' => true,
+                'catalog_id' => '999999999',
+                'feed_id' => 'production-feed',
+                'api_version' => 'v23.0',
+            ], [
+                'access_token' => 'production-token',
+                'feed_token' => 'production-feed-token',
+            ]);
+
+            $service->import($path);
+
+            $values = SiteSetting::valuesFor('facebook_catalog');
+            $this->assertTrue($values['enabled']);
+            $this->assertSame('999999999', $values['catalog_id']);
+            $this->assertSame('production-feed', $values['feed_id']);
+            $this->assertSame('v23.0', $values['api_version']);
+            $this->assertSame('production-token', SiteSetting::secretsFor('facebook_catalog')['access_token']);
+            $this->assertSame('production-feed-token', SiteSetting::secretsFor('facebook_catalog')['feed_token']);
+        } finally {
+            File::delete($path);
+        }
+    }
+
     public function test_facebook_capi_snapshot_updates_events_without_overwriting_production_connection(): void
     {
         $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tisilo-facebook-capi-'.Str::random(10).'.json';

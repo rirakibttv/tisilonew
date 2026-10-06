@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Integrations\MetaCatalogFeedController;
 use App\Http\Controllers\Storefront\AccountController;
 use App\Http\Controllers\Storefront\BkashPaymentController;
 use App\Http\Controllers\Storefront\CartController;
@@ -16,6 +17,10 @@ use App\Http\Controllers\Storefront\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('store.home');
+Route::get('/integrations/meta/catalog-feed/{token}.tsv', MetaCatalogFeedController::class)
+    ->where('token', '[A-Za-z0-9_-]{32,128}')
+    ->middleware('throttle:30,1')
+    ->name('integrations.meta.catalog-feed');
 Route::post('/language', LocaleController::class)
     ->middleware('throttle:20,1')
     ->name('store.language.update');
