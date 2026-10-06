@@ -15,6 +15,11 @@ class AutoDeployCronTest extends TestCase
             '* * * * * /usr/bin/env bash ${REPOSITORY}/scripts/deploy-production.sh',
             $script,
         );
+        $this->assertStringContainsString(
+            '* * * * * ${PHP_BIN} ${REPOSITORY}/artisan schedule:run --no-interaction',
+            $script,
+        );
+        $this->assertStringContainsString('readonly SCHEDULER_LOG=', $script);
         $this->assertStringContainsString('crontab "${temporary_crontab}"', $script);
         $this->assertStringContainsString('flock -n 9', $script);
         $this->assertStringContainsString('ensure_minute_auto_deploy_cron', $script);

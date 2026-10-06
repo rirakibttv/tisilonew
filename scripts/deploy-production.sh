@@ -11,6 +11,7 @@ readonly BOOTSTRAP_UPLOAD_ARCHIVE="${BACKUP_ROOT}/bootstrap-storage.tar.gz"
 readonly BOOTSTRAP_UPLOAD_MARKER="${REPOSITORY}/storage/app/.bootstrap-media-imported"
 readonly LOCK_FILE="${REPOSITORY}/storage/framework/tisilo-auto-deploy.lock"
 readonly DEPLOY_LOG="${REPOSITORY}/storage/logs/deploy.log"
+readonly SCHEDULER_LOG="${REPOSITORY}/storage/logs/scheduler.log"
 readonly INDEX_SIGNATURE="tisilo-cpanel-front-controller-v1"
 readonly PUBLIC_MEDIA_MARKER=".tisilo-public-media-mirror"
 
@@ -229,28 +230,33 @@ quarantine_legacy_public_env() {
 }
 
 ensure_minute_auto_deploy_cron() {
-    local current_crontab desired_entry temporary_crontab
+    local current_crontab desired_deploy_entry desired_scheduler_entry temporary_crontab
 
     if ! command -v crontab >/dev/null 2>&1; then
         log "crontab executable was not found; the one-minute auto-deploy schedule could not be verified."
         return 1
     fi
 
-    desired_entry="* * * * * /usr/bin/env bash ${REPOSITORY}/scripts/deploy-production.sh >> ${DEPLOY_LOG} 2>&1"
+    desired_deploy_entry="* * * * * /usr/bin/env bash ${REPOSITORY}/scripts/deploy-production.sh >> ${DEPLOY_LOG} 2>&1"
+    desired_scheduler_entry="* * * * * ${PHP_BIN} ${REPOSITORY}/artisan schedule:run --no-interaction >> ${SCHEDULER_LOG} 2>&1"
     current_crontab="$(crontab -l 2>/dev/null || true)"
 
-    if grep -Fqx -- "${desired_entry}" <<< "${current_crontab}"; then
+    if grep -Fqx -- "${desired_deploy_entry}" <<< "${current_crontab}" \
+        && grep -Fqx -- "${desired_scheduler_entry}" <<< "${current_crontab}"; then
         return 0
     fi
 
     temporary_crontab="$(mktemp "${TMPDIR:-/tmp}/tisilo-auto-deploy-cron.XXXXXX")"
-    awk -v script="${REPOSITORY}/scripts/deploy-production.sh" 'index($0, script) == 0' \
+    awk \
+        -v deploy_script="${REPOSITORY}/scripts/deploy-production.sh" \
+        -v scheduler_command="${REPOSITORY}/artisan schedule:run" \
+        'index($0, deploy_script) == 0 && index($0, scheduler_command) == 0' \
         <<< "${current_crontab}" > "${temporary_crontab}"
-    printf '%s\n' "${desired_entry}" >> "${temporary_crontab}"
+    printf '%s\n' "${desired_deploy_entry}" "${desired_scheduler_entry}" >> "${temporary_crontab}"
     crontab "${temporary_crontab}"
     rm -f "${temporary_crontab}"
 
-    log "Auto-deploy cron verified: GitHub main is checked once per minute."
+    log "Auto-deploy and Laravel scheduler cron entries verified for every minute."
 }
 
 sync_public_media() {
@@ -476,6 +482,7 @@ rollback_code() {
     install_dependencies
     sync_public_files
     "${PHP_BIN}" artisan optimize:clear
+    "${PHP_BIN}" artisan filament:optimize-clear
     "${PHP_BIN}" artisan up || true
     log "Code rollback completed. Database backup is available for manual recovery."
 }
@@ -590,6 +597,7 @@ main() {
         log "Composer files are unchanged; dependency installation skipped."
     fi
     "${PHP_BIN}" artisan optimize:clear
+    "${PHP_BIN}" artisan filament:optimize-clear
     "${PHP_BIN}" artisan migrate --force
     prepare_public_storage_link
     quarantine_legacy_public_source

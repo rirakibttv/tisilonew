@@ -10,8 +10,8 @@ use App\Models\SiteSetting;
 use App\Services\MetaConversionsApiService;
 use App\Services\VisitorAnalyticsService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Http\Request;
 use Illuminate\Http\Client\Request as HttpRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
@@ -20,6 +20,46 @@ use Tests\TestCase;
 class MetaConversionsApiTest extends TestCase
 {
     use DatabaseTransactions;
+
+    public function test_page_view_uses_the_same_event_id_for_the_conversions_api_job(): void
+    {
+        $this->enableMeta(['PageView']);
+        Queue::fake();
+        $request = Request::create(
+            'https://www.tisilo.com/shop?utm_source=facebook',
+            'GET',
+            [],
+            ['_fbp' => 'fb.1.1234567890.browser'],
+            [],
+            ['REMOTE_ADDR' => '203.0.113.10', 'HTTP_USER_AGENT' => 'Tisilo Test Browser'],
+        );
+
+        app(VisitorAnalyticsService::class)->record($request, [
+            'visitor_id' => (string) Str::uuid(),
+            'event_type' => 'page_view',
+            'event_id' => 'page-view-browser-and-server-1',
+            'path' => '/shop',
+        ]);
+
+        Queue::assertPushed(SendMetaConversionEvent::class, fn (SendMetaConversionEvent $job): bool => $job->eventName === 'PageView'
+            && $job->event['event_id'] === 'page-view-browser-and-server-1'
+            && $job->event['event_source_url'] === 'https://www.tisilo.com/shop?utm_source=facebook'
+            && $job->event['user_data']['fbp'] === 'fb.1.1234567890.browser'
+        );
+    }
+
+    public function test_storefront_loads_the_meta_pixel_without_exposing_the_access_token(): void
+    {
+        $this->enableMeta(['PageView', 'ViewContent']);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('var metaPixelEnabled = true;', false)
+            ->assertSee('var metaPixelId = "123456789";', false)
+            ->assertSee('https://connect.facebook.net/en_US/fbevents.js', false)
+            ->assertSee('{ eventID: eventId }', false)
+            ->assertDontSee('private-meta-token');
+    }
 
     public function test_purchase_is_queued_with_hashed_customer_and_complete_order_data(): void
     {
@@ -78,8 +118,7 @@ class MetaConversionsApiTest extends TestCase
 
         foreach ($events as $status => $eventName) {
             $order->update(['status' => $status]);
-            Queue::assertPushed(SendMetaConversionEvent::class, fn (SendMetaConversionEvent $job): bool =>
-                $job->eventName === $eventName
+            Queue::assertPushed(SendMetaConversionEvent::class, fn (SendMetaConversionEvent $job): bool => $job->eventName === $eventName
                 && $job->event['custom_data']['status'] === $status
                 && $job->event['custom_data']['order_id'] === $order->order_number
             );

@@ -57,11 +57,18 @@ class AppServiceProvider extends ServiceProvider
             }
 
             View::composer('*', function (IlluminateView $view): void {
+                $metaPixel = SiteSetting::valuesFor('facebook_capi');
+
                 $view->with([
                     'generalSettings' => SiteSetting::valuesFor('general'),
                     'seoSettings' => SiteSetting::valuesFor('seo'),
                     'contactSettings' => SiteSetting::valuesFor('contact'),
                     'googleAnalyticsSettings' => SiteSetting::valuesFor('google_analytics'),
+                    'metaPixelSettings' => [
+                        'enabled' => filter_var($metaPixel['enabled'] ?? false, FILTER_VALIDATE_BOOL),
+                        'pixel_id' => $metaPixel['pixel_id'] ?? null,
+                        'events' => is_array($metaPixel['events'] ?? null) ? $metaPixel['events'] : [],
+                    ],
                     'socialLinks' => SiteSetting::valuesFor('social')['links'] ?? [],
                     'contentPages' => collect(SiteSetting::valuesFor('pages')['pages'] ?? [])
                         ->where('status', true)
