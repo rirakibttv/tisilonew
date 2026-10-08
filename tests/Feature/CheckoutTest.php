@@ -71,7 +71,7 @@ class CheckoutTest extends TestCase
         $this->get($response->headers->get('Location'))
             ->assertOk()
             ->assertSee($order->order_number)
-            ->assertSee('আপনার অর্ডারটি গ্রহণ করা হয়েছে');
+            ->assertSee('আপনার অর্ডার গ্রহণ করা হয়েছে');
 
         $this->assertSame('pending', $order->status->value);
         $this->assertSame('cod', $order->payment_method);

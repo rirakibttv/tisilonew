@@ -52,6 +52,11 @@ class GeneralSettingsSeeder extends Seeder
             ],
             'seo' => [
                 'meta_tags' => 'tisilo, marketplace, ecommerce, bangladesh',
+                'search_console_sitemap_url' => url('/sitemap.xml'),
+                'sitemap_include_products' => true,
+                'sitemap_include_categories' => true,
+                'sitemap_include_pages' => true,
+                'sitemap_change_frequency' => 'hourly',
             ],
             'social' => ['links' => []],
             'contact' => ['status' => true],
@@ -71,13 +76,6 @@ class GeneralSettingsSeeder extends Seeder
                 'github_deploy_frequency_minutes' => 1,
                 'github_deploy_branch' => 'main',
                 'github_deploy_command' => '* * * * * scripts/deploy-production.sh',
-            ],
-            'sitemap' => [
-                'auto_generate' => true,
-                'include_products' => true,
-                'include_pages' => true,
-                'change_frequency' => 'daily',
-                'path' => 'sitemap.xml',
             ],
             'fraud' => [
                 'enabled' => false,

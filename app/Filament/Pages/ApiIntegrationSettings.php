@@ -7,6 +7,8 @@ use App\Services\CloudflareApiService;
 use App\Services\GoogleAnalyticsService;
 use App\Services\GoogleSearchConsoleService;
 use App\Services\MetaCatalogService;
+use App\Services\SitemapService;
+use App\Services\SmsGatewayService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
@@ -57,6 +59,10 @@ class ApiIntegrationSettings extends Page
 
         $values = SiteSetting::valuesFor($this->settingKey());
 
+        if ($this->section === 'search_console') {
+            $values = app(SitemapService::class)->settings();
+        }
+
         foreach ($this->secretFields() as $field) {
             $values[$field] = null;
         }
@@ -79,7 +85,7 @@ class ApiIntegrationSettings extends Page
         return match ($this->section) {
             'cloudflare' => 'Read zone traffic and configuration, verify access, and purge CDN cache securely.',
             'google_analytics' => 'Send ecommerce events to GA4 and read verified reporting data back into Tisilo.',
-            'search_console' => 'Read Google Search performance and submit the configured sitemap securely.',
+            'search_console' => 'Manage Search Console, generate the complete sitemap every hour, and submit sitemap updates to Google automatically.',
             'facebook_catalog' => 'Sync published products, inventory, pricing, images and Tisilo category hierarchy with Meta Commerce Catalog.',
             default => 'Credentials are encrypted. Saving settings never sends a test request, SMS, event, or social post.',
         };
@@ -131,6 +137,10 @@ class ApiIntegrationSettings extends Page
             $fresh['feed_url'] = app(MetaCatalogService::class)->feedUrl()
                 ?? 'Save settings to generate the secure feed URL.';
         }
+        if ($this->section === 'search_console') {
+            $fresh = app(SitemapService::class)->settings();
+            $fresh['search_console_service_account_json'] = null;
+        }
         $this->form->fill($fresh);
     }
 
@@ -152,7 +162,7 @@ class ApiIntegrationSettings extends Page
                 'sslcommerz_store_password', 'shurjopay_password',
                 'aamarpay_signature_key', 'uddoktapay_api_key',
             ],
-            'sms' => ['api_key', 'admin_phone_list'],
+            'sms' => ['api_key', 'creative_design_api_key', 'admin_phone_list'],
             'courier' => [
                 'steadfast_api_key', 'steadfast_secret_key',
                 'pathao_client_secret', 'pathao_password', 'pathao_access_token',
@@ -198,10 +208,14 @@ class ApiIntegrationSettings extends Page
                     ->modalDescription('Meta will fetch the secure Tisilo feed and update product, price, stock and category data in the configured catalog.')
                     ->action('syncMetaCatalog'),
             ],
+            'sms' => [
+                Action::make('sendTestSms')->label('Send Test SMS')->icon('heroicon-o-paper-airplane')->requiresConfirmation()->action('sendTestSms'),
+            ],
             'search_console' => [
                 Action::make('verifySearchConsole')->label('Verify Access')->icon('heroicon-o-signal')->action('verifySearchConsole'),
                 Action::make('syncSearchConsole')->label('Sync Search Data')->icon('heroicon-o-arrow-down-tray')->action('syncSearchConsole'),
-                Action::make('submitSearchConsoleSitemap')->label('Submit Sitemap')->icon('heroicon-o-paper-airplane')->requiresConfirmation()->action('submitSearchConsoleSitemap'),
+                Action::make('syncSitemap')->label('Update Sitemap Now')->icon('heroicon-o-arrow-path')->action('syncSitemap'),
+                Action::make('submitSearchConsoleSitemap')->label('Submit Existing Sitemap')->icon('heroicon-o-paper-airplane')->requiresConfirmation()->action('submitSearchConsoleSitemap'),
             ],
             'google_analytics' => [
                 Action::make('verifyGoogleAnalytics')->label('Verify Event Delivery')->icon('heroicon-o-signal')->action('verifyGoogleAnalytics'),
@@ -274,6 +288,53 @@ class ApiIntegrationSettings extends Page
             Notification::make()->success()->title('Sitemap submitted to Google')->body($sitemap)->send();
         } catch (Throwable $exception) {
             $this->integrationFailure('Sitemap submission failed', $exception);
+        }
+    }
+
+    public function syncSitemap(SitemapService $sitemap): void
+    {
+        try {
+            $result = $sitemap->sync();
+            $this->refreshSearchConsoleForm();
+
+            Notification::make()->success()->title('Sitemap updated successfully')
+                ->body($result['url_count'].' URLs · '.$result['submission_status'])->send();
+        } catch (Throwable $exception) {
+            $this->refreshSearchConsoleForm();
+            $this->integrationFailure('Automatic sitemap update failed', $exception);
+        }
+    }
+
+    public function sendTestSms(SmsGatewayService $sms): void
+    {
+        try {
+            $number = trim((string) ($this->data['test_phone_number'] ?? ''));
+            if ($number === '') {
+                throw new RuntimeException('Enter a test phone number first.');
+            }
+
+            $result = $sms->sendNow($number, 'Tisilo Creative Design SMS gateway test successful.');
+            if ($result['skipped'] ?? false) {
+                throw new RuntimeException('Enable Creative Design as the SMS provider and save its API key first.');
+            }
+
+            SiteSetting::put('sms', [
+                ...SiteSetting::valuesFor('sms'),
+                'last_test_status' => 'Successful',
+                'last_test_at' => now()->toIso8601String(),
+            ]);
+            $this->refreshSmsForm();
+
+            Notification::make()->success()->title('Creative Design test SMS sent')
+                ->body($number.' · Message ID: '.$result['message_id'])->send();
+        } catch (Throwable $exception) {
+            SiteSetting::put('sms', [
+                ...SiteSetting::valuesFor('sms'),
+                'last_test_status' => 'Failed — '.$exception->getMessage(),
+                'last_test_at' => now()->toIso8601String(),
+            ]);
+            $this->refreshSmsForm();
+            $this->integrationFailure('Test SMS failed', $exception);
         }
     }
 
@@ -478,17 +539,37 @@ class ApiIntegrationSettings extends Page
                     'bulksmsbd' => 'BulkSMSBD',
                     'mimsms' => 'MIM SMS',
                     'ssl_wireless' => 'SSL Wireless',
+                    'creative_design' => 'Creative Design',
                     'custom' => 'Custom HTTP API',
-                ])->default('bulksmsbd')->required(),
-                TextInput::make('endpoint')->url()->maxLength(500)->columnSpanFull(),
-                TextInput::make('sender_id')->maxLength(100),
-                $this->secretInput('api_key', 'API Key'),
+                ])->default('bulksmsbd')->required()->live()
+                    ->afterStateUpdated(function (mixed $state, callable $set): void {
+                        if ($state === 'creative_design') {
+                            $set('endpoint', SmsGatewayService::CREATIVE_DESIGN_ENDPOINT);
+                        }
+                    }),
+                TextInput::make('endpoint')->url()->maxLength(500)->columnSpanFull()
+                    ->visible(fn (callable $get): bool => $get('provider') !== 'creative_design'),
+                TextInput::make('creative_design_endpoint')->label('Creative Design API URL')
+                    ->default(SmsGatewayService::CREATIVE_DESIGN_ENDPOINT)->disabled()->dehydrated(false)->columnSpanFull()
+                    ->visible(fn (callable $get): bool => $get('provider') === 'creative_design'),
+                TextInput::make('sender_id')->maxLength(100)
+                    ->visible(fn (callable $get): bool => $get('provider') !== 'creative_design'),
+                $this->secretInput('api_key', 'API Key')
+                    ->visible(fn (callable $get): bool => $get('provider') !== 'creative_design'),
+                $this->secretInput('creative_design_api_key', 'Creative Design API Key')
+                    ->visible(fn (callable $get): bool => $get('provider') === 'creative_design'),
                 $this->secretInput('admin_phone_list', 'Admin Phone List')->helperText('Comma-separated recipients; encrypted at rest.'),
             ]),
             Section::make('Automated SMS')->columns(3)->schema([
                 Toggle::make('order_confirmation')->default(true),
                 Toggle::make('password_reset')->default(true),
                 Toggle::make('admin_new_order_alert')->default(true),
+            ]),
+            Section::make('Creative Design Connection Test')->columns(3)->schema([
+                TextInput::make('test_phone_number')->label('Test Phone Number')->tel()->dehydrated(false)
+                    ->placeholder('01700000000'),
+                TextInput::make('last_test_status')->label('Last Test Status')->disabled(),
+                TextInput::make('last_test_at')->label('Last Tested')->disabled(),
             ]),
         ];
     }
@@ -618,6 +699,27 @@ class ApiIntegrationSettings extends Page
                     Textarea::make('search_console_service_account_json')->rows(7)->columnSpanFull()
                         ->placeholder('Leave blank to keep the encrypted service-account JSON')
                         ->helperText('Required for API sync. Stored encrypted and never exported to Git.'),
+                ]),
+            Section::make('Automatic Sitemap')
+                ->description('The Laravel scheduler rebuilds sitemap.xml every hour. When its content changes and Search Console is configured, the new sitemap is submitted to Google automatically.')
+                ->columns(4)->schema([
+                    TextInput::make('sitemap_update_schedule')->label('Update Schedule')
+                        ->default('Every hour')->disabled()->dehydrated(false),
+                    Select::make('sitemap_change_frequency')->label('Sitemap Change Frequency')->options([
+                        'always' => 'Always',
+                        'hourly' => 'Hourly',
+                        'daily' => 'Daily',
+                        'weekly' => 'Weekly',
+                        'monthly' => 'Monthly',
+                    ])->default('hourly')->required(),
+                    Toggle::make('sitemap_include_products')->label('Include Published Products')->default(true),
+                    Toggle::make('sitemap_include_categories')->label('Include Active Categories')->default(true),
+                    Toggle::make('sitemap_include_pages')->label('Include Active Pages')->default(true),
+                    TextInput::make('sitemap_url_count')->label('URLs in Sitemap')->disabled(),
+                    TextInput::make('sitemap_last_generated_at')->label('Last Generated')->disabled(),
+                    TextInput::make('sitemap_last_changed_at')->label('Last Content Change')->disabled(),
+                    TextInput::make('sitemap_last_generated_status')->label('Generation Status')->disabled()->columnSpan(2),
+                    TextInput::make('sitemap_last_auto_submission_status')->label('Automatic Google Submission')->disabled()->columnSpan(2),
                 ]),
             Section::make('Search Performance (last 28 days)')->columns(4)->schema([
                 TextInput::make('search_console_clicks')->label('Clicks')->disabled(),
@@ -788,8 +890,26 @@ class ApiIntegrationSettings extends Page
     {
         SiteSetting::put($key, [...SiteSetting::valuesFor($key), ...$status]);
 
-        $fresh = SiteSetting::valuesFor($key);
+        $fresh = $key === 'seo' && $this->section === 'search_console'
+            ? app(SitemapService::class)->settings()
+            : SiteSetting::valuesFor($key);
         foreach ((array) $secretFields as $field) {
+            $fresh[$field] = null;
+        }
+        $this->form->fill($fresh);
+    }
+
+    private function refreshSearchConsoleForm(): void
+    {
+        $fresh = app(SitemapService::class)->settings();
+        $fresh['search_console_service_account_json'] = null;
+        $this->form->fill($fresh);
+    }
+
+    private function refreshSmsForm(): void
+    {
+        $fresh = SiteSetting::valuesFor('sms');
+        foreach ($this->secretFields() as $field) {
             $fresh[$field] = null;
         }
         $this->form->fill($fresh);

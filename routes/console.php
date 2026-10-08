@@ -19,3 +19,7 @@ Schedule::command('shipping:sync-statuses --limit=100')
 Schedule::command('meta-catalog:sync')
     ->everyFifteenMinutes()
     ->withoutOverlapping();
+
+Schedule::command('sitemap:sync')
+    ->hourly()
+    ->withoutOverlapping();

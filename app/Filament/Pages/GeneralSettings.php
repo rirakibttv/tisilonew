@@ -2,9 +2,7 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Product;
 use App\Models\SiteSetting;
-use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -18,7 +16,6 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class GeneralSettings extends Page
@@ -44,7 +41,6 @@ class GeneralSettings extends Page
         'order_restriction' => 'Order Restriction',
         'email' => 'Email Settings',
         'cronjob' => 'Cronjob',
-        'sitemap' => 'Sitemap Settings',
     ];
 
     public function mount(): void
@@ -122,61 +118,6 @@ class GeneralSettings extends Page
         ]);
     }
 
-    /** @return array<Action> */
-    protected function getHeaderActions(): array
-    {
-        if ($this->section !== 'sitemap') {
-            return [];
-        }
-
-        return [
-            Action::make('generateSitemap')
-                ->label('Generate Sitemap Now')
-                ->icon('heroicon-o-arrow-path')
-                ->action('generateSitemap'),
-        ];
-    }
-
-    public function generateSitemap(): void
-    {
-        $settings = SiteSetting::valuesFor('sitemap');
-        $urls = collect([
-            ['loc' => route('store.home'), 'priority' => '1.0'],
-            ['loc' => route('store.shop.index'), 'priority' => '0.9'],
-        ]);
-
-        if ($settings['include_products'] ?? true) {
-            $urls->push(...Product::query()->where('status', 'published')->get(['slug'])->map(
-                fn (Product $product): array => ['loc' => route('store.products.show', $product), 'priority' => '0.8'],
-            ));
-        }
-
-        if ($settings['include_pages'] ?? true) {
-            $urls->push(...collect(SiteSetting::valuesFor('pages')['pages'] ?? [])
-                ->where('status', true)
-                ->map(fn (array $page): array => [
-                    'loc' => route('store.pages.show', ['slug' => $page['slug']]),
-                    'priority' => '0.6',
-                ]));
-        }
-
-        $frequency = $settings['change_frequency'] ?? 'daily';
-        $body = $urls->unique('loc')->map(function (array $url) use ($frequency): string {
-            $location = htmlspecialchars($url['loc'], ENT_XML1);
-
-            return "  <url>\n    <loc>{$location}</loc>\n    <changefreq>{$frequency}</changefreq>\n    <priority>{$url['priority']}</priority>\n  </url>";
-        })->implode("\n");
-        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n{$body}\n</urlset>\n";
-
-        File::put(public_path('sitemap.xml'), $xml);
-        SiteSetting::put('sitemap', [
-            ...$settings,
-            'last_generated_at' => now()->toISOString(),
-        ]);
-
-        Notification::make()->success()->title('Sitemap generated successfully')->send();
-    }
-
     /** @return array<string> */
     private function secretFields(): array
     {
@@ -198,7 +139,6 @@ class GeneralSettings extends Page
             'order_restriction' => $this->orderRestrictionComponents(),
             'email' => $this->emailComponents(),
             'cronjob' => $this->cronjobComponents(),
-            'sitemap' => $this->sitemapComponents(),
         };
     }
 
@@ -362,24 +302,6 @@ class GeneralSettings extends Page
                     ->disabled()
                     ->dehydrated()
                     ->columnSpanFull(),
-            ]),
-        ];
-    }
-
-    /** @return array<mixed> */
-    private function sitemapComponents(): array
-    {
-        return [
-            Section::make('Sitemap Configuration')->columns(2)->schema([
-                Toggle::make('auto_generate')->default(true),
-                Select::make('change_frequency')->options([
-                    'always' => 'Always', 'hourly' => 'Hourly', 'daily' => 'Daily',
-                    'weekly' => 'Weekly', 'monthly' => 'Monthly',
-                ])->required(),
-                Toggle::make('include_products')->default(true),
-                Toggle::make('include_pages')->default(true),
-                TextInput::make('path')->disabled(),
-                TextInput::make('last_generated_at')->disabled(),
             ]),
         ];
     }

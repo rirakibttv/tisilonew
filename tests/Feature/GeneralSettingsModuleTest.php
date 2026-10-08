@@ -35,6 +35,31 @@ class GeneralSettingsModuleTest extends TestCase
         $this->assertArrayNotHasKey('shipping', GeneralSettings::SECTIONS);
     }
 
+    public function test_sitemap_settings_are_owned_by_the_google_search_console_module(): void
+    {
+        $admin = User::factory()->create([
+            'role' => UserRole::Admin,
+            'status' => UserStatus::Active,
+        ]);
+
+        $this->assertArrayNotHasKey('sitemap', GeneralSettings::SECTIONS);
+
+        $this->actingAs($admin)
+            ->get('/admin/general-settings?section=sitemap')
+            ->assertNotFound();
+
+        $this->actingAs($admin)
+            ->get('/admin/api-integrations?section=search_console')
+            ->assertOk()
+            ->assertSee('Google Search Console')
+            ->assertSee('Automatic Sitemap')
+            ->assertSee('Update Schedule')
+            ->assertSee('every hour')
+            ->assertSee('Include Published Products')
+            ->assertSee('Include Active Categories')
+            ->assertSee('Include Active Pages');
+    }
+
     public function test_create_page_and_contact_are_owned_by_pages_and_marketing_navigation(): void
     {
         $admin = User::factory()->create([

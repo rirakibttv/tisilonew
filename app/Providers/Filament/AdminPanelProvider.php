@@ -391,7 +391,6 @@ class AdminPanelProvider extends PanelProvider
             ['order_restriction', 'Order Restriction', Heroicon::OutlinedAdjustmentsHorizontal],
             ['email', 'Email Settings', Heroicon::OutlinedEnvelope],
             ['cronjob', 'Cronjob', Heroicon::OutlinedClock],
-            ['sitemap', 'Sitemap Settings', Heroicon::OutlinedGlobeAlt],
         ];
 
         return array_map(

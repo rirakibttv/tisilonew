@@ -5,10 +5,20 @@ namespace App\Observers;
 use App\Models\Order;
 use App\Services\GoogleAnalyticsService;
 use App\Services\MetaConversionsApiService;
+use App\Services\SmsGatewayService;
 use Throwable;
 
 class OrderObserver
 {
+    public function created(Order $order): void
+    {
+        try {
+            app(SmsGatewayService::class)->queueOrderPlaced($order);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+    }
+
     public function updated(Order $order): void
     {
         if (! $order->wasChanged('status')) {
