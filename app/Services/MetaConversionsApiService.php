@@ -17,6 +17,10 @@ use RuntimeException;
 
 class MetaConversionsApiService
 {
+    public function __construct(
+        private readonly ClientIpFingerprintService $clientIps,
+    ) {}
+
     /** @var array<string, string> */
     private const VISITOR_EVENTS = [
         'page_view' => 'PageView',
@@ -52,7 +56,7 @@ class MetaConversionsApiService
             'event_name' => $eventName,
             'event_time' => ($visitorEvent->occurred_at ?? now())->getTimestamp(),
             'event_id' => $visitorEvent->event_key ?: 'visitor-event-'.$visitorEvent->getKey(),
-            'event_source_url' => $request->fullUrl(),
+            'event_source_url' => $this->eventSourceUrl($request, $visitorEvent),
             'action_source' => 'website',
             'user_data' => $this->userData($request, $visitorEvent, $order),
             'custom_data' => $this->customData($visitorEvent, $order),
@@ -163,9 +167,10 @@ class MetaConversionsApiService
             'ln' => $lastName ? [$lastName] : null,
             'ct' => ($city = $this->hash($address['district'] ?? null, fn (string $value): string => $this->text($value))) ? [$city] : null,
             'st' => ($state = $this->hash($address['division'] ?? null, fn (string $value): string => $this->text($value))) ? [$state] : null,
+            'zp' => ($postalCode = $this->hash($address['postal_code'] ?? null, fn (string $value): string => preg_replace('/\s+/', '', strtolower(trim($value))) ?? '')) ? [$postalCode] : null,
             'country' => $order ? [hash('sha256', 'bd')] : null,
             'external_id' => filled($externalId) ? [hash('sha256', (string) $externalId)] : null,
-            'client_ip_address' => $request?->ip(),
+            'client_ip_address' => $request ? $this->clientIps->resolve($request) : null,
             'client_user_agent' => $request?->userAgent(),
             'fbp' => $request?->cookie('_fbp') ?: ($attribution['fbp'] ?? null),
             'fbc' => $request?->cookie('_fbc') ?: ($attribution['fbc'] ?? null),
@@ -268,6 +273,21 @@ class MetaConversionsApiService
         $value = is_scalar($value) ? $normalizer((string) $value) : '';
 
         return $value !== '' ? hash('sha256', $value) : null;
+    }
+
+    private function eventSourceUrl(Request $request, VisitorEvent $visitorEvent): string
+    {
+        $eventPath = '/'.ltrim((string) $visitorEvent->path, '/');
+        $requestPath = '/'.ltrim($request->path(), '/');
+
+        // Browser events arrive through our first-party analytics endpoint.
+        // Meta needs the storefront URL where the action happened, not the
+        // collector endpoint URL, for attribution and Event Match Quality.
+        if ($eventPath !== '/' && $eventPath !== $requestPath) {
+            return url($eventPath);
+        }
+
+        return $request->fullUrl();
     }
 
     /** @return array<string, mixed> */

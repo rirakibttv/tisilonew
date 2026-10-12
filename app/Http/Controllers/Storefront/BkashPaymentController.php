@@ -90,23 +90,14 @@ class BkashPaymentController extends Controller
         }
         $request->session()->forget('bkash_payment');
 
+        $purchaseEvent = $analytics->purchaseEvent($order);
         try {
-            $analytics->record($request, [
-                'event_type' => 'purchase',
-                'event_id' => 'purchase-'.$order->order_number,
-                'order_id' => $order->getKey(),
-                'value' => $order->total_amount,
-                'metadata' => [
-                    'currency' => $order->currency,
-                    'invoice_id' => $order->order_number,
-                    'payment_method' => 'bkash',
-                ],
-            ]);
+            $analytics->record($request, $purchaseEvent);
         } catch (Throwable) {
             // Analytics must never block a paid order receipt.
         }
 
-        return $this->receipt($order);
+        return $this->receipt($order, $purchaseEvent);
     }
 
     /** @param array<string, mixed> $payload */
@@ -158,13 +149,18 @@ class BkashPaymentController extends Controller
         return to_route('store.checkout.index')->withErrors(['payment_method' => $message]);
     }
 
-    private function receipt(Order $order): RedirectResponse
+    /** @param array<string, mixed>|null $browserEvent */
+    private function receipt(Order $order, ?array $browserEvent = null): RedirectResponse
     {
-        return redirect(URL::temporarySignedRoute(
+        $response = redirect(URL::temporarySignedRoute(
             'store.checkout.success',
             now()->addDay(),
             ['order' => $order],
         ));
+
+        return $browserEvent
+            ? $response->with('meta_browser_events', [$browserEvent])
+            : $response;
     }
 
     private function completeIncompleteOrder(Request $request, Order $order): void

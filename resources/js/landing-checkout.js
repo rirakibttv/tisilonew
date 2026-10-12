@@ -284,7 +284,7 @@ if (campaignForm && campaignData) {
         quantity.value = String(Math.max(1, Math.min(Number(quantity.max), Number(quantity.value || 1) + Number(button.dataset.quantityStep))));
         queueQuote();
     }));
-    campaignForm.addEventListener('change', () => {
+    const trackCheckoutStart = () => {
         if (!tracked && !preview && window.TisiloAnalytics) {
             tracked = true;
             const productId = String(product.value);
@@ -304,12 +304,16 @@ if (campaignForm && campaignData) {
                 },
             });
         }
-    });
+    };
+    campaignForm.addEventListener('change', trackCheckoutStart);
     campaignForm.addEventListener('submit', event => {
         if (preview || !ready || submitting || !region.value) {
             event.preventDefault();
             return;
         }
+        // A customer can submit the pre-selected defaults without firing a
+        // change event. Track that valid checkout start before navigation.
+        trackCheckoutStart();
         submitting = true;
         submit.disabled = true;
         submit.textContent = messages.submitting || 'Submitting Order…';

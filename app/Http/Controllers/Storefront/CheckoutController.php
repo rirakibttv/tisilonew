@@ -124,18 +124,9 @@ class CheckoutController extends Controller
         $this->completeIncompleteOrder($request, $order);
         $request->session()->forget(['store_cart', 'tisilo_incomplete_order_id', 'meta_checkout_tracking']);
 
+        $purchaseEvent = $analytics->purchaseEvent($order);
         try {
-            $analytics->record($request, [
-                'event_type' => 'purchase',
-                'event_id' => 'purchase-'.$order->order_number,
-                'order_id' => $order->getKey(),
-                'value' => $order->total_amount,
-                'metadata' => [
-                    'currency' => $order->currency,
-                    'invoice_id' => $order->order_number,
-                    'payment_method' => $order->payment_method,
-                ],
-            ]);
+            $analytics->record($request, $purchaseEvent);
         } catch (Throwable) {
             // Analytics must never block order confirmation.
         }
@@ -144,7 +135,7 @@ class CheckoutController extends Controller
             'store.checkout.success',
             now()->addDay(),
             ['order' => $order],
-        ));
+        ))->with('meta_browser_events', [$purchaseEvent]);
     }
 
     public function success(Order $order): View

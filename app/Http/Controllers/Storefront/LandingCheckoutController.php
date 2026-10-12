@@ -156,17 +156,14 @@ class LandingCheckoutController extends Controller
         }
 
         $request->session()->put($sessionKey.'.order_id', $order->id);
+        $purchaseEvent = $analytics->purchaseEvent($order);
         try {
-            $analytics->record($request, [
-                'event_type' => 'purchase', 'event_id' => 'purchase-'.$order->order_number,
-                'order_id' => $order->id, 'value' => $order->total_amount,
-                'metadata' => ['currency' => $order->currency, 'invoice_id' => $order->order_number, 'payment_method' => $order->payment_method],
-            ]);
+            $analytics->record($request, $purchaseEvent);
         } catch (Throwable) {
             // Analytics must not interrupt a confirmed order.
         }
 
-        return $this->receipt($order);
+        return $this->receipt($order, $purchaseEvent);
     }
 
     private function ensurePublished(LandingPage $campaign): void
@@ -183,8 +180,13 @@ class LandingCheckoutController extends Controller
         ];
     }
 
-    private function receipt(Order $order): RedirectResponse
+    /** @param array<string, mixed>|null $browserEvent */
+    private function receipt(Order $order, ?array $browserEvent = null): RedirectResponse
     {
-        return redirect(URL::temporarySignedRoute('store.checkout.success', now()->addDay(), ['order' => $order]));
+        $response = redirect(URL::temporarySignedRoute('store.checkout.success', now()->addDay(), ['order' => $order]));
+
+        return $browserEvent
+            ? $response->with('meta_browser_events', [$browserEvent])
+            : $response;
     }
 }

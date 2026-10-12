@@ -51,6 +51,30 @@ class MetaConversionsApiTest extends TestCase
         );
     }
 
+    public function test_browser_collector_uses_the_storefront_url_and_cloudflare_client_ip(): void
+    {
+        $this->enableMeta(['PageView']);
+        Queue::fake();
+        $eventId = 'page-view-source-'.Str::uuid();
+
+        $this->withHeaders([
+            'CF-Connecting-IP' => '203.0.113.77',
+            'User-Agent' => 'Mozilla/5.0 Tisilo CAPI Test',
+        ])->postJson(route('visitor.analytics.track'), [
+            'visitor_id' => (string) Str::uuid(),
+            'event_type' => 'page_view',
+            'event_id' => $eventId,
+            'path' => '/shop',
+        ])->assertNoContent();
+
+        Queue::assertPushed(SendMetaConversionEvent::class, fn (SendMetaConversionEvent $job): bool => $job->eventName === 'PageView'
+            && $job->event['event_id'] === $eventId
+            && $job->event['event_source_url'] === url('/shop')
+            && $job->event['user_data']['client_ip_address'] === '203.0.113.77'
+            && $job->event['user_data']['client_user_agent'] === 'Mozilla/5.0 Tisilo CAPI Test'
+        );
+    }
+
     public function test_storefront_loads_the_meta_pixel_without_exposing_the_access_token(): void
     {
         $this->enableMeta(['PageView', 'ViewContent']);
@@ -234,6 +258,38 @@ class MetaConversionsApiTest extends TestCase
                 && ! str_contains($encoded, '01700000000')
                 && ! str_contains($encoded, 'buyer@example.com');
         });
+    }
+
+    public function test_purchase_browser_event_matches_the_server_event_payload(): void
+    {
+        $order = $this->order();
+        $product = Product::query()->create([
+            'name' => 'Meta Purchase Product',
+            'slug' => 'meta-purchase-product-'.Str::lower(Str::random(8)),
+            'product_type' => 'simple',
+            'regular_price' => 500,
+            'status' => 'published',
+        ]);
+        $order->items()->create([
+            'product_id' => $product->getKey(),
+            'product_name' => $product->name,
+            'quantity' => 2,
+            'unit_price' => 500,
+            'total_amount' => 1000,
+        ]);
+
+        $event = app(VisitorAnalyticsService::class)->purchaseEvent($order);
+
+        $this->assertSame('purchase', $event['event_type']);
+        $this->assertSame('purchase-'.$order->order_number, $event['event_id']);
+        $this->assertSame(1080.0, $event['value']);
+        $this->assertSame([(string) $product->getKey()], $event['metadata']['content_ids']);
+        $this->assertSame(2, $event['metadata']['num_items']);
+        $this->assertSame([
+            'id' => (string) $product->getKey(),
+            'quantity' => 2,
+            'item_price' => 500.0,
+        ], $event['metadata']['contents'][0]);
     }
 
     public function test_all_order_lifecycle_changes_are_queued_from_the_order_observer(): void

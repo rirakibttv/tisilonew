@@ -81,20 +81,40 @@ class LandingPageController extends Controller
             $request->session()->put($sessionKey, ['token' => (string) Str::uuid()]);
         }
 
+        $metaBrowserEvents = [];
         if (! $preview) {
+            $viewProduct = collect($checkoutProducts)->firstWhere('id', $primaryProduct->getKey());
+            $viewVariations = collect($viewProduct['variations'] ?? []);
+            $viewVariation = $viewVariations->first(fn (array $variation): bool => ($variation['available'] ?? 0) > 0)
+                ?? $viewVariations->first();
+            $viewPrice = (bool) ($viewProduct['variable'] ?? false)
+                ? ($viewVariation['price'] ?? $primaryProduct->sale_price ?? $primaryProduct->regular_price)
+                : ($viewProduct['price'] ?? $primaryProduct->sale_price ?? $primaryProduct->regular_price);
+            $viewContentEvent = [
+                'event_type' => 'product_view',
+                'event_id' => 'view-content-'.Str::uuid(),
+                'product_id' => $primaryProduct->getKey(),
+                'value' => $viewPrice,
+                'metadata' => [
+                    'product_name' => $primaryProduct->name,
+                    'currency' => 'BDT',
+                    'content_ids' => [(string) $primaryProduct->getKey()],
+                    'contents' => [[
+                        'id' => (string) $primaryProduct->getKey(),
+                        'quantity' => 1,
+                        'item_price' => $viewPrice,
+                    ]],
+                    'num_items' => 1,
+                ],
+            ];
+
             try {
-                $analytics->record($request, [
-                    'event_type' => 'product_view',
-                    'product_id' => $primaryProduct->getKey(),
-                    'value' => $primaryProduct->sale_price ?? $primaryProduct->regular_price,
-                    'metadata' => [
-                        'product_name' => $primaryProduct->name,
-                        'currency' => 'BDT',
-                    ],
-                ]);
+                $analytics->record($request, $viewContentEvent);
             } catch (Throwable) {
                 // Analytics must never block a paid-ad landing page.
             }
+
+            $metaBrowserEvents[] = $viewContentEvent;
         }
 
         return view('storefront.landing.show-classic', [
@@ -108,6 +128,7 @@ class LandingPageController extends Controller
             'regions' => $regions,
             'checkoutError' => $checkoutError,
             'checkoutToken' => $preview ? '' : $request->session()->get($sessionKey.'.token'),
+            'metaBrowserEvents' => $metaBrowserEvents,
             'generalSettings' => SiteSetting::valuesFor('general'),
             'contactSettings' => SiteSetting::valuesFor('contact'),
             'seoSettings' => SiteSetting::valuesFor('seo'),

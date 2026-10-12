@@ -13,13 +13,22 @@
 
 @push('scripts')
     <script>
-        if (window.TisiloAnalytics) {
-            window.TisiloAnalytics.track('product_view', {
-                product_id: {{ $product->getKey() }},
-                value: {{ (float) $summary['price'] }},
-                metadata: { product_name: @json($product->name), currency: 'BDT' }
-            });
-        }
+        (function () {
+            function trackProductView() {
+                if (!window.TisiloAnalytics) return;
+                window.TisiloAnalytics.track('product_view', {
+                    product_id: {{ $product->getKey() }},
+                    value: {{ (float) $summary['price'] }},
+                    metadata: { product_name: @json($product->name), currency: 'BDT' }
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', trackProductView, { once: true });
+            } else {
+                trackProductView();
+            }
+        })();
     </script>
 @endpush
 

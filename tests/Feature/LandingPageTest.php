@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Jobs\SendMetaConversionEvent;
 use App\Models\LandingPage;
 use App\Models\Order;
 use App\Models\Product;
@@ -17,6 +18,7 @@ use App\Models\User;
 use App\Services\DeploymentDataSnapshot;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -32,6 +34,7 @@ class LandingPageTest extends TestCase
     protected function tearDown(): void
     {
         SiteSetting::forget('payment');
+        SiteSetting::forget('facebook_capi');
         parent::tearDown();
     }
 
@@ -90,6 +93,50 @@ class LandingPageTest extends TestCase
         $response->assertSee('data-landing-related-products', false);
         $this->assertSame(6, substr_count($content, 'data-product-card="'));
         $this->assertStringNotContainsString('data-product-card="'.$primaryProduct->getKey().'"', $content);
+    }
+
+    public function test_paid_ad_landing_page_deduplicates_view_content_and_purchase_between_pixel_and_capi(): void
+    {
+        SiteSetting::put('facebook_capi', [
+            'enabled' => true,
+            'pixel_id' => '123456789',
+            'api_version' => 'v23.0',
+            'events' => ['ViewContent', 'Purchase'],
+        ], ['access_token' => 'private-meta-token']);
+        SiteSetting::put('payment', [
+            'cod_enabled' => true,
+            'bkash_enabled' => false,
+            'default_gateway' => 'cod',
+            'currency' => 'BDT',
+        ]);
+        Queue::fake();
+        $this->shippingSettings();
+        $product = $this->product();
+        $landingPage = $this->landingPage('meta-deduplication', 'published');
+        $landingPage->products()->attach($product);
+
+        $response = $this->get(route('store.landing.show', $landingPage))->assertOk();
+        $viewContentJob = Queue::pushed(SendMetaConversionEvent::class)
+            ->first(fn (SendMetaConversionEvent $job): bool => $job->eventName === 'ViewContent');
+
+        $this->assertNotNull($viewContentJob);
+        $response->assertSee($viewContentJob->event['event_id'], false);
+        $this->assertSame([(string) $product->getKey()], $viewContentJob->event['custom_data']['content_ids']);
+        $this->assertSame(999.0, $viewContentJob->event['custom_data']['value']);
+
+        $this->post(route('store.landing.order', $landingPage), [
+            ...$this->checkoutData(),
+            'checkout_token' => session('landing_checkout.'.$landingPage->id.'.token'),
+            'product_id' => $product->getKey(),
+            'quantity' => 1,
+        ])->assertRedirect()->assertSessionHas('meta_browser_events.0.event_type', 'purchase');
+
+        $browserEvent = session('meta_browser_events.0');
+        Queue::assertPushed(SendMetaConversionEvent::class, fn (SendMetaConversionEvent $job): bool => $job->eventName === 'Purchase'
+            && $job->event['event_id'] === $browserEvent['event_id']
+            && $job->event['custom_data']['content_ids'] === [(string) $product->getKey()]
+            && $job->event['custom_data']['num_items'] === 1
+        );
     }
 
     public function test_landing_page_order_preserves_campaign_and_first_party_attribution(): void

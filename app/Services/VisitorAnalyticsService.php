@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Order;
 use App\Models\VisitorEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -75,6 +76,32 @@ class VisitorAnalyticsService
         }
 
         return $event;
+    }
+
+    /** @return array<string, mixed> */
+    public function purchaseEvent(Order $order): array
+    {
+        $order->loadMissing('items');
+        $contents = $order->items->map(fn ($item): array => [
+            'id' => (string) ($item->product_id ?: $item->sku ?: $item->product_name),
+            'quantity' => max(1, (int) $item->quantity),
+            'item_price' => round((float) $item->unit_price, 2),
+        ])->values();
+
+        return [
+            'event_type' => 'purchase',
+            'event_id' => 'purchase-'.$order->order_number,
+            'order_id' => $order->getKey(),
+            'value' => round((float) $order->total_amount, 2),
+            'metadata' => [
+                'currency' => strtoupper((string) ($order->currency ?: 'BDT')),
+                'invoice_id' => $order->order_number,
+                'payment_method' => $order->payment_method,
+                'content_ids' => $contents->pluck('id')->unique()->values()->all(),
+                'contents' => $contents->all(),
+                'num_items' => $contents->sum('quantity'),
+            ],
+        ];
     }
 
     public function recordBotRequest(Request $request): ?VisitorEvent
