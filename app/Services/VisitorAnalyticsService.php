@@ -21,6 +21,7 @@ class VisitorAnalyticsService
     public function __construct(
         private MetaConversionsApiService $meta,
         private GoogleAnalyticsService $googleAnalytics,
+        private BotTrafficService $botTraffic,
     ) {}
 
     /** @param array<string, mixed> $data */
@@ -88,7 +89,7 @@ class VisitorAnalyticsService
 
     public function isBot(?string $userAgent): bool
     {
-        return (bool) preg_match('/bot|crawl|spider|slurp|headless|lighthouse|facebookexternalhit/i', (string) $userAgent);
+        return $this->botTraffic->isAutomatedAnalyticsTraffic($userAgent);
     }
 
     protected function cleanPath(mixed $path): ?string

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\BlockKnownAiCrawlers;
 use App\Http\Middleware\SetStorefrontLocale;
 use App\Support\CanonicalUrl;
 use Illuminate\Foundation\Application;
@@ -14,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(prepend: [
+            BlockKnownAiCrawlers::class,
             CanonicalUrl::class,
         ]);
 
