@@ -4,9 +4,12 @@ namespace Tests\Feature;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\VisitorEvent;
+use App\Services\BotTrafficControlService;
 use App\Services\BotTrafficService;
+use App\Services\ClientIpFingerprintService;
 use App\Services\SeoOverviewReportService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +18,19 @@ use Tests\TestCase;
 class AiCrawlerProtectionTest extends TestCase
 {
     use DatabaseTransactions;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        SiteSetting::query()->where('key', 'bot_security')->delete();
+        SiteSetting::forget('bot_security');
+    }
+
+    protected function tearDown(): void
+    {
+        SiteSetting::forget('bot_security');
+        parent::tearDown();
+    }
 
     public function test_known_ai_crawlers_are_allowed_and_recorded_by_name(): void
     {
@@ -79,6 +95,73 @@ class AiCrawlerProtectionTest extends TestCase
         $this->assertTrue($service->isAutomatedAnalyticsTraffic('curl/8.0'));
         $this->assertTrue($service->isAutomatedAnalyticsTraffic('Googlebot/2.1'));
         $this->assertFalse($service->isAutomatedAnalyticsTraffic('Mozilla/5.0 Chrome/124.0 Safari/537.36'));
+    }
+
+    public function test_an_admin_selected_bot_identity_can_be_blocked_and_allowed_again(): void
+    {
+        $this->registerStorefrontProbe();
+        $control = app(BotTrafficControlService::class);
+        $control->blockBot('GPTBot');
+
+        $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.91'])
+            ->withHeader('User-Agent', 'Mozilla/5.0; GPTBot/1.2')
+            ->get('/_bot-traffic-probe')
+            ->assertForbidden()
+            ->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+
+        $control->unblockBot('GPTBot');
+
+        $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.91'])
+            ->withHeader('User-Agent', 'Mozilla/5.0; GPTBot/1.2')
+            ->get('/_bot-traffic-probe')
+            ->assertOk();
+    }
+
+    public function test_an_admin_selected_ip_fingerprint_is_blocked_without_storing_the_raw_ip(): void
+    {
+        $this->registerStorefrontProbe();
+        $control = app(BotTrafficControlService::class);
+        $ip = '203.0.113.92';
+        $ipHash = app(ClientIpFingerprintService::class)->fingerprintIp($ip);
+        $this->assertNotNull($ipHash);
+
+        $control->blockIpHash($ipHash);
+
+        $this->withServerVariables(['REMOTE_ADDR' => $ip])
+            ->withHeader('User-Agent', 'Mozilla/5.0 Chrome/124.0 Safari/537.36')
+            ->get('/_bot-traffic-probe')
+            ->assertForbidden();
+
+        $stored = SiteSetting::valuesFor('bot_security');
+        $this->assertContains($ipHash, $stored['blocked_ip_hashes']);
+        $this->assertStringNotContainsString($ip, json_encode($stored, JSON_THROW_ON_ERROR));
+
+        $control->unblockIpHash($ipHash);
+        $this->withServerVariables(['REMOTE_ADDR' => $ip])
+            ->withHeader('User-Agent', 'Mozilla/5.0 Chrome/124.0 Safari/537.36')
+            ->get('/_bot-traffic-probe')
+            ->assertOk();
+    }
+
+    public function test_repeated_bot_requests_are_flagged_as_abnormal_in_the_report(): void
+    {
+        config()->set('security.bot_traffic.abnormal_requests_per_hour', 3);
+        $this->registerStorefrontProbe();
+
+        foreach (range(1, 3) as $request) {
+            $this->withServerVariables(['REMOTE_ADDR' => '203.0.113.93'])
+                ->withHeader('User-Agent', 'SemrushBot/7~bl')
+                ->get('/_bot-traffic-probe')
+                ->assertOk();
+        }
+
+        $source = app(SeoOverviewReportService::class)
+            ->report(1)['botSources']
+            ->firstWhere('bot_name', 'SemrushBot');
+
+        $this->assertNotNull($source);
+        $this->assertSame(3, $source->requests_last_hour);
+        $this->assertTrue($source->is_abnormal);
     }
 
     public function test_robots_file_allows_crawlers(): void

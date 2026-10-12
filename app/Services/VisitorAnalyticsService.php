@@ -24,6 +24,7 @@ class VisitorAnalyticsService
         private MetaConversionsApiService $meta,
         private GoogleAnalyticsService $googleAnalytics,
         private BotTrafficService $botTraffic,
+        private ClientIpFingerprintService $fingerprints,
     ) {}
 
     /** @param array<string, mixed> $data */
@@ -52,7 +53,7 @@ class VisitorAnalyticsService
             'value' => isset($data['value']) ? round((float) $data['value'], 2) : null,
             'device_type' => $this->deviceType((string) $request->userAgent()),
             'browser' => $this->browser((string) $request->userAgent()),
-            'ip_hash' => $request->ip() ? hash_hmac('sha256', $request->ip(), $this->hashKey()) : null,
+            'ip_hash' => $this->fingerprints->fingerprint($request),
             'metadata' => $this->safeMetadata($data['metadata'] ?? []),
             'occurred_at' => now(),
         ];
@@ -84,8 +85,9 @@ class VisitorAnalyticsService
         }
 
         $path = $this->cleanPath($request->getRequestUri());
+        $ipHash = $this->fingerprints->fingerprint($request);
         $fingerprint = hash_hmac('sha256', implode('|', [
-            (string) $request->ip(),
+            (string) $ipHash,
             strtolower((string) $request->userAgent()),
         ]), $this->hashKey());
         $visitorId = Uuid::uuid5(Uuid::NAMESPACE_URL, $fingerprint)->toString();
@@ -114,7 +116,7 @@ class VisitorAnalyticsService
             'value' => null,
             'device_type' => 'bot',
             'browser' => Str::limit($bot['name'], 40, ''),
-            'ip_hash' => $request->ip() ? hash_hmac('sha256', $request->ip(), $this->hashKey()) : null,
+            'ip_hash' => $ipHash,
             'metadata' => [
                 'bot_name' => $bot['name'],
                 'bot_category' => $bot['category'],

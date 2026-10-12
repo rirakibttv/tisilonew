@@ -2,7 +2,9 @@
 
 namespace App\Filament\Pages;
 
+use App\Services\BotTrafficControlService;
 use App\Services\SeoOverviewReportService;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 
@@ -30,6 +32,30 @@ class SeoOverview extends Page
     public function report(): array
     {
         return app(SeoOverviewReportService::class)->report($this->period, $this->platform);
+    }
+
+    public function blockBot(string $botName, BotTrafficControlService $control): void
+    {
+        $control->blockBot($botName);
+        Notification::make()->title("{$botName} is now blocked")->success()->send();
+    }
+
+    public function unblockBot(string $botName, BotTrafficControlService $control): void
+    {
+        $control->unblockBot($botName);
+        Notification::make()->title("{$botName} is now allowed")->success()->send();
+    }
+
+    public function blockIp(string $ipHash, BotTrafficControlService $control): void
+    {
+        $control->blockIpHash($ipHash);
+        Notification::make()->title($control->maskedFingerprint($ipHash).' is now blocked')->success()->send();
+    }
+
+    public function unblockIp(string $ipHash, BotTrafficControlService $control): void
+    {
+        $control->unblockIpHash($ipHash);
+        Notification::make()->title($control->maskedFingerprint($ipHash).' is now allowed')->success()->send();
     }
 
     public function getTitle(): string|Htmlable

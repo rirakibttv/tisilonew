@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 class SeoOverviewReportService
 {
+    public function __construct(private BotTrafficControlService $botTrafficControl) {}
+
     /** @return array<string, mixed> */
     public function report(int $period, string $platform = 'all'): array
     {
@@ -96,16 +98,33 @@ class SeoOverviewReportService
             ->orderByDesc('requests')
             ->limit(20)
             ->get();
+        $abnormalThreshold = max(1, (int) config('security.bot_traffic.abnormal_requests_per_hour', 120));
+        $lastHour = now()->subHour();
+        $botSources = (clone $botBase)
+            ->selectRaw("COALESCE(NULLIF(traffic_campaign, ''), 'Unidentified Bot') as bot_name, COALESCE(NULLIF(traffic_medium, ''), 'Other Bot') as bot_category, ip_hash, COUNT(*) as requests, COUNT(DISTINCT path) as pages, SUM(CASE WHEN occurred_at >= ? THEN 1 ELSE 0 END) as requests_last_hour, MAX(occurred_at) as last_seen", [$lastHour])
+            ->groupBy('bot_name', 'bot_category', 'ip_hash')
+            ->orderByDesc('requests_last_hour')
+            ->orderByDesc('requests')
+            ->limit(50)
+            ->get()
+            ->each(function (VisitorEvent $source) use ($abnormalThreshold): void {
+                $source->setAttribute('requests_last_hour', (int) $source->requests_last_hour);
+                $source->setAttribute('is_abnormal', (int) $source->requests_last_hour >= $abnormalThreshold);
+                $source->setAttribute('bot_blocked', $this->botTrafficControl->botIsBlocked((string) $source->bot_name));
+                $source->setAttribute('ip_blocked', $this->botTrafficControl->ipHashIsBlocked($source->ip_hash));
+                $source->setAttribute('ip_label', $this->botTrafficControl->maskedFingerprint($source->ip_hash));
+            });
         $botMetrics = [
             'requests' => (clone $botBase)->count(),
             'visitors' => (clone $botBase)->distinct()->count('visitor_id'),
             'types' => (clone $botBase)->distinct()->count('traffic_campaign'),
+            'abnormal_sources' => $botSources->where('is_abnormal', true)->count(),
         ];
 
         return compact(
             'period', 'from', 'to', 'platform', 'metrics', 'counts', 'daily',
             'campaigns', 'mediums', 'topPages', 'devices', 'recentEvents', 'sourceSummaries',
-            'botTraffic', 'botMetrics',
+            'botTraffic', 'botSources', 'botMetrics', 'abnormalThreshold',
         );
     }
 
