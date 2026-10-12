@@ -5,8 +5,10 @@ namespace App\Providers;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\PopupOffer;
+use App\Models\Product;
 use App\Models\SiteSetting;
 use App\Observers\OrderObserver;
+use App\Observers\ProductObserver;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -38,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Order::observe(OrderObserver::class);
+        Product::observe(ProductObserver::class);
 
         View::composer('storefront.partials.header', function (IlluminateView $view): void {
             try {

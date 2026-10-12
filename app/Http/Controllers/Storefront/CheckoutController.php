@@ -19,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Throwable;
 
@@ -38,15 +39,7 @@ class CheckoutController extends Controller
         $regions = $shippingRates->quotesForCart($cart);
         $this->rememberIncompleteOrder($request, $cart);
 
-        try {
-            $analytics->record($request, [
-                'event_type' => 'initiate_checkout',
-                'value' => $this->subtotal($cart),
-                'metadata' => ['currency' => 'BDT'],
-            ]);
-        } catch (Throwable) {
-            // Analytics must never block checkout.
-        }
+        $metaBrowserEvents = [$this->checkoutTrackingEvent($request, $analytics, $cart)];
 
         $enabledPaymentMethods = $paymentMethods->enabled();
         $preferredPaymentMethod = $request->user()?->paymentPreference?->default_method;
@@ -60,6 +53,7 @@ class CheckoutController extends Controller
             'defaultPaymentMethod' => array_key_exists((string) $preferredPaymentMethod, $enabledPaymentMethods)
                 ? $preferredPaymentMethod
                 : $paymentMethods->default(),
+            'metaBrowserEvents' => $metaBrowserEvents,
         ]);
     }
 
@@ -128,7 +122,7 @@ class CheckoutController extends Controller
         $order = $checkout->place($cart, $validated, $quote);
 
         $this->completeIncompleteOrder($request, $order);
-        $request->session()->forget(['store_cart', 'tisilo_incomplete_order_id']);
+        $request->session()->forget(['store_cart', 'tisilo_incomplete_order_id', 'meta_checkout_tracking']);
 
         try {
             $analytics->record($request, [
@@ -200,6 +194,56 @@ class CheckoutController extends Controller
     private function subtotal(Collection $cart): float
     {
         return $cart->sum(fn (array $line): float => (float) $line['price'] * (int) $line['quantity']);
+    }
+
+    /**
+     * Record InitiateCheckout once for the current cart and return the exact
+     * same event ID and commerce data for the browser Pixel event.
+     *
+     * @param  Collection<string, array<string, mixed>>  $cart
+     * @return array<string, mixed>
+     */
+    private function checkoutTrackingEvent(
+        Request $request,
+        VisitorAnalyticsService $analytics,
+        Collection $cart,
+    ): array {
+        $contents = $cart->map(fn (array $line): array => [
+            'id' => (string) $line['product_id'],
+            'quantity' => (int) $line['quantity'],
+            'item_price' => round((float) $line['price'], 2),
+        ])->values();
+        $fingerprint = hash('sha256', $contents
+            ->sortBy(fn (array $item): string => $item['id'].'|'.$item['item_price'].'|'.$item['quantity'])
+            ->values()
+            ->toJson());
+        $tracking = $request->session()->get('meta_checkout_tracking');
+
+        if (! is_array($tracking) || ($tracking['fingerprint'] ?? null) !== $fingerprint) {
+            $tracking = [
+                'fingerprint' => $fingerprint,
+                'event' => [
+                    'event_type' => 'initiate_checkout',
+                    'event_id' => 'initiate-checkout-'.Str::uuid(),
+                    'value' => round($this->subtotal($cart), 2),
+                    'metadata' => [
+                        'currency' => 'BDT',
+                        'content_ids' => $contents->pluck('id')->unique()->values()->all(),
+                        'contents' => $contents->all(),
+                        'num_items' => $contents->sum('quantity'),
+                    ],
+                ],
+            ];
+            $request->session()->put('meta_checkout_tracking', $tracking);
+
+            try {
+                $analytics->record($request, $tracking['event']);
+            } catch (Throwable) {
+                // Analytics must never block checkout.
+            }
+        }
+
+        return $tracking['event'];
     }
 
     /** @param Collection<string, array<string, mixed>> $cart */

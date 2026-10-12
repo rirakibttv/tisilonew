@@ -148,7 +148,9 @@ class CheckoutTest extends TestCase
         ]);
         $response->assertRedirect('https://tokenized.sandbox.bka.sh/checkout/test-payment');
         $order = Order::query()->sole();
-        $transaction = PaymentTransaction::query()->sole();
+        $transaction = PaymentTransaction::query()
+            ->where('gateway_payment_id', 'TEST-BKASH-PAYMENT')
+            ->sole();
         $this->assertSame('bkash', $order->payment_method);
         $this->assertSame(PaymentStatus::Pending, $order->payment_status);
         $this->assertSame('initiated', $transaction->status);

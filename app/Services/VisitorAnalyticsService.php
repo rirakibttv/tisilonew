@@ -213,6 +213,34 @@ class VisitorAnalyticsService
             }
         }
 
+        if (isset($metadata['num_items']) && is_numeric($metadata['num_items'])) {
+            $safe['num_items'] = max(1, min(999, (int) $metadata['num_items']));
+        }
+
+        if (is_array($metadata['content_ids'] ?? null)) {
+            $safe['content_ids'] = collect($metadata['content_ids'])
+                ->filter(fn (mixed $id): bool => is_scalar($id) && trim((string) $id) !== '')
+                ->map(fn (mixed $id): string => Str::limit(trim((string) $id), 100, ''))
+                ->take(100)
+                ->values()
+                ->all();
+        }
+
+        if (is_array($metadata['contents'] ?? null)) {
+            $safe['contents'] = collect($metadata['contents'])
+                ->filter(fn (mixed $item): bool => is_array($item) && filled($item['id'] ?? null))
+                ->map(fn (array $item): array => array_filter([
+                    'id' => Str::limit(trim((string) $item['id']), 100, ''),
+                    'quantity' => max(1, min(99, (int) ($item['quantity'] ?? 1))),
+                    'item_price' => isset($item['item_price']) && is_numeric($item['item_price'])
+                        ? round((float) $item['item_price'], 2)
+                        : null,
+                ], fn (mixed $value): bool => $value !== null))
+                ->take(100)
+                ->values()
+                ->all();
+        }
+
         return $safe ?: null;
     }
 

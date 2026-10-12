@@ -1,3 +1,9 @@
+@php
+    $flashedMetaBrowserEvents = session('meta_browser_events', []);
+    $flashedMetaBrowserEvents = is_array($flashedMetaBrowserEvents) ? $flashedMetaBrowserEvents : [];
+    $pageMetaBrowserEvents = isset($metaBrowserEvents) && is_array($metaBrowserEvents) ? $metaBrowserEvents : [];
+    $serverMetaBrowserEvents = array_values(array_merge($flashedMetaBrowserEvents, $pageMetaBrowserEvents));
+@endphp
 <script>
 (function (window, document) {
     'use strict';
@@ -10,6 +16,7 @@
     var metaPixelEnabled = @json(filter_var($metaPixelSettings['enabled'] ?? false, FILTER_VALIDATE_BOOL));
     var metaPixelId = @json($metaPixelSettings['pixel_id'] ?? null);
     var metaPixelEvents = @json(is_array($metaPixelSettings['events'] ?? null) ? $metaPixelSettings['events'] : []);
+    var serverMetaBrowserEvents = @json($serverMetaBrowserEvents);
     var metaEventNames = {
         page_view: 'PageView',
         product_view: 'ViewContent',
@@ -125,30 +132,72 @@
             }
         }
 
+        // Tisilo sends explicit standard events. Disabling automatic event
+        // detection prevents Meta from inventing SubscribedButtonClick for
+        // cart/checkout controls.
+        window.fbq('set', 'autoConfig', false, metaPixelId);
         window.fbq('init', metaPixelId);
     }
 
     function trackMetaEvent(eventType, details, eventId) {
         var eventName = metaEventNames[eventType];
-        if (!window.fbq || !eventName || metaPixelEvents.indexOf(eventName) === -1) return;
+        if (!window.fbq || !eventName || metaPixelEvents.indexOf(eventName) === -1) return false;
 
         var metadata = details.metadata && typeof details.metadata === 'object' ? details.metadata : {};
         var parameters = {};
         var value = Number(details.value);
-        var quantity = Number(metadata.quantity);
+        var quantity = Number(metadata.num_items || metadata.quantity || 1);
+        var currency = String(metadata.currency || 'BDT').trim().toUpperCase();
+        var contentIds = Array.isArray(metadata.content_ids)
+            ? metadata.content_ids.map(String).filter(Boolean)
+            : (details.product_id ? [String(details.product_id)] : []);
+        var contents = Array.isArray(metadata.contents) ? metadata.contents.map(function (item) {
+            if (!item || item.id === undefined || item.id === null) return null;
+            var normalized = {
+                id: String(item.id),
+                quantity: Math.max(1, Number(item.quantity) || 1)
+            };
+            var itemPrice = Number(item.item_price);
+            if (Number.isFinite(itemPrice)) normalized.item_price = Math.round(itemPrice * 100) / 100;
+            return normalized;
+        }).filter(Boolean) : [];
+
+        if (!/^[A-Z]{3}$/.test(currency)) currency = 'BDT';
+        if (!Number.isFinite(quantity) || quantity < 1) quantity = 1;
+        if (!contents.length && details.product_id) {
+            var fallbackContent = { id: String(details.product_id), quantity: quantity };
+            if (Number.isFinite(value)) fallbackContent.item_price = Math.round((value / quantity) * 100) / 100;
+            contents = [fallbackContent];
+        }
 
         if (Number.isFinite(value)) {
-            parameters.value = value;
-            parameters.currency = metadata.currency || 'BDT';
+            parameters.value = Math.round(value * 100) / 100;
+            parameters.currency = currency;
         }
-        if (details.product_id) {
-            parameters.content_ids = [String(details.product_id)];
+        if (contentIds.length) {
+            parameters.content_ids = contentIds;
             parameters.content_type = 'product';
         }
+        if (contents.length) parameters.contents = contents;
         if (metadata.product_name) parameters.content_name = String(metadata.product_name);
-        if (Number.isFinite(quantity) && quantity > 0) parameters.num_items = quantity;
+        if (contentIds.length) parameters.num_items = quantity;
 
         window.fbq('track', eventName, parameters, { eventID: eventId });
+
+        return true;
+    }
+
+    function trackServerMetaEventOnce(details) {
+        if (!details || !details.event_type || !details.event_id) return;
+
+        var key = 'tisilo_meta_browser_' + String(details.event_id).replace(/[^A-Za-z0-9_-]/g, '').substring(0, 100);
+        try {
+            if (window.sessionStorage.getItem(key)) return;
+        } catch (error) {}
+
+        if (trackMetaEvent(details.event_type, details, details.event_id)) {
+            try { window.sessionStorage.setItem(key, '1'); } catch (error) {}
+        }
     }
 
     function track(eventType, details) {
@@ -183,12 +232,18 @@
     var currentVisitorId = visitorId();
     initializeGoogleAnalytics(currentVisitorId);
     initializeMetaPixel();
-    window.TisiloAnalytics = { track: track, visitorId: visitorId };
+    window.TisiloAnalytics = { track: track, trackBrowser: trackServerMetaEventOnce, visitorId: visitorId };
+
+    function bootAnalytics() {
+        // This is deliberately a standard event, never trackCustom.
+        track('page_view');
+        serverMetaBrowserEvents.forEach(trackServerMetaEventOnce);
+    }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { track('page_view'); }, { once: true });
+        document.addEventListener('DOMContentLoaded', bootAnalytics, { once: true });
     } else {
-        track('page_view');
+        bootAnalytics();
     }
 })(window, document);
 </script>

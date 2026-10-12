@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\SiteSetting;
 use App\Services\CloudflareApiService;
+use App\Services\FacebookAutoPostService;
 use App\Services\GoogleAnalyticsService;
 use App\Services\GoogleSearchConsoleService;
 use App\Services\MetaCatalogService;
@@ -87,6 +88,7 @@ class ApiIntegrationSettings extends Page
             'google_analytics' => 'Send ecommerce events to GA4 and read verified reporting data back into Tisilo.',
             'search_console' => 'Manage Search Console, generate the complete sitemap every hour, and submit sitemap updates to Google automatically.',
             'facebook_catalog' => 'Sync published products, inventory, pricing, images and Tisilo category hierarchy with Meta Commerce Catalog.',
+            'facebook_auto_post' => 'Get managed Pages securely from the saved CAPI token and publish newly released products automatically.',
             default => 'Credentials are encrypted. Saving settings never sends a test request, SMS, event, or social post.',
         };
     }
@@ -115,6 +117,14 @@ class ApiIntegrationSettings extends Page
         if ($this->section === 'facebook_catalog'
             && blank(SiteSetting::secretsFor('facebook_catalog')['feed_token'] ?? null)) {
             $secretUpdates['feed_token'] = Str::random(64);
+        }
+
+        if ($this->section === 'facebook_auto_post' && filled($values['page_id'] ?? null)) {
+            $discoveredPage = app(FacebookAutoPostService::class)->discoveredPage((string) $values['page_id']);
+            if ($discoveredPage) {
+                $values['page_name'] = $discoveredPage['name'];
+                $secretUpdates['page_access_token'] = $discoveredPage['token'];
+            }
         }
 
         SiteSetting::put(
@@ -207,6 +217,10 @@ class ApiIntegrationSettings extends Page
                 Action::make('syncMetaCatalog')->label('Sync Products & Categories')->icon('heroicon-o-arrow-path')->requiresConfirmation()
                     ->modalDescription('Meta will fetch the secure Tisilo feed and update product, price, stock and category data in the configured catalog.')
                     ->action('syncMetaCatalog'),
+            ],
+            'facebook_auto_post' => [
+                Action::make('discoverFacebookPages')->label('Get Pages from CAPI')->icon('heroicon-o-arrow-down-tray')->action('discoverFacebookPages'),
+                Action::make('verifyFacebookPage')->label('Verify Selected Page')->icon('heroicon-o-signal')->action('verifyFacebookPage'),
             ],
             'sms' => [
                 Action::make('sendTestSms')->label('Send Test SMS')->icon('heroicon-o-paper-airplane')->requiresConfirmation()->action('sendTestSms'),
@@ -353,6 +367,32 @@ class ApiIntegrationSettings extends Page
                 ->body(($result['name'] ?? 'Catalog').' · '.number_format((int) ($result['product_count'] ?? 0)).' items')->send();
         } catch (Throwable $exception) {
             $this->integrationFailure('Meta Catalog verification failed', $exception);
+        }
+    }
+
+    public function discoverFacebookPages(FacebookAutoPostService $autoPost): void
+    {
+        try {
+            $result = $autoPost->discoverPagesFromCapi();
+            $this->refreshFacebookAutoPostForm();
+
+            Notification::make()->success()->title('Facebook Pages loaded securely')
+                ->body($result['count'].' manageable Page(s) found. Select a Page and save FB Auto Post settings.')->send();
+        } catch (Throwable $exception) {
+            $this->integrationFailure('Facebook Page discovery failed', $exception);
+        }
+    }
+
+    public function verifyFacebookPage(FacebookAutoPostService $autoPost): void
+    {
+        try {
+            $page = $autoPost->verifyPage();
+            $this->refreshFacebookAutoPostForm();
+
+            Notification::make()->success()->title('Facebook Page verified')
+                ->body((string) ($page['name'] ?? $page['id'] ?? 'Connected'))->send();
+        } catch (Throwable $exception) {
+            $this->integrationFailure('Facebook Page verification failed', $exception);
         }
     }
 
@@ -615,7 +655,9 @@ class ApiIntegrationSettings extends Page
                 Toggle::make('enabled')->default(false),
                 TextInput::make('pixel_id')->label('Dataset / Pixel ID')->regex('/^[0-9]{5,32}$/')->maxLength(32),
                 Select::make('api_version')->options(['v23.0' => 'v23.0', 'v22.0' => 'v22.0', 'v21.0' => 'v21.0'])->default('v23.0'),
-                TextInput::make('test_event_code')->maxLength(100),
+                TextInput::make('test_event_code')
+                    ->maxLength(100)
+                    ->helperText('Only sent when META_CAPI_TEST_MODE=true. Keep that environment switch false in production.'),
                 $this->secretInput('access_token', 'CAPI Access Token')->columnSpanFull(),
                 CheckboxList::make('events')->options([
                     'PageView' => 'PageView',
@@ -671,14 +713,34 @@ class ApiIntegrationSettings extends Page
     private function facebookAutoPostComponents(): array
     {
         return [
-            Section::make('Facebook Page Publishing')->description('Saving credentials does not publish anything. Posting requires a separate explicit action.')->columns(2)->schema([
-                Toggle::make('enabled')->default(false),
-                Toggle::make('post_on_product_publish')->default(false),
-                TextInput::make('page_id')->maxLength(100),
-                Select::make('api_version')->options(['v23.0' => 'v23.0', 'v22.0' => 'v22.0', 'v21.0' => 'v21.0'])->default('v23.0'),
-                $this->secretInput('page_access_token', 'Page Access Token')->columnSpanFull(),
-                Textarea::make('default_message_template')->rows(5)->maxLength(2000)->columnSpanFull()
-                    ->helperText('Available placeholders: {product_name}, {price}, {url}'),
+            Section::make('Facebook Page Connection')
+                ->description('Click “Get Pages from CAPI” to use the encrypted Facebook CAPI token. It must be a User Access Token with pages_show_list, pages_read_engagement and pages_manage_posts permissions. Returned Page tokens are encrypted and never shown in the browser or exported to Git.')
+                ->columns(2)->schema([
+                    Toggle::make('enabled')->label('Enable FB Auto Post')->default(false),
+                    Toggle::make('post_on_product_publish')->label('Post when a product is first published')->default(false),
+                    Select::make('page_id')->label('Facebook Page')
+                        ->options(fn (): array => app(FacebookAutoPostService::class)->pageOptions())
+                        ->searchable()->native(false)
+                        ->helperText('Load the Pages from CAPI, then select the destination Page.'),
+                    Select::make('api_version')->options(['v23.0' => 'v23.0', 'v22.0' => 'v22.0', 'v21.0' => 'v21.0'])->default('v23.0'),
+                    TextInput::make('page_name')->label('Selected Page Name')->disabled(),
+                    $this->secretInput('page_access_token', 'Page Access Token')
+                        ->helperText('Automatically selected from the encrypted Page list. You may paste a Page token manually as a fallback.')
+                        ->columnSpanFull(),
+                    Textarea::make('default_message_template')->rows(5)->maxLength(2000)->columnSpanFull()
+                        ->default("✨ {product_name}\n\nPrice: ৳{price}\n\nShop now: {url}")
+                        ->helperText('Available placeholders: {product_name}, {price}, {url}.'),
+                ]),
+            Section::make('Page & Auto Post Status')->columns(4)->schema([
+                TextInput::make('page_discovery_status')->label('Page Discovery')->disabled(),
+                TextInput::make('pages_last_synced_at')->label('Pages Last Loaded')->disabled(),
+                TextInput::make('page_verification_status')->label('Page Verification')->disabled(),
+                TextInput::make('page_last_verified_at')->label('Last Verified')->disabled(),
+                TextInput::make('page_link')->label('Facebook Page URL')->disabled()->columnSpan(2),
+                TextInput::make('last_post_status')->label('Last Post Status')->disabled(),
+                TextInput::make('last_posted_at')->label('Last Posted')->disabled(),
+                TextInput::make('last_post_id')->label('Last Facebook Post ID')->disabled()->columnSpan(2),
+                TextInput::make('last_post_product_id')->label('Last Product ID')->disabled(),
             ]),
         ];
     }
@@ -912,6 +974,13 @@ class ApiIntegrationSettings extends Page
         foreach ($this->secretFields() as $field) {
             $fresh[$field] = null;
         }
+        $this->form->fill($fresh);
+    }
+
+    private function refreshFacebookAutoPostForm(): void
+    {
+        $fresh = SiteSetting::valuesFor('facebook_auto_post');
+        $fresh['page_access_token'] = null;
         $this->form->fill($fresh);
     }
 

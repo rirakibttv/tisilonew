@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\SiteSetting;
 use App\Services\MetaConversionsApiService;
+use App\Services\ShippingRateService;
 use App\Services\VisitorAnalyticsService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Client\Request as HttpRequest;
@@ -59,8 +60,101 @@ class MetaConversionsApiTest extends TestCase
             ->assertSee('var metaPixelEnabled = true;', false)
             ->assertSee('var metaPixelId = "123456789";', false)
             ->assertSee('https://connect.facebook.net/en_US/fbevents.js', false)
+            ->assertSee("window.fbq('set', 'autoConfig', false, metaPixelId);", false)
+            ->assertSee("window.fbq('track', eventName, parameters, { eventID: eventId });", false)
+            ->assertDontSee("fbq('trackCustom'", false)
             ->assertSee('{ eventID: eventId }', false)
             ->assertDontSee('private-meta-token');
+    }
+
+    public function test_cart_add_shares_one_event_id_and_complete_commerce_payload_with_browser(): void
+    {
+        $this->enableMeta(['AddToCart']);
+        Queue::fake();
+        $product = Product::query()->create([
+            'name' => 'Meta Cart Product',
+            'slug' => 'meta-cart-product-'.Str::lower(Str::random(8)),
+            'product_type' => 'simple',
+            'regular_price' => 1050,
+            'stock_quantity' => 10,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+
+        $response = $this->post(route('store.cart.store'), [
+            'product_id' => $product->id,
+            'quantity' => 2,
+        ]);
+
+        $response->assertRedirect(route('store.cart.index'))
+            ->assertSessionHas('meta_browser_events.0.event_type', 'add_to_cart');
+        $browserEvent = session('meta_browser_events.0');
+
+        Queue::assertPushed(SendMetaConversionEvent::class, function (SendMetaConversionEvent $job) use ($browserEvent, $product): bool {
+            return $job->eventName === 'AddToCart'
+                && $job->event['event_id'] === $browserEvent['event_id']
+                && $job->event['custom_data']['value'] === 2100.0
+                && $job->event['custom_data']['currency'] === 'BDT'
+                && $job->event['custom_data']['content_ids'] === [(string) $product->id]
+                && $job->event['custom_data']['contents'][0] === [
+                    'id' => (string) $product->id,
+                    'quantity' => 2,
+                    'item_price' => 1050.0,
+                ]
+                && $job->event['custom_data']['num_items'] === 2;
+        });
+    }
+
+    public function test_checkout_queues_once_and_reuses_the_server_event_id_for_the_browser(): void
+    {
+        $this->enableMeta(['InitiateCheckout']);
+        Queue::fake();
+        $product = Product::query()->create([
+            'name' => 'Meta Checkout Product',
+            'slug' => 'meta-checkout-product-'.Str::lower(Str::random(8)),
+            'product_type' => 'simple',
+            'regular_price' => 1050,
+            'stock_quantity' => 10,
+            'stock_status' => 'in_stock',
+            'status' => 'published',
+        ]);
+        $this->mock(ShippingRateService::class, function ($mock): void {
+            $mock->shouldReceive('quotesForCart')->twice()->andReturn(collect());
+        });
+        $cart = [
+            'catalog-'.$product->id.'-base' => [
+                'key' => 'catalog-'.$product->id.'-base',
+                'product_id' => $product->id,
+                'product_variation_id' => null,
+                'vendor_listing_item_id' => null,
+                'vendor_id' => null,
+                'name' => $product->name,
+                'slug' => $product->slug,
+                'option' => null,
+                'vendor' => 'Tisilo',
+                'sku' => null,
+                'image' => null,
+                'price' => 1050.0,
+                'available' => 10,
+                'backorders_allowed' => false,
+                'quantity' => 2,
+                'landing_page_id' => null,
+            ],
+        ];
+
+        $first = $this->withSession(['store_cart' => $cart])->get(route('store.checkout.index'));
+        $tracking = session('meta_checkout_tracking');
+        $second = $this->get(route('store.checkout.index'));
+
+        $first->assertOk()->assertSee($tracking['event']['event_id'], false);
+        $second->assertOk()->assertSee($tracking['event']['event_id'], false);
+        Queue::assertPushed(SendMetaConversionEvent::class, 1);
+        Queue::assertPushed(SendMetaConversionEvent::class, fn (SendMetaConversionEvent $job): bool => $job->eventName === 'InitiateCheckout'
+            && $job->event['event_id'] === $tracking['event']['event_id']
+            && $job->event['custom_data']['currency'] === 'BDT'
+            && $job->event['custom_data']['contents'][0]['quantity'] === 2
+            && $job->event['custom_data']['num_items'] === 2
+        );
     }
 
     public function test_product_event_includes_the_tisilo_category_hierarchy(): void
@@ -187,6 +281,37 @@ class MetaConversionsApiTest extends TestCase
                 && $request['data'][0]['event_id'] === 'purchase-test-1'
                 && ! array_key_exists('access_token', $request->data());
         });
+    }
+
+    public function test_meta_test_event_code_requires_explicit_environment_test_mode(): void
+    {
+        SiteSetting::put('facebook_capi', [
+            'enabled' => true,
+            'pixel_id' => '123456789',
+            'api_version' => 'v23.0',
+            'test_event_code' => 'TEST33888',
+            'events' => ['PageView'],
+        ], ['access_token' => 'private-meta-token']);
+        Http::fake([
+            'https://graph.facebook.com/v23.0/123456789/events' => Http::response(['events_received' => 1], 200),
+        ]);
+        $event = [
+            'event_time' => now()->getTimestamp(),
+            'event_id' => 'test-mode-gate-1',
+            'action_source' => 'website',
+            'user_data' => ['external_id' => [hash('sha256', 'test-user')]],
+        ];
+
+        config()->set('services.meta_capi.test_mode', false);
+        app(MetaConversionsApiService::class)->sendNow('PageView', $event);
+        Http::assertSent(fn (HttpRequest $request): bool => ! array_key_exists('test_event_code', $request->data()));
+
+        Http::fake([
+            'https://graph.facebook.com/v23.0/123456789/events' => Http::response(['events_received' => 1], 200),
+        ]);
+        config()->set('services.meta_capi.test_mode', true);
+        app(MetaConversionsApiService::class)->sendNow('PageView', $event);
+        Http::assertSent(fn (HttpRequest $request): bool => $request['test_event_code'] === 'TEST33888');
     }
 
     /** @param array<int, string> $events */

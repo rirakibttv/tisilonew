@@ -14,6 +14,7 @@ use App\Services\VisitorAnalyticsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -70,16 +71,30 @@ class CartController extends Controller
         $cart[$line['key']] = $line;
         $request->session()->put('store_cart', $cart);
 
+        $addedQuantity = (int) $validated['quantity'];
+        $eventId = 'add-to-cart-'.Str::uuid();
+        $eventDetails = [
+            'event_type' => 'add_to_cart',
+            'event_id' => $eventId,
+            'product_id' => $product->getKey(),
+            'value' => round((float) $line['price'] * $addedQuantity, 2),
+            'metadata' => [
+                'product_name' => $product->name,
+                'quantity' => $addedQuantity,
+                'num_items' => $addedQuantity,
+                'currency' => 'BDT',
+                'content_ids' => [(string) $product->getKey()],
+                'contents' => [[
+                    'id' => (string) $product->getKey(),
+                    'quantity' => $addedQuantity,
+                    'item_price' => round((float) $line['price'], 2),
+                ]],
+            ],
+        ];
+
         try {
             $analytics->record($request, [
-                'event_type' => 'add_to_cart',
-                'product_id' => $product->getKey(),
-                'value' => $line['price'] * (int) $validated['quantity'],
-                'metadata' => [
-                    'product_name' => $product->name,
-                    'quantity' => (int) $validated['quantity'],
-                    'currency' => 'BDT',
-                ],
+                ...$eventDetails,
             ]);
         } catch (Throwable) {
             // Analytics must never block the cart workflow.
@@ -89,7 +104,10 @@ class CartController extends Controller
             ? 'store.checkout.index'
             : 'store.cart.index';
 
-        return to_route($destination)->with('success', 'পণ্যটি কার্টে যোগ হয়েছে।');
+        return to_route($destination)->with([
+            'success' => 'পণ্যটি কার্টে যোগ হয়েছে।',
+            'meta_browser_events' => [$eventDetails],
+        ]);
     }
 
     public function update(Request $request, string $line): RedirectResponse

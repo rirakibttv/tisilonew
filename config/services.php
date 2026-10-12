@@ -39,4 +39,11 @@ return [
         'outbound_ip' => env('FRAUD_CHECKER_OUTBOUND_IP', '162.0.209.109'),
     ],
 
+    'meta_capi' => [
+        // Test Events must be an explicit deployment-time choice. A saved code
+        // alone can never put production traffic into Meta's test stream.
+        'test_mode' => env('META_CAPI_TEST_MODE', false),
+        'test_event_code' => env('META_CAPI_TEST_EVENT_CODE'),
+    ],
+
 ];

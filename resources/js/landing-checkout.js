@@ -287,7 +287,22 @@ if (campaignForm && campaignData) {
     campaignForm.addEventListener('change', () => {
         if (!tracked && !preview && window.TisiloAnalytics) {
             tracked = true;
-            window.TisiloAnalytics.track('initiate_checkout', {product_id: Number(product.value), value: subtotal, metadata: {currency: 'BDT'}});
+            const productId = String(product.value);
+            const itemQuantity = Math.max(1, Number(quantity.value) || 1);
+            window.TisiloAnalytics.track('initiate_checkout', {
+                product_id: Number(product.value),
+                value: Number(subtotal),
+                metadata: {
+                    currency: 'BDT',
+                    content_ids: [productId],
+                    contents: [{
+                        id: productId,
+                        quantity: itemQuantity,
+                        item_price: Number(subtotal) / itemQuantity,
+                    }],
+                    num_items: itemQuantity,
+                },
+            });
         }
     });
     campaignForm.addEventListener('submit', event => {

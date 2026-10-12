@@ -128,10 +128,14 @@ class MetaConversionsApiService
             return null;
         }
 
+        $testMode = filter_var(config('services.meta_capi.test_mode', false), FILTER_VALIDATE_BOOL);
+        $configuredTestCode = trim((string) config('services.meta_capi.test_event_code', ''));
+        $savedTestCode = trim((string) ($values['test_event_code'] ?? ''));
+
         return [
             'pixel_id' => $pixelId,
             'api_version' => $version,
-            'test_event_code' => filled($values['test_event_code'] ?? null) ? trim((string) $values['test_event_code']) : null,
+            'test_event_code' => $testMode ? ($configuredTestCode ?: ($savedTestCode ?: null)) : null,
             'access_token' => $token,
         ];
     }
@@ -179,14 +183,45 @@ class MetaConversionsApiService
         $product = $visitorEvent->product_id
             ? Product::query()->with('category.parent.parent')->find($visitorEvent->product_id)
             : null;
+        $currency = strtoupper(trim((string) ($metadata['currency'] ?? 'BDT')));
+        $currency = preg_match('/^[A-Z]{3}$/', $currency) ? $currency : 'BDT';
+        $contentIds = collect($metadata['content_ids'] ?? [])
+            ->filter(fn (mixed $id): bool => is_scalar($id) && trim((string) $id) !== '')
+            ->map(fn (mixed $id): string => trim((string) $id))
+            ->values()
+            ->all();
+        if ($contentIds === [] && $visitorEvent->product_id) {
+            $contentIds = [(string) $visitorEvent->product_id];
+        }
+        $quantity = max(1, (int) ($metadata['num_items'] ?? $metadata['quantity'] ?? 1));
+        $contents = collect($metadata['contents'] ?? [])
+            ->filter(fn (mixed $item): bool => is_array($item) && filled($item['id'] ?? null))
+            ->map(fn (array $item): array => array_filter([
+                'id' => (string) $item['id'],
+                'quantity' => max(1, (int) ($item['quantity'] ?? 1)),
+                'item_price' => isset($item['item_price']) ? round((float) $item['item_price'], 2) : null,
+            ], fn (mixed $value): bool => $value !== null))
+            ->values()
+            ->all();
+        if ($contents === [] && $visitorEvent->product_id) {
+            $contents = [[
+                'id' => (string) $visitorEvent->product_id,
+                'quantity' => $quantity,
+                'item_price' => $visitorEvent->value !== null
+                    ? round((float) $visitorEvent->value / $quantity, 2)
+                    : null,
+            ]];
+        }
+
         $data = array_filter([
-            'currency' => $metadata['currency'] ?? ($visitorEvent->value !== null ? 'BDT' : null),
+            'currency' => $visitorEvent->value !== null ? $currency : null,
             'value' => $visitorEvent->value !== null ? (float) $visitorEvent->value : null,
-            'content_ids' => $visitorEvent->product_id ? [(string) $visitorEvent->product_id] : null,
-            'content_type' => $visitorEvent->product_id ? 'product' : null,
+            'content_ids' => $contentIds ?: null,
+            'contents' => $contents ?: null,
+            'content_type' => $contentIds !== [] ? 'product' : null,
             'content_name' => $metadata['product_name'] ?? $product?->name,
             'content_category' => $product?->category?->hierarchicalName(),
-            'num_items' => isset($metadata['quantity']) ? (int) $metadata['quantity'] : null,
+            'num_items' => $contentIds !== [] ? $quantity : null,
         ], fn (mixed $value): bool => $value !== null && $value !== [] && $value !== '');
 
         return $data ?: null;

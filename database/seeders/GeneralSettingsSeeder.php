@@ -103,7 +103,12 @@ class GeneralSettingsSeeder extends Seeder
                 'default_currency' => 'BDT',
                 'default_brand' => 'Tisilo',
             ],
-            'facebook_auto_post' => ['enabled' => false, 'post_on_product_publish' => false, 'api_version' => 'v23.0'],
+            'facebook_auto_post' => [
+                'enabled' => false,
+                'post_on_product_publish' => false,
+                'api_version' => 'v23.0',
+                'default_message_template' => "✨ {product_name}\n\nPrice: ৳{price}\n\nShop now: {url}",
+            ],
             'google_analytics' => ['enabled' => false, 'enhanced_ecommerce' => true, 'anonymize_ip' => true],
             'google_tag_manager' => ['enabled' => false],
         ];

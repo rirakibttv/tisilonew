@@ -112,6 +112,55 @@ class DeploymentDataSnapshotTest extends TestCase
         }
     }
 
+    public function test_facebook_auto_post_snapshot_never_overwrites_the_production_page_connection(): void
+    {
+        $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'tisilo-facebook-auto-post-'.Str::random(10).'.json';
+        $service = app(DeploymentDataSnapshot::class);
+
+        try {
+            SiteSetting::put('facebook_auto_post', [
+                'enabled' => false,
+                'post_on_product_publish' => false,
+                'page_id' => '111111111',
+                'page_name' => 'Local Page',
+                'default_message_template' => 'Local {product_name}',
+            ], [
+                'page_access_token' => 'local-page-token',
+                'page_tokens' => ['111111111' => 'local-page-token'],
+            ]);
+
+            $service->export($path);
+            $snapshot = json_decode(File::get($path), true, 512, JSON_THROW_ON_ERROR);
+            $facebook = collect($snapshot['site_settings'])->firstWhere('key', 'facebook_auto_post');
+
+            $this->assertSame(['default_message_template' => 'Local {product_name}'], $facebook['values']);
+            $this->assertStringNotContainsString('local-page-token', File::get($path));
+
+            SiteSetting::put('facebook_auto_post', [
+                'enabled' => true,
+                'post_on_product_publish' => true,
+                'page_id' => '999999999',
+                'page_name' => 'Production Page',
+                'api_version' => 'v23.0',
+            ], [
+                'page_access_token' => 'production-page-token',
+                'page_tokens' => ['999999999' => 'production-page-token'],
+            ]);
+
+            $service->import($path);
+
+            $values = SiteSetting::valuesFor('facebook_auto_post');
+            $this->assertTrue($values['enabled']);
+            $this->assertTrue($values['post_on_product_publish']);
+            $this->assertSame('999999999', $values['page_id']);
+            $this->assertSame('Production Page', $values['page_name']);
+            $this->assertSame('Local {product_name}', $values['default_message_template']);
+            $this->assertSame('production-page-token', SiteSetting::secretsFor('facebook_auto_post')['page_access_token']);
+        } finally {
+            File::delete($path);
+        }
+    }
+
     public function test_snapshot_includes_complete_catalog_and_user_data_without_session_secrets(): void
     {
         $token = Str::lower(Str::random(10));
