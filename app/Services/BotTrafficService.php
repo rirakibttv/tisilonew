@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Str;
+
 class BotTrafficService
 {
     /**
@@ -11,44 +13,82 @@ class BotTrafficService
      * not included here. They are excluded from analytics, but remain able to
      * crawl the storefront for search indexing.
      *
-     * @var array<string, string>
+     * @var array<int, array{name: string, token: string, category: string}>
      */
-    private const AI_CRAWLERS = [
-        'GPTBot' => 'gptbot',
-        'ChatGPT-User' => 'chatgpt-user',
-        'OAI-SearchBot' => 'oai-searchbot',
-        'ClaudeBot' => 'claudebot',
-        'Claude-SearchBot' => 'claude-searchbot',
-        'Claude-User' => 'claude-user',
-        'Claude-Web' => 'claude-web',
-        'anthropic-ai' => 'anthropic-ai',
-        'PerplexityBot' => 'perplexitybot',
-        'Perplexity-User' => 'perplexity-user',
-        'CCBot' => 'ccbot',
-        'Bytespider' => 'bytespider',
-        'cohere-ai' => 'cohere-ai',
-        'Google-Extended' => 'google-extended',
-        'Applebot-Extended' => 'applebot-extended',
-        'Amazonbot' => 'amazonbot',
-        'YouBot' => 'youbot',
-        'Diffbot' => 'diffbot',
-        'ImagesiftBot' => 'imagesiftbot',
-        'Meta-ExternalAgent' => 'meta-externalagent',
-        'omgili' => 'omgili',
-        'Timpibot' => 'timpibot',
+    private const BOT_SIGNATURES = [
+        ['name' => 'GPTBot', 'token' => 'gptbot', 'category' => 'AI Bot'],
+        ['name' => 'ChatGPT-User', 'token' => 'chatgpt-user', 'category' => 'AI Agent'],
+        ['name' => 'OAI-SearchBot', 'token' => 'oai-searchbot', 'category' => 'AI Search Bot'],
+        ['name' => 'ClaudeBot', 'token' => 'claudebot', 'category' => 'AI Bot'],
+        ['name' => 'Claude-SearchBot', 'token' => 'claude-searchbot', 'category' => 'AI Search Bot'],
+        ['name' => 'Claude-User', 'token' => 'claude-user', 'category' => 'AI Agent'],
+        ['name' => 'Claude-Web', 'token' => 'claude-web', 'category' => 'AI Agent'],
+        ['name' => 'Anthropic AI', 'token' => 'anthropic-ai', 'category' => 'AI Bot'],
+        ['name' => 'PerplexityBot', 'token' => 'perplexitybot', 'category' => 'AI Search Bot'],
+        ['name' => 'Perplexity-User', 'token' => 'perplexity-user', 'category' => 'AI Agent'],
+        ['name' => 'CCBot', 'token' => 'ccbot', 'category' => 'AI/Data Crawler'],
+        ['name' => 'Bytespider', 'token' => 'bytespider', 'category' => 'AI/Data Crawler'],
+        ['name' => 'Cohere AI', 'token' => 'cohere-ai', 'category' => 'AI Bot'],
+        ['name' => 'Google-Extended', 'token' => 'google-extended', 'category' => 'AI/Data Crawler'],
+        ['name' => 'Applebot-Extended', 'token' => 'applebot-extended', 'category' => 'AI/Data Crawler'],
+        ['name' => 'Amazonbot', 'token' => 'amazonbot', 'category' => 'AI Bot'],
+        ['name' => 'YouBot', 'token' => 'youbot', 'category' => 'AI Search Bot'],
+        ['name' => 'Diffbot', 'token' => 'diffbot', 'category' => 'AI/Data Crawler'],
+        ['name' => 'ImagesiftBot', 'token' => 'imagesiftbot', 'category' => 'AI/Data Crawler'],
+        ['name' => 'Meta-ExternalAgent', 'token' => 'meta-externalagent', 'category' => 'AI Bot'],
+        ['name' => 'Omgili', 'token' => 'omgili', 'category' => 'AI/Data Crawler'],
+        ['name' => 'Timpibot', 'token' => 'timpibot', 'category' => 'AI Search Bot'],
+        ['name' => 'Googlebot', 'token' => 'googlebot', 'category' => 'Search Bot'],
+        ['name' => 'Bingbot', 'token' => 'bingbot', 'category' => 'Search Bot'],
+        ['name' => 'BingPreview', 'token' => 'bingpreview', 'category' => 'Search Bot'],
+        ['name' => 'DuckDuckBot', 'token' => 'duckduckbot', 'category' => 'Search Bot'],
+        ['name' => 'YandexBot', 'token' => 'yandexbot', 'category' => 'Search Bot'],
+        ['name' => 'Baiduspider', 'token' => 'baiduspider', 'category' => 'Search Bot'],
+        ['name' => 'Applebot', 'token' => 'applebot', 'category' => 'Search Bot'],
+        ['name' => 'PetalBot', 'token' => 'petalbot', 'category' => 'Search Bot'],
+        ['name' => 'Facebook Link Preview', 'token' => 'facebookexternalhit', 'category' => 'Social Bot'],
+        ['name' => 'Facebook Bot', 'token' => 'facebot', 'category' => 'Social Bot'],
+        ['name' => 'Twitterbot', 'token' => 'twitterbot', 'category' => 'Social Bot'],
+        ['name' => 'LinkedInBot', 'token' => 'linkedinbot', 'category' => 'Social Bot'],
+        ['name' => 'TelegramBot', 'token' => 'telegrambot', 'category' => 'Social Bot'],
+        ['name' => 'Discordbot', 'token' => 'discordbot', 'category' => 'Social Bot'],
+        ['name' => 'Slackbot', 'token' => 'slackbot', 'category' => 'Social Bot'],
+        ['name' => 'AhrefsBot', 'token' => 'ahrefsbot', 'category' => 'SEO Bot'],
+        ['name' => 'SemrushBot', 'token' => 'semrushbot', 'category' => 'SEO Bot'],
+        ['name' => 'MJ12bot', 'token' => 'mj12bot', 'category' => 'SEO Bot'],
+        ['name' => 'DotBot', 'token' => 'dotbot', 'category' => 'SEO Bot'],
+        ['name' => 'UptimeRobot', 'token' => 'uptimerobot', 'category' => 'Monitoring Bot'],
+        ['name' => 'cURL', 'token' => 'curl/', 'category' => 'Automation'],
+        ['name' => 'Python Requests', 'token' => 'python-requests', 'category' => 'Automation'],
+        ['name' => 'Go HTTP Client', 'token' => 'go-http-client', 'category' => 'Automation'],
+        ['name' => 'Scrapy', 'token' => 'scrapy', 'category' => 'Automation'],
+        ['name' => 'Selenium', 'token' => 'selenium', 'category' => 'Automation'],
+        ['name' => 'PhantomJS', 'token' => 'phantomjs', 'category' => 'Automation'],
+        ['name' => 'Headless Browser', 'token' => 'headless', 'category' => 'Automation'],
     ];
 
-    public function blockedAiCrawler(?string $userAgent): ?string
+    /** @return array{name: string, category: string}|null */
+    public function identify(?string $userAgent): ?array
     {
         $normalized = strtolower(trim((string) $userAgent));
         if ($normalized === '') {
             return null;
         }
 
-        foreach ($this->aiCrawlerTokens() as $name => $token) {
-            if ($token !== '' && str_contains($normalized, $token)) {
-                return $name;
+        foreach ($this->botSignatures() as $signature) {
+            if ($signature['token'] !== '' && str_contains($normalized, $signature['token'])) {
+                return [
+                    'name' => $signature['name'],
+                    'category' => $signature['category'],
+                ];
             }
+        }
+
+        if (preg_match('/([a-z0-9._-]*(?:bot|crawler|spider)[a-z0-9._-]*)/i', $normalized, $match)) {
+            return [
+                'name' => Str::limit($match[1], 80, ''),
+                'category' => 'Other Bot',
+            ];
         }
 
         return null;
@@ -58,7 +98,7 @@ class BotTrafficService
     {
         $userAgent = trim((string) $userAgent);
 
-        if ($userAgent === '' || $this->blockedAiCrawler($userAgent) !== null) {
+        if ($userAgent === '' || $this->identify($userAgent) !== null) {
             return true;
         }
 
@@ -68,23 +108,27 @@ class BotTrafficService
         );
     }
 
-    /** @return array<string, string> */
-    private function aiCrawlerTokens(): array
+    /** @return array<int, array{name: string, token: string, category: string}> */
+    private function botSignatures(): array
     {
-        $tokens = self::AI_CRAWLERS;
-        $extraTokens = config('security.ai_crawler_protection.extra_user_agents', []);
+        $signatures = self::BOT_SIGNATURES;
+        $extraTokens = config('security.bot_traffic.extra_user_agents', []);
 
         if (! is_array($extraTokens)) {
-            return $tokens;
+            return $signatures;
         }
 
         foreach ($extraTokens as $token) {
             $token = strtolower(trim((string) $token));
             if ($token !== '') {
-                $tokens[$token] = $token;
+                $signatures[] = [
+                    'name' => Str::limit($token, 80, ''),
+                    'token' => $token,
+                    'category' => 'Custom Bot',
+                ];
             }
         }
 
-        return $tokens;
+        return $signatures;
     }
 }

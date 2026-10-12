@@ -38,12 +38,6 @@
 RewriteEngine On
 RewriteBase /
 
-# Let declared AI crawlers read the opt-out policy, but reject all other
-# storefront/static requests before Laravel and PHP need to boot.
-RewriteCond %{REQUEST_URI} !^/robots\.txt$ [NC]
-RewriteCond %{HTTP_USER_AGENT} (GPTBot|ChatGPT-User|OAI-SearchBot|ClaudeBot|Claude-SearchBot|Claude-User|Claude-Web|anthropic-ai|PerplexityBot|Perplexity-User|CCBot|Bytespider|cohere-ai|Google-Extended|Applebot-Extended|Amazonbot|YouBot|Diffbot|ImagesiftBot|Meta-ExternalAgent|omgili|Timpibot) [NC]
-RewriteRule ^ - [F,L]
-
 # A legacy full Laravel tree may still exist in public_html after the first
 # non-destructive cPanel cutover. Keep application source and secrets private.
 <IfModule mod_authz_core.c>

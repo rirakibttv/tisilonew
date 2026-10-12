@@ -61,6 +61,32 @@
                     </section>
                 @endforeach
             </div>
+
+            <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
+                <div class="flex flex-col justify-between gap-4 border-b border-gray-100 p-5 dark:border-white/10 sm:flex-row sm:items-center">
+                    <div>
+                        <h3 class="font-black text-gray-950 dark:text-white">Bot traffic identification</h3>
+                        <p class="mt-1 text-xs text-gray-500">Bots are allowed, identified by User-Agent, and kept separate from human visitor metrics.</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-5 text-center">
+                        <div><p class="text-xl font-black text-gray-950 dark:text-white">{{ number_format($report['botMetrics']['requests']) }}</p><p class="text-[10px] uppercase text-gray-500">Requests</p></div>
+                        <div><p class="text-xl font-black text-gray-950 dark:text-white">{{ number_format($report['botMetrics']['visitors']) }}</p><p class="text-[10px] uppercase text-gray-500">Bot visitors</p></div>
+                        <div><p class="text-xl font-black text-gray-950 dark:text-white">{{ number_format($report['botMetrics']['types']) }}</p><p class="text-[10px] uppercase text-gray-500">Bot types</p></div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-white/5"><tr><th class="px-5 py-3">Bot name</th><th class="px-4 py-3">Type</th><th class="px-4 py-3 text-right">Requests</th><th class="px-4 py-3 text-right">Pages</th><th class="px-5 py-3 text-right">Last seen</th></tr></thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-white/10">
+                            @forelse ($report['botTraffic'] as $bot)
+                                <tr><td class="px-5 py-3 font-bold text-gray-900 dark:text-white">{{ $bot->bot_name }}</td><td class="px-4 py-3"><span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">{{ $bot->bot_category }}</span></td><td class="px-4 py-3 text-right">{{ number_format($bot->requests) }}</td><td class="px-4 py-3 text-right">{{ number_format($bot->pages) }}</td><td class="whitespace-nowrap px-5 py-3 text-right text-gray-500">{{ \Illuminate\Support\Carbon::parse($bot->last_seen)->format('d M, h:i A') }}</td></tr>
+                            @empty
+                                <tr><td colspan="5" class="px-5 py-10 text-center text-sm text-gray-500">No bot traffic has been identified in this period.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         @endif
 
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -117,7 +143,7 @@
 
         <div class="grid gap-6 xl:grid-cols-2">
             <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
-                <div class="border-b border-gray-100 p-5 dark:border-white/10"><h3 class="font-black text-gray-950 dark:text-white">Campaign performance</h3><p class="mt-1 text-xs text-gray-500">UTM-attributed results</p></div>
+                <div class="border-b border-gray-100 p-5 dark:border-white/10"><h3 class="font-black text-gray-950 dark:text-white">Campaign performance</h3><p class="mt-1 text-xs text-gray-500">UTM-attributed human traffic; visitors without UTM remain under Direct / Organic.</p></div>
                 <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-white/5"><tr><th class="px-5 py-3">Campaign</th><th class="px-4 py-3 text-right">Visitors</th><th class="px-4 py-3 text-right">Purchases</th><th class="px-5 py-3 text-right">Revenue</th></tr></thead><tbody class="divide-y divide-gray-100 dark:divide-white/10">
                     @forelse ($report['campaigns'] as $campaign)
                         <tr><td class="max-w-56 truncate px-5 py-3 font-medium text-gray-800 dark:text-gray-100">{{ $campaign->campaign }}</td><td class="px-4 py-3 text-right">{{ number_format($campaign->visitors) }}</td><td class="px-4 py-3 text-right">{{ number_format($campaign->purchases) }}</td><td class="px-5 py-3 text-right font-bold">৳{{ number_format((float) $campaign->revenue, 2) }}</td></tr>

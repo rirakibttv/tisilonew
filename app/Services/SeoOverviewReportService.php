@@ -15,7 +15,12 @@ class SeoOverviewReportService
         $platform = in_array($platform, ['all', 'facebook', 'google'], true) ? $platform : 'all';
         $from = now()->subDays($period - 1)->startOfDay();
         $to = now()->endOfDay();
-        $base = VisitorEvent::query()->whereBetween('occurred_at', [$from, $to]);
+        $periodBase = VisitorEvent::query()->whereBetween('occurred_at', [$from, $to]);
+        $botBase = (clone $periodBase)->whereRaw('LOWER(traffic_source) = ?', ['bot']);
+        $base = (clone $periodBase)->where(function (Builder $query): void {
+            $query->whereNull('traffic_source')
+                ->orWhereRaw('LOWER(traffic_source) <> ?', ['bot']);
+        });
 
         if ($platform !== 'all') {
             $base = $this->platformQuery($base, $platform);
@@ -60,7 +65,7 @@ class SeoOverviewReportService
         });
 
         $campaigns = (clone $base)
-            ->selectRaw("COALESCE(NULLIF(traffic_campaign, ''), '(not set)') as campaign, COUNT(DISTINCT visitor_id) as visitors, SUM(CASE WHEN event_type = 'purchase' THEN 1 ELSE 0 END) as purchases, SUM(CASE WHEN event_type = 'purchase' THEN value ELSE 0 END) as revenue")
+            ->selectRaw("COALESCE(NULLIF(traffic_campaign, ''), 'No campaign (Direct / Organic)') as campaign, COUNT(DISTINCT visitor_id) as visitors, SUM(CASE WHEN event_type = 'purchase' THEN 1 ELSE 0 END) as purchases, SUM(CASE WHEN event_type = 'purchase' THEN value ELSE 0 END) as revenue")
             ->groupBy('campaign')
             ->orderByDesc('visitors')
             ->limit(12)
@@ -84,11 +89,23 @@ class SeoOverviewReportService
             ->pluck('visitors', 'device')
             ->map(fn ($value): int => (int) $value);
         $recentEvents = (clone $base)->with('product:id,name')->latest('occurred_at')->limit(20)->get();
-        $sourceSummaries = $this->sourceSummaries(VisitorEvent::query()->whereBetween('occurred_at', [$from, $to]));
+        $sourceSummaries = $this->sourceSummaries(clone $periodBase);
+        $botTraffic = (clone $botBase)
+            ->selectRaw("COALESCE(NULLIF(traffic_campaign, ''), 'Unidentified Bot') as bot_name, COALESCE(NULLIF(traffic_medium, ''), 'Other Bot') as bot_category, COUNT(*) as requests, COUNT(DISTINCT visitor_id) as visitors, COUNT(DISTINCT path) as pages, MAX(occurred_at) as last_seen")
+            ->groupBy('bot_name', 'bot_category')
+            ->orderByDesc('requests')
+            ->limit(20)
+            ->get();
+        $botMetrics = [
+            'requests' => (clone $botBase)->count(),
+            'visitors' => (clone $botBase)->distinct()->count('visitor_id'),
+            'types' => (clone $botBase)->distinct()->count('traffic_campaign'),
+        ];
 
         return compact(
             'period', 'from', 'to', 'platform', 'metrics', 'counts', 'daily',
             'campaigns', 'mediums', 'topPages', 'devices', 'recentEvents', 'sourceSummaries',
+            'botTraffic', 'botMetrics',
         );
     }
 

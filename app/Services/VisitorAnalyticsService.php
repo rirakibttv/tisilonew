@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\VisitorEvent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Ramsey\Uuid\Uuid;
 use Throwable;
 
 class VisitorAnalyticsService
@@ -72,6 +74,53 @@ class VisitorAnalyticsService
         }
 
         return $event;
+    }
+
+    public function recordBotRequest(Request $request): ?VisitorEvent
+    {
+        $bot = $this->botTraffic->identify($request->userAgent());
+        if ($bot === null) {
+            return null;
+        }
+
+        $path = $this->cleanPath($request->getRequestUri());
+        $fingerprint = hash_hmac('sha256', implode('|', [
+            (string) $request->ip(),
+            strtolower((string) $request->userAgent()),
+        ]), $this->hashKey());
+        $visitorId = Uuid::uuid5(Uuid::NAMESPACE_URL, $fingerprint)->toString();
+        $rateLimitKey = 'bot-traffic:'.hash('sha256', $fingerprint);
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 120)) {
+            return null;
+        }
+        RateLimiter::hit($rateLimitKey, 60);
+
+        return VisitorEvent::create([
+            'visitor_id' => $visitorId,
+            'session_id' => null,
+            'customer_id' => null,
+            'event_type' => 'bot_visit',
+            'event_key' => null,
+            'path' => $path,
+            'referrer_host' => $this->referrerHost($request->headers->get('referer')),
+            'traffic_source' => 'bot',
+            'traffic_medium' => $bot['category'],
+            'traffic_campaign' => $bot['name'],
+            'traffic_content' => null,
+            'traffic_term' => null,
+            'click_source' => null,
+            'product_id' => null,
+            'order_id' => null,
+            'value' => null,
+            'device_type' => 'bot',
+            'browser' => Str::limit($bot['name'], 40, ''),
+            'ip_hash' => $request->ip() ? hash_hmac('sha256', $request->ip(), $this->hashKey()) : null,
+            'metadata' => [
+                'bot_name' => $bot['name'],
+                'bot_category' => $bot['category'],
+            ],
+            'occurred_at' => now(),
+        ]);
     }
 
     public function visitorId(Request $request, mixed $candidate = null): string
