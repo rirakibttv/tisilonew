@@ -392,18 +392,36 @@
     <!-- 7. Brands Showcase -->
     @if($brands->isNotEmpty())
         <section class="storefront-shell pt-2">
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-                <div class="border-b border-slate-100 pb-4">
-                    <h2 class="text-lg font-black text-slate-900">{{ __('Top Brands') }}</h2>
+            <div class="rounded-2xl border border-slate-200 bg-white p-[5px] shadow-xs">
+                <div class="border-b border-slate-100 pb-[5px]">
+                    <h2 class="text-lg font-black text-slate-900 sm:text-xl">{{ __('Top Brands') }}</h2>
                 </div>
-                <div class="mt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-8">
+                <div data-brand-grid class="storefront-product-grid mt-[5px] grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                     @foreach($brands as $brand)
-                        <a href="{{ route('store.products.index', ['q' => $brand->name]) }}" class="group flex items-center justify-center rounded-xl border border-slate-100 bg-slate-50/50 px-5 py-3 transition hover:border-purple-200 hover:bg-purple-50/30 hover:shadow-xs">
-                            @if($brand->logo)
-                                <img src="{{ asset('storage/'.ltrim($brand->logo, '/')) }}" alt="{{ $brand->name }}" class="h-8 w-auto object-contain grayscale group-hover:grayscale-0 transition" loading="lazy">
-                            @else
-                                <span class="text-sm font-black text-slate-700 group-hover:text-purple-700">{{ $brand->name }}</span>
-                            @endif
+                        <a
+                            data-brand-card="{{ $brand->id }}"
+                            href="{{ route('store.products.index', ['brands' => [$brand->id]]) }}"
+                            class="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-100/50"
+                        >
+                            <div data-brand-card-image class="relative aspect-square overflow-hidden bg-slate-50">
+                                @if($brand->logo)
+                                    <img
+                                        src="{{ asset('storage/'.ltrim($brand->logo, '/')) }}"
+                                        alt="{{ $brand->name }}"
+                                        class="size-full object-contain p-5 transition duration-500 group-hover:scale-105 sm:p-7"
+                                        loading="lazy"
+                                    >
+                                @else
+                                    <div data-brand-card-placeholder class="grid size-full place-items-center p-6" aria-hidden="true">
+                                        <span class="grid size-20 place-items-center rounded-3xl bg-purple-50 text-3xl font-black text-purple-700 shadow-xs ring-1 ring-purple-100">
+                                            {{ mb_strtoupper(mb_substr($brand->name, 0, 1)) }}
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                            <h3 data-brand-card-name class="line-clamp-2 min-h-[3.25rem] border-t border-slate-100 px-3 py-3 text-center text-sm font-bold leading-snug text-slate-800 transition group-hover:text-purple-700 sm:text-base">
+                                {{ $brand->name }}
+                            </h3>
                         </a>
                     @endforeach
                 </div>

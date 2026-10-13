@@ -197,6 +197,29 @@ class StorefrontTest extends TestCase
         $this->assertStringContainsString('padding: 0;', $css);
     }
 
+    public function test_top_brands_use_responsive_image_and_name_cards(): void
+    {
+        $token = Str::lower(Str::random(8));
+        Brand::query()->where('status', true)->update(['sort_order' => 65535]);
+        $brand = Brand::query()->create([
+            'name' => 'Card Brand '.$token,
+            'slug' => 'card-brand-'.$token,
+            'logo' => 'brands/card-brand-'.$token.'.webp',
+            'status' => true,
+            'sort_order' => 0,
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('data-brand-grid', false)
+            ->assertSee('data-brand-card="'.$brand->id.'"', false)
+            ->assertSee('data-brand-card-image', false)
+            ->assertSee('data-brand-card-name', false)
+            ->assertSee('grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6', false)
+            ->assertSee(asset('storage/'.$brand->logo), false)
+            ->assertSee($brand->name);
+    }
+
     public function test_shop_and_category_catalogs_filter_thirty_products_and_expose_infinite_scroll_batches(): void
     {
         $token = Str::lower(Str::random(8));
