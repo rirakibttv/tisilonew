@@ -6,6 +6,7 @@ use App\Http\Controllers\Storefront\BkashPaymentController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\ContentPageController;
+use App\Http\Controllers\Storefront\CouponController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\LandingCheckoutController;
 use App\Http\Controllers\Storefront\LandingPageController;
@@ -85,6 +86,12 @@ Route::post('/cart', [CartController::class, 'store'])->name('store.cart.store')
 Route::patch('/cart/{line}', [CartController::class, 'update'])->name('store.cart.update');
 Route::delete('/cart/{line}', [CartController::class, 'destroy'])->name('store.cart.destroy');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('store.checkout.index');
+Route::post('/checkout/coupon', [CouponController::class, 'store'])
+    ->middleware('throttle:20,1')
+    ->name('store.checkout.coupon.store');
+Route::post('/checkout/coupon/remove', [CouponController::class, 'destroy'])
+    ->middleware('throttle:20,1')
+    ->name('store.checkout.coupon.destroy');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('store.checkout.store');
 Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])
     ->middleware('signed')

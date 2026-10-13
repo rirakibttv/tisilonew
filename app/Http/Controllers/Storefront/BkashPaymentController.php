@@ -41,6 +41,8 @@ class BkashPaymentController extends Controller
         );
 
         if ($transaction->status === 'completed' && $transaction->order->payment_status === PaymentStatus::Paid) {
+            $request->session()->forget('store_coupon_code');
+
             return $this->receipt($transaction->order);
         }
 
@@ -86,7 +88,7 @@ class BkashPaymentController extends Controller
         if ($order->landing_page_id) {
             $request->session()->put('landing_checkout.'.$order->landing_page_id.'.order_id', $order->getKey());
         } else {
-            $request->session()->forget(['store_cart', 'tisilo_incomplete_order_id']);
+            $request->session()->forget(['store_cart', 'store_coupon_code', 'tisilo_incomplete_order_id']);
         }
         $request->session()->forget('bkash_payment');
 

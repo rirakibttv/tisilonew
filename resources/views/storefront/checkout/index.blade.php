@@ -24,7 +24,17 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('store.checkout.store') }}" class="grid gap-8 lg:grid-cols-[1fr_380px]" data-shipping-checkout data-subtotal="{{ $subtotal }}">
+        @if (session('coupon_status'))
+            <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700">
+                {{ session('coupon_status') }}
+            </div>
+        @elseif ($couponError)
+            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-bold text-amber-800">
+                {{ $couponError }}
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('store.checkout.store') }}" class="grid gap-8 lg:grid-cols-[1fr_380px]" data-shipping-checkout data-payable-subtotal="{{ max(0, $subtotal - $couponDiscount) }}">
             @csrf
             <div class="space-y-6">
                 <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -98,10 +108,51 @@
                     @endforeach
                 </div>
 
+                <div class="mt-5 border-t border-slate-200 pt-5">
+                    <label for="checkout-coupon" class="text-sm font-black text-slate-900">{{ __('Coupon Code') }}</label>
+                    <div class="mt-2 flex gap-2">
+                        <input
+                            id="checkout-coupon"
+                            name="coupon_code"
+                            value="{{ old('coupon_code', $coupon?->code) }}"
+                            maxlength="64"
+                            autocomplete="off"
+                            placeholder="{{ __('Enter coupon code') }}"
+                            class="h-11 min-w-0 flex-1 rounded-xl border border-slate-200 px-3 text-sm font-bold uppercase outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                        >
+                        @if ($coupon)
+                            <button
+                                type="submit"
+                                formaction="{{ route('store.checkout.coupon.destroy') }}"
+                                formmethod="POST"
+                                formnovalidate
+                                class="h-11 rounded-xl border border-rose-200 px-4 text-sm font-black text-rose-600 hover:bg-rose-50"
+                            >{{ __('Remove') }}</button>
+                        @else
+                            <button
+                                type="submit"
+                                formaction="{{ route('store.checkout.coupon.store') }}"
+                                formmethod="POST"
+                                formnovalidate
+                                class="h-11 rounded-xl bg-slate-900 px-4 text-sm font-black text-white hover:bg-slate-700"
+                            >{{ __('Apply') }}</button>
+                        @endif
+                    </div>
+                    @error('coupon_code')
+                        <p class="mt-2 text-xs font-bold text-rose-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <div class="mt-5 space-y-3 border-t border-slate-200 pt-5 text-sm">
                     <div class="flex justify-between"><span class="text-slate-500">{{ __('Subtotal') }}</span><span class="font-bold">৳{{ number_format($subtotal, 0) }}</span></div>
+                    @if ($coupon)
+                        <div class="flex justify-between text-emerald-700">
+                            <span>{{ __('Coupon Discount') }} <span class="font-bold">({{ $coupon->code }})</span></span>
+                            <span class="font-black">−৳{{ number_format($couponDiscount, 0) }}</span>
+                        </div>
+                    @endif
                     <div class="flex justify-between"><span class="text-slate-500">{{ __('Delivery') }}</span><span class="font-bold text-orange-600" data-shipping-amount>{{ $selectedQuote ? '৳'.number_format($selectedQuote['amount'], 0) : __('Select District') }}</span></div>
-                    <div class="flex justify-between border-t border-slate-100 pt-3 text-base"><span class="font-black text-slate-900">{{ __('Grand Total') }}</span><span class="font-black text-slate-900" data-order-total>{{ $selectedQuote ? '৳'.number_format($subtotal + $selectedQuote['amount'], 0) : __('Select District') }}</span></div>
+                    <div class="flex justify-between border-t border-slate-100 pt-3 text-base"><span class="font-black text-slate-900">{{ __('Grand Total') }}</span><span class="font-black text-slate-900" data-order-total>{{ $selectedQuote ? '৳'.number_format(max(0, $subtotal - $couponDiscount) + $selectedQuote['amount'], 0) : __('Select District') }}</span></div>
                 </div>
 
                 @if ($checkoutNote)
@@ -129,7 +180,7 @@
 
             const quotes = JSON.parse(quotesElement.textContent || '{}');
             const quoteList = Object.values(quotes);
-            const subtotal = Number(form.dataset.subtotal || 0);
+            const payableSubtotal = Number(form.dataset.payableSubtotal || 0);
             const locale = @js(app()->isLocale('bn') ? 'bn-BD' : 'en-US');
             const selectDistrictText = @js(__('Select District'));
             const noRateText = @js(__('No delivery rate was found for this district.'));
@@ -180,7 +231,7 @@
             const update = () => {
                 const quote = quotes[region.value];
                 form.querySelector('[data-shipping-amount]').textContent = quote ? money(Number(quote.amount)) : selectDistrictText;
-                form.querySelector('[data-order-total]').textContent = quote ? money(subtotal + Number(quote.amount)) : selectDistrictText;
+                form.querySelector('[data-order-total]').textContent = quote ? money(payableSubtotal + Number(quote.amount)) : selectDistrictText;
                 submit.disabled = ! quote;
             };
             const selectDistrict = quote => {

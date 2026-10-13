@@ -10,6 +10,9 @@ use App\Filament\Pages\GeneralSettings;
 use App\Filament\Pages\ModuleOverview;
 use App\Filament\Pages\PosSystem;
 use App\Filament\Pages\SeoOverview;
+use App\Filament\Resources\Coupons\CouponResource;
+use App\Filament\Resources\Coupons\Pages\CreateCoupon;
+use App\Filament\Resources\Coupons\Pages\ListCoupons;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
 use App\Filament\Resources\FlashSaleResource;
 use App\Filament\Resources\IncompleteOrders\Pages\ListIncompleteOrders;
@@ -144,6 +147,8 @@ class AdminPanelProvider extends PanelProvider
 
                 ...$this->offerPanelNavigationItems(),
 
+                ...$this->couponNavigationItems(),
+
                 ...$this->landingPageNavigationItems(),
 
                 ...$this->reviewNavigationItems(),
@@ -228,6 +233,31 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    /** @return array<NavigationItem> */
+    private function couponNavigationItems(): array
+    {
+        return [
+            NavigationItem::make('Add New Coupon')
+                ->key('coupon-create')
+                ->group(AdminNavigationGroup::Coupons)
+                ->icon(Heroicon::OutlinedPlusCircle)
+                ->sort(0)
+                ->visible(fn (): bool => CouponResource::canCreate())
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.coupons.create'))
+                ->url(fn (): string => CreateCoupon::getUrl()),
+
+            NavigationItem::make('All Coupon')
+                ->key('coupon-all')
+                ->group(AdminNavigationGroup::Coupons)
+                ->icon(Heroicon::OutlinedTicket)
+                ->sort(1)
+                ->visible(fn (): bool => CouponResource::canViewAny())
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.coupons.index')
+                    || request()->routeIs('filament.admin.resources.coupons.edit'))
+                ->url(fn (): string => ListCoupons::getUrl()),
+        ];
     }
 
     /** @return array<NavigationItem> */

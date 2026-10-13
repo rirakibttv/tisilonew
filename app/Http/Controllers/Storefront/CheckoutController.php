@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\SiteSetting;
 use App\Services\BkashPaymentService;
 use App\Services\CheckoutService;
+use App\Services\CouponService;
 use App\Services\PaymentMethodService;
 use App\Services\ShippingRateService;
 use App\Services\VisitorAnalyticsService;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class CheckoutController extends Controller
@@ -30,6 +32,7 @@ class CheckoutController extends Controller
         VisitorAnalyticsService $analytics,
         ShippingRateService $shippingRates,
         PaymentMethodService $paymentMethods,
+        CouponService $coupons,
     ): View|RedirectResponse {
         $cart = collect($request->session()->get('store_cart', []));
         if ($cart->isEmpty()) {
@@ -37,16 +40,42 @@ class CheckoutController extends Controller
         }
 
         $regions = $shippingRates->quotesForCart($cart);
+        $subtotal = $this->subtotal($cart);
+        $couponQuote = null;
+        $couponError = null;
+        $couponCode = (string) $request->session()->get('store_coupon_code', '');
+        if ($couponCode !== '') {
+            try {
+                $couponQuote = $coupons->quote(
+                    $couponCode,
+                    $subtotal,
+                    $request->user()?->getKey(),
+                    $request->user()?->phone,
+                );
+            } catch (ValidationException $exception) {
+                $couponError = collect($exception->errors())->flatten()->first();
+                $request->session()->forget('store_coupon_code');
+            }
+        }
         $this->rememberIncompleteOrder($request, $cart);
 
-        $metaBrowserEvents = [$this->checkoutTrackingEvent($request, $analytics, $cart)];
+        $metaBrowserEvents = [$this->checkoutTrackingEvent(
+            $request,
+            $analytics,
+            $cart,
+            (float) ($couponQuote['discount'] ?? 0),
+            $couponQuote['coupon']->code ?? null,
+        )];
 
         $enabledPaymentMethods = $paymentMethods->enabled();
         $preferredPaymentMethod = $request->user()?->paymentPreference?->default_method;
 
         return view('storefront.checkout.index', [
             'lines' => $cart,
-            'subtotal' => $this->subtotal($cart),
+            'subtotal' => $subtotal,
+            'coupon' => $couponQuote['coupon'] ?? null,
+            'couponDiscount' => (float) ($couponQuote['discount'] ?? 0),
+            'couponError' => $couponError,
             'regions' => $regions,
             'checkoutNote' => SiteSetting::valuesFor('general')['checkout_note'] ?? null,
             'paymentMethods' => $enabledPaymentMethods,
@@ -96,6 +125,7 @@ class CheckoutController extends Controller
         $validated['postal_code'] = $quote['postal_code'];
         $validated['landing_page_id'] = $this->activeLandingPage($request)?->getKey();
         $validated['marketing_attribution'] = $this->marketingAttribution($request);
+        $validated['coupon_code'] = $request->session()->get('store_coupon_code');
         if ($validated['payment_method'] === 'bkash') {
             try {
                 $payment = DB::transaction(function () use ($checkout, $bkash, $cart, $validated, $quote): array {
@@ -122,7 +152,12 @@ class CheckoutController extends Controller
         $order = $checkout->place($cart, $validated, $quote);
 
         $this->completeIncompleteOrder($request, $order);
-        $request->session()->forget(['store_cart', 'tisilo_incomplete_order_id', 'meta_checkout_tracking']);
+        $request->session()->forget([
+            'store_cart',
+            'store_coupon_code',
+            'tisilo_incomplete_order_id',
+            'meta_checkout_tracking',
+        ]);
 
         $purchaseEvent = $analytics->purchaseEvent($order);
         try {
@@ -198,16 +233,22 @@ class CheckoutController extends Controller
         Request $request,
         VisitorAnalyticsService $analytics,
         Collection $cart,
+        float $discount = 0,
+        ?string $couponCode = null,
     ): array {
         $contents = $cart->map(fn (array $line): array => [
             'id' => (string) $line['product_id'],
             'quantity' => (int) $line['quantity'],
             'item_price' => round((float) $line['price'], 2),
         ])->values();
-        $fingerprint = hash('sha256', $contents
-            ->sortBy(fn (array $item): string => $item['id'].'|'.$item['item_price'].'|'.$item['quantity'])
-            ->values()
-            ->toJson());
+        $fingerprint = hash('sha256', json_encode([
+            'items' => $contents
+                ->sortBy(fn (array $item): string => $item['id'].'|'.$item['item_price'].'|'.$item['quantity'])
+                ->values()
+                ->all(),
+            'coupon' => $couponCode,
+            'discount' => round($discount, 2),
+        ], JSON_THROW_ON_ERROR));
         $tracking = $request->session()->get('meta_checkout_tracking');
 
         if (! is_array($tracking) || ($tracking['fingerprint'] ?? null) !== $fingerprint) {
@@ -216,9 +257,10 @@ class CheckoutController extends Controller
                 'event' => [
                     'event_type' => 'initiate_checkout',
                     'event_id' => 'initiate-checkout-'.Str::uuid(),
-                    'value' => round($this->subtotal($cart), 2),
+                    'value' => round(max(0, $this->subtotal($cart) - $discount), 2),
                     'metadata' => [
                         'currency' => 'BDT',
+                        'coupon_code' => $couponCode,
                         'content_ids' => $contents->pluck('id')->unique()->values()->all(),
                         'contents' => $contents->all(),
                         'num_items' => $contents->sum('quantity'),

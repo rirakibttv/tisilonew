@@ -21,7 +21,10 @@ use Illuminate\Validation\ValidationException;
 
 class CheckoutService
 {
-    public function __construct(private readonly FlashSalePricingService $flashSalePricing) {}
+    public function __construct(
+        private readonly FlashSalePricingService $flashSalePricing,
+        private readonly CouponService $coupons,
+    ) {}
 
     /**
      * @param  Collection<string, array<string, mixed>>  $cart
@@ -88,9 +91,21 @@ class CheckoutService
                 $subtotal += (float) $item->total_amount;
             }
 
+            $redemption = $this->coupons->redeem(
+                $order,
+                $subtotal,
+                $customer['coupon_code'] ?? null,
+                $order->user_id,
+                $order->customer_phone,
+            );
+            $discount = $redemption['discount'];
+
             $order->forceFill([
+                'coupon_id' => $redemption['coupon']?->getKey(),
+                'coupon_code' => $redemption['coupon']?->code,
                 'subtotal_amount' => $subtotal,
-                'total_amount' => $subtotal + $shippingAmount,
+                'discount_amount' => $discount,
+                'total_amount' => round(max(0, $subtotal - $discount) + $shippingAmount, 2),
             ])->save();
 
             return $order->fresh(['items.vendor']);
@@ -227,6 +242,7 @@ class CheckoutService
                 'status' => OrderStatus::Cancelled,
                 'payment_status' => PaymentStatus::Failed,
             ]);
+            $this->coupons->release($lockedOrder);
 
             return $lockedOrder->fresh();
         }, attempts: 3);

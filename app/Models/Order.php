@@ -20,6 +20,8 @@ class Order extends Model
         'checkout_reference',
         'user_id',
         'landing_page_id',
+        'coupon_id',
+        'coupon_code',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -108,6 +110,11 @@ class Order extends Model
         return $this->belongsTo(LandingPage::class);
     }
 
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
+    }
+
     public function shippingRegion(): BelongsTo
     {
         return $this->belongsTo(ShippingRegion::class);
@@ -141,5 +148,10 @@ class Order extends Model
     public function customerRequests(): HasMany
     {
         return $this->hasMany(CustomerOrderRequest::class);
+    }
+
+    public function couponUsages(): HasMany
+    {
+        return $this->hasMany(CouponUsage::class);
     }
 }

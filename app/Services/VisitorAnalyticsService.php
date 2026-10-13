@@ -97,6 +97,7 @@ class VisitorAnalyticsService
                 'currency' => strtoupper((string) ($order->currency ?: 'BDT')),
                 'invoice_id' => $order->order_number,
                 'payment_method' => $order->payment_method,
+                'coupon_code' => $order->coupon_code,
                 'content_ids' => $contents->pluck('id')->unique()->values()->all(),
                 'contents' => $contents->all(),
                 'num_items' => $contents->sum('quantity'),
@@ -284,7 +285,7 @@ class VisitorAnalyticsService
         }
 
         $safe = [];
-        foreach (['product_name', 'quantity', 'currency', 'invoice_id', 'payment_method'] as $key) {
+        foreach (['product_name', 'quantity', 'currency', 'invoice_id', 'payment_method', 'coupon_code'] as $key) {
             if (array_key_exists($key, $metadata) && is_scalar($metadata[$key])) {
                 $safe[$key] = is_string($metadata[$key])
                     ? Str::limit(strip_tags($metadata[$key]), 200, '')

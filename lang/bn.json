@@ -418,5 +418,19 @@
     "Rejected": "প্রত্যাখ্যাত",
     "Useful Links": "প্রয়োজনীয় লিংক",
     "Very Good": "খুব ভালো",
-    "Your Name": "আপনার নাম"
+    "Your Name": "আপনার নাম",
+    "Coupon Code": "কুপন কোড",
+    "Enter coupon code": "কুপন কোড লিখুন",
+    "Apply": "প্রয়োগ করুন",
+    "Remove": "সরিয়ে দিন",
+    "Coupon Discount": "কুপন ছাড়",
+    "Add a product to the cart before applying a coupon.": "কুপন প্রয়োগের আগে কার্টে একটি পণ্য যোগ করুন।",
+    "This coupon code is invalid or inactive.": "এই কুপন কোডটি সঠিক নয় অথবা এখন নিষ্ক্রিয়।",
+    "This coupon is not active yet.": "এই কুপনটি এখনো চালু হয়নি।",
+    "This coupon has expired.": "এই কুপনের মেয়াদ শেষ হয়েছে।",
+    "A minimum order of :amount is required for this coupon.": "এই কুপনের জন্য সর্বনিম্ন :amount টাকার অর্ডার প্রয়োজন।",
+    "This coupon has reached its usage limit.": "এই কুপনের ব্যবহারসীমা শেষ হয়েছে।",
+    "You have already used this coupon the maximum number of times.": "আপনি এই কুপনটি সর্বোচ্চ অনুমোদিত সংখ্যকবার ব্যবহার করেছেন।",
+    "Coupon :code applied. You saved :amount.": ":code কুপন প্রয়োগ হয়েছে। আপনি :amount সাশ্রয় করেছেন।",
+    "Coupon removed.": "কুপন সরিয়ে দেওয়া হয়েছে।"
 }
