@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Products\Schemas;
 
 use App\Filament\Resources\Products\ProductResource;
 use App\Models\Attribute;
+use App\Support\ProductImageFilename;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -17,7 +18,9 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class ProfessionalProductForm
 {
@@ -231,9 +234,18 @@ class ProfessionalProductForm
                         FileUpload::make('image')
                             ->label('Variation Image')
                             ->image()
+                            ->acceptedFileTypes(ProductImageFilename::acceptedMimeTypes())
                             ->disk('public')
                             ->directory('products/variations')
                             ->visibility('public')
+                            ->getUploadedFileNameForStorageUsing(
+                                fn (TemporaryUploadedFile $file, Get $get): string => ProductImageFilename::make(
+                                    (string) $get('../../name'),
+                                    (string) $file->getMimeType(),
+                                    Storage::disk('public'),
+                                    'products/variations',
+                                )
+                            )
                             ->imagePreviewHeight('180')
                             ->panelLayout('integrated')
                             ->columnSpanFull(),
@@ -430,20 +442,38 @@ class ProfessionalProductForm
                 FileUpload::make('featured_image')
                     ->label('Featured Image')
                     ->image()
+                    ->acceptedFileTypes(ProductImageFilename::acceptedMimeTypes())
                     ->disk('public')
                     ->directory('products/featured')
                     ->visibility('public')
+                    ->getUploadedFileNameForStorageUsing(
+                        fn (TemporaryUploadedFile $file, Get $get): string => ProductImageFilename::make(
+                            (string) $get('name'),
+                            (string) $file->getMimeType(),
+                            Storage::disk('public'),
+                            'products/featured',
+                        )
+                    )
                     ->imagePreviewHeight('220')
                     ->panelLayout('integrated'),
 
                 FileUpload::make('gallery_images')
                     ->label('Gallery Images')
                     ->image()
+                    ->acceptedFileTypes(ProductImageFilename::acceptedMimeTypes())
                     ->multiple()
                     ->reorderable()
                     ->disk('public')
                     ->directory('products/gallery')
                     ->visibility('public')
+                    ->getUploadedFileNameForStorageUsing(
+                        fn (TemporaryUploadedFile $file, Get $get): string => ProductImageFilename::make(
+                            (string) $get('name'),
+                            (string) $file->getMimeType(),
+                            Storage::disk('public'),
+                            'products/gallery',
+                        )
+                    )
                     ->imagePreviewHeight('110')
                     ->panelLayout('grid'),
             ]);

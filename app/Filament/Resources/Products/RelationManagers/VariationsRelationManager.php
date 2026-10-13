@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Products\RelationManagers;
 use App\Models\Attribute;
 use App\Models\AttributeValue;
 use App\Models\ProductVariation;
+use App\Support\ProductImageFilename;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -25,6 +26,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class VariationsRelationManager extends RelationManager
 {
@@ -416,9 +419,18 @@ class VariationsRelationManager extends RelationManager
                         FileUpload::make('image')
                             ->label('Variation Image')
                             ->image()
+                            ->acceptedFileTypes(ProductImageFilename::acceptedMimeTypes())
                             ->disk('public')
                             ->directory('products/variations')
                             ->visibility('public')
+                            ->getUploadedFileNameForStorageUsing(
+                                fn (TemporaryUploadedFile $file): string => ProductImageFilename::make(
+                                    (string) $this->getOwnerRecord()->name,
+                                    (string) $file->getMimeType(),
+                                    Storage::disk('public'),
+                                    'products/variations',
+                                )
+                            )
                             ->columnSpanFull(),
                     ]),
 
