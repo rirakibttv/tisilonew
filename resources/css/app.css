@@ -135,6 +135,36 @@
         animation-play-state: paused;
     }
 
+    .storefront-brand-carousel {
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .storefront-brand-track {
+        display: flex;
+        width: max-content;
+        animation: storefront-category-slide 36s linear infinite;
+        will-change: transform;
+    }
+
+    .storefront-brand-group {
+        display: flex;
+        flex-shrink: 0;
+        align-items: stretch;
+        gap: 5px;
+        padding-right: 5px;
+    }
+
+    .storefront-brand-item {
+        width: calc((100vw - 25px) / 2);
+        flex: 0 0 calc((100vw - 25px) / 2);
+    }
+
+    .storefront-brand-carousel:hover .storefront-brand-track,
+    .storefront-brand-carousel:focus-within .storefront-brand-track {
+        animation-play-state: paused;
+    }
+
     .product-variation-option[aria-pressed='true'] {
         @apply border-orange-500 ring-2 ring-orange-100;
     }
@@ -196,6 +226,32 @@
         width: 132px;
         flex-basis: 132px;
     }
+
+    .storefront-brand-item {
+        width: calc((100vw - 30px) / 3);
+        flex-basis: calc((100vw - 30px) / 3);
+    }
+}
+
+@media (min-width: 768px) {
+    .storefront-brand-item {
+        width: calc((100vw - 35px) / 4);
+        flex-basis: calc((100vw - 35px) / 4);
+    }
+}
+
+@media (min-width: 1024px) {
+    .storefront-brand-item {
+        width: calc((100vw - 45px) / 6);
+        flex-basis: calc((100vw - 45px) / 6);
+    }
+}
+
+@media (min-width: 1280px) {
+    .storefront-brand-item {
+        width: calc((min(100vw, 1600px) - 55px) / 8);
+        flex-basis: calc((min(100vw, 1600px) - 55px) / 8);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -208,8 +264,18 @@
         transform: none;
     }
 
-    .storefront-category-group[aria-hidden='true'] {
+    .storefront-category-group[aria-hidden='true'],
+    .storefront-brand-group[aria-hidden='true'] {
         display: none;
+    }
+
+    .storefront-brand-carousel {
+        overflow-x: auto;
+    }
+
+    .storefront-brand-track {
+        animation: none;
+        transform: none;
     }
 }
 

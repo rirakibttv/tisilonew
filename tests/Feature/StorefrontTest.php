@@ -211,13 +211,21 @@ class StorefrontTest extends TestCase
 
         $this->get('/')
             ->assertOk()
-            ->assertSee('data-brand-grid', false)
+            ->assertSee('data-brand-carousel', false)
+            ->assertSee('data-brand-track', false)
+            ->assertSee('data-brand-group', false)
             ->assertSee('data-brand-card="'.$brand->id.'"', false)
             ->assertSee('data-brand-card-image', false)
             ->assertSee('data-brand-card-name', false)
-            ->assertSee('grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6', false)
+            ->assertSee('storefront-brand-item', false)
             ->assertSee(asset('storage/'.$brand->logo), false)
             ->assertSee($brand->name);
+
+        $css = file_get_contents(resource_path('css/app.css'));
+
+        $this->assertIsString($css);
+        $this->assertStringContainsString('animation: storefront-category-slide 36s linear infinite;', $css);
+        $this->assertStringContainsString('width: calc((min(100vw, 1600px) - 55px) / 8);', $css);
     }
 
     public function test_shop_and_category_catalogs_filter_thirty_products_and_expose_infinite_scroll_batches(): void
