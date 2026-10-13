@@ -116,6 +116,7 @@ class AdminPanelProvider extends PanelProvider
                             AdminNavigationGroup::OrderPanel,
                             AdminNavigationGroup::Shipping,
                             AdminNavigationGroup::OfferPanel,
+                            AdminNavigationGroup::Coupons,
                             AdminNavigationGroup::LandingPage,
                             AdminNavigationGroup::Reviews,
                             AdminNavigationGroup::SeoOverview,
