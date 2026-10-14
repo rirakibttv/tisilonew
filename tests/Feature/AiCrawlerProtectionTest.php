@@ -64,6 +64,7 @@ class AiCrawlerProtectionTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin/seo-overview?platform=all&period=1')
             ->assertOk()
+            ->assertSeeInOrder(['Recent visitor events', 'Bot traffic identification'])
             ->assertSee('Bot traffic identification')
             ->assertSee('GPTBot');
     }

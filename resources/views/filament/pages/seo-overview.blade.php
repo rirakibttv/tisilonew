@@ -62,60 +62,6 @@
                 @endforeach
             </div>
 
-            <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
-                <div class="flex flex-col justify-between gap-4 border-b border-gray-100 p-5 dark:border-white/10 sm:flex-row sm:items-center">
-                    <div>
-                        <h3 class="font-black text-gray-950 dark:text-white">Bot traffic identification</h3>
-                        <p class="mt-1 text-xs text-gray-500">Bots stay separate from human metrics. A source is flagged after {{ number_format($report['abnormalThreshold']) }} requests in one hour; you can block its bot identity or IP fingerprint.</p>
-                    </div>
-                    <div class="grid grid-cols-3 gap-5 text-center">
-                        <div><p class="text-xl font-black text-gray-950 dark:text-white">{{ number_format($report['botMetrics']['requests']) }}</p><p class="text-[10px] uppercase text-gray-500">Requests</p></div>
-                        <div><p class="text-xl font-black text-gray-950 dark:text-white">{{ number_format($report['botMetrics']['visitors']) }}</p><p class="text-[10px] uppercase text-gray-500">Bot visitors</p></div>
-                        <div><p class="text-xl font-black {{ $report['botMetrics']['abnormal_sources'] > 0 ? 'text-red-600' : 'text-gray-950 dark:text-white' }}">{{ number_format($report['botMetrics']['abnormal_sources']) }}</p><p class="text-[10px] uppercase text-gray-500">Abnormal sources</p></div>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-white/5"><tr><th class="px-5 py-3">Bot / IP fingerprint</th><th class="px-4 py-3">Type</th><th class="px-4 py-3 text-right">Requests</th><th class="px-4 py-3">Status</th><th class="px-5 py-3 text-right">Control</th></tr></thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-white/10">
-                            @forelse ($report['botSources'] as $bot)
-                                <tr class="{{ $bot->is_abnormal ? 'bg-red-50/60 dark:bg-red-500/5' : '' }}">
-                                    <td class="px-5 py-3"><p class="font-bold text-gray-900 dark:text-white">{{ $bot->bot_name }}</p><p class="mt-1 font-mono text-[11px] text-gray-500">{{ $bot->ip_label }} · {{ number_format($bot->pages) }} pages</p></td>
-                                    <td class="px-4 py-3"><span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">{{ $bot->bot_category }}</span><p class="mt-2 whitespace-nowrap text-[11px] text-gray-500">{{ \Illuminate\Support\Carbon::parse($bot->last_seen)->format('d M, h:i A') }}</p></td>
-                                    <td class="px-4 py-3 text-right"><p class="font-bold">{{ number_format($bot->requests) }}</p><p class="mt-1 text-[11px] {{ $bot->is_abnormal ? 'font-bold text-red-600' : 'text-gray-500' }}">{{ number_format($bot->requests_last_hour) }} last hour</p></td>
-                                    <td class="px-4 py-3">
-                                        @if ($bot->bot_blocked || $bot->ip_blocked)
-                                            <span class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700 dark:bg-red-500/10 dark:text-red-300">Blocked</span>
-                                        @elseif ($bot->is_abnormal)
-                                            <span class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700 dark:bg-red-500/10 dark:text-red-300">Abnormal</span>
-                                        @else
-                                            <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">Allowed</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-5 py-3 text-right">
-                                        <div class="flex flex-wrap justify-end gap-2">
-                                            @if ($bot->bot_blocked)
-                                                <button type="button" wire:click="unblockBot({{ \Illuminate\Support\Js::from((string) $bot->bot_name) }})" wire:confirm="Allow this bot identity again?" class="rounded-lg border border-emerald-300 px-2.5 py-1.5 text-xs font-bold text-emerald-700">Allow bot</button>
-                                            @else
-                                                <button type="button" wire:click="blockBot({{ \Illuminate\Support\Js::from((string) $bot->bot_name) }})" wire:confirm="Block this bot identity across the storefront?" class="rounded-lg border border-red-300 px-2.5 py-1.5 text-xs font-bold text-red-700">Block bot</button>
-                                            @endif
-                                            @if ($bot->ip_hash)
-                                                @if ($bot->ip_blocked)
-                                                    <button type="button" wire:click="unblockIp({{ \Illuminate\Support\Js::from((string) $bot->ip_hash) }})" wire:confirm="Allow this IP fingerprint again?" class="rounded-lg border border-emerald-300 px-2.5 py-1.5 text-xs font-bold text-emerald-700">Allow IP</button>
-                                                @else
-                                                    <button type="button" wire:click="blockIp({{ \Illuminate\Support\Js::from((string) $bot->ip_hash) }})" wire:confirm="Block this IP fingerprint across the storefront?" class="rounded-lg border border-red-300 px-2.5 py-1.5 text-xs font-bold text-red-700">Block IP</button>
-                                                @endif
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="5" class="px-5 py-10 text-center text-sm text-gray-500">No bot traffic has been identified in this period.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </section>
         @endif
 
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -204,5 +150,62 @@
                 @endforelse
             </tbody></table></div>
         </section>
+
+        @if ($platform === 'all')
+            <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
+                <div class="flex flex-col justify-between gap-4 border-b border-gray-100 p-5 dark:border-white/10 sm:flex-row sm:items-center">
+                    <div>
+                        <h3 class="font-black text-gray-950 dark:text-white">Bot traffic identification</h3>
+                        <p class="mt-1 text-xs text-gray-500">Bots stay separate from human metrics. A source is flagged after {{ number_format($report['abnormalThreshold']) }} requests in one hour; you can block its bot identity or IP fingerprint.</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-5 text-center">
+                        <div><p class="text-xl font-black text-gray-950 dark:text-white">{{ number_format($report['botMetrics']['requests']) }}</p><p class="text-[10px] uppercase text-gray-500">Requests</p></div>
+                        <div><p class="text-xl font-black text-gray-950 dark:text-white">{{ number_format($report['botMetrics']['visitors']) }}</p><p class="text-[10px] uppercase text-gray-500">Bot visitors</p></div>
+                        <div><p class="text-xl font-black {{ $report['botMetrics']['abnormal_sources'] > 0 ? 'text-red-600' : 'text-gray-950 dark:text-white' }}">{{ number_format($report['botMetrics']['abnormal_sources']) }}</p><p class="text-[10px] uppercase text-gray-500">Abnormal sources</p></div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-white/5"><tr><th class="px-5 py-3">Bot / IP fingerprint</th><th class="px-4 py-3">Type</th><th class="px-4 py-3 text-right">Requests</th><th class="px-4 py-3">Status</th><th class="px-5 py-3 text-right">Control</th></tr></thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-white/10">
+                            @forelse ($report['botSources'] as $bot)
+                                <tr class="{{ $bot->is_abnormal ? 'bg-red-50/60 dark:bg-red-500/5' : '' }}">
+                                    <td class="px-5 py-3"><p class="font-bold text-gray-900 dark:text-white">{{ $bot->bot_name }}</p><p class="mt-1 font-mono text-[11px] text-gray-500">{{ $bot->ip_label }} · {{ number_format($bot->pages) }} pages</p></td>
+                                    <td class="px-4 py-3"><span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">{{ $bot->bot_category }}</span><p class="mt-2 whitespace-nowrap text-[11px] text-gray-500">{{ \Illuminate\Support\Carbon::parse($bot->last_seen)->format('d M, h:i A') }}</p></td>
+                                    <td class="px-4 py-3 text-right"><p class="font-bold">{{ number_format($bot->requests) }}</p><p class="mt-1 text-[11px] {{ $bot->is_abnormal ? 'font-bold text-red-600' : 'text-gray-500' }}">{{ number_format($bot->requests_last_hour) }} last hour</p></td>
+                                    <td class="px-4 py-3">
+                                        @if ($bot->bot_blocked || $bot->ip_blocked)
+                                            <span class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700 dark:bg-red-500/10 dark:text-red-300">Blocked</span>
+                                        @elseif ($bot->is_abnormal)
+                                            <span class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700 dark:bg-red-500/10 dark:text-red-300">Abnormal</span>
+                                        @else
+                                            <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">Allowed</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-3 text-right">
+                                        <div class="flex flex-wrap justify-end gap-2">
+                                            @if ($bot->bot_blocked)
+                                                <button type="button" wire:click="unblockBot({{ \Illuminate\Support\Js::from((string) $bot->bot_name) }})" wire:confirm="Allow this bot identity again?" class="rounded-lg border border-emerald-300 px-2.5 py-1.5 text-xs font-bold text-emerald-700">Allow bot</button>
+                                            @else
+                                                <button type="button" wire:click="blockBot({{ \Illuminate\Support\Js::from((string) $bot->bot_name) }})" wire:confirm="Block this bot identity across the storefront?" class="rounded-lg border border-red-300 px-2.5 py-1.5 text-xs font-bold text-red-700">Block bot</button>
+                                            @endif
+                                            @if ($bot->ip_hash)
+                                                @if ($bot->ip_blocked)
+                                                    <button type="button" wire:click="unblockIp({{ \Illuminate\Support\Js::from((string) $bot->ip_hash) }})" wire:confirm="Allow this IP fingerprint again?" class="rounded-lg border border-emerald-300 px-2.5 py-1.5 text-xs font-bold text-emerald-700">Allow IP</button>
+                                                @else
+                                                    <button type="button" wire:click="blockIp({{ \Illuminate\Support\Js::from((string) $bot->ip_hash) }})" wire:confirm="Block this IP fingerprint across the storefront?" class="rounded-lg border border-red-300 px-2.5 py-1.5 text-xs font-bold text-red-700">Block IP</button>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="px-5 py-10 text-center text-sm text-gray-500">No bot traffic has been identified in this period.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        @endif
     </div>
 </x-filament-panels::page>
