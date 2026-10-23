@@ -14,7 +14,11 @@ use App\Filament\Resources\Coupons\CouponResource;
 use App\Filament\Resources\Coupons\Pages\CreateCoupon;
 use App\Filament\Resources\Coupons\Pages\ListCoupons;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
+use App\Filament\Resources\Expenses\ExpenseResource;
+use App\Filament\Resources\Expenses\Pages\ListExpenses;
 use App\Filament\Resources\FlashSaleResource;
+use App\Filament\Resources\FundAccounts\FundAccountResource;
+use App\Filament\Resources\FundAccounts\Pages\ListFundAccounts;
 use App\Filament\Resources\IncompleteOrders\Pages\ListIncompleteOrders;
 use App\Filament\Resources\LandingPages\Pages\CreateLandingPage;
 use App\Filament\Resources\LandingPages\Pages\ListLandingPages;
@@ -29,8 +33,12 @@ use App\Filament\Resources\ProductReviews\Pages\ListProductReviews;
 use App\Filament\Resources\Products\Pages\CreateProduct;
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\Pages\PendingProducts;
+use App\Filament\Resources\Purchases\Pages\ListPurchases;
+use App\Filament\Resources\Purchases\PurchaseResource;
 use App\Filament\Resources\Roles\Pages\ListRoles;
 use App\Filament\Resources\SliderGroups\Pages\ListSliderGroups;
+use App\Filament\Resources\Suppliers\Pages\ListSuppliers;
+use App\Filament\Resources\Suppliers\SupplierResource;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Support\SiteBranding;
 use Filament\Http\Middleware\Authenticate;
@@ -117,6 +125,7 @@ class AdminPanelProvider extends PanelProvider
                             AdminNavigationGroup::Shipping,
                             AdminNavigationGroup::OfferPanel,
                             AdminNavigationGroup::Coupons,
+                            AdminNavigationGroup::Accounts,
                             AdminNavigationGroup::LandingPage,
                             AdminNavigationGroup::Reviews,
                             AdminNavigationGroup::SeoOverview,
@@ -149,6 +158,8 @@ class AdminPanelProvider extends PanelProvider
                 ...$this->offerPanelNavigationItems(),
 
                 ...$this->couponNavigationItems(),
+
+                ...$this->accountsNavigationItems(),
 
                 ...$this->landingPageNavigationItems(),
 
@@ -258,6 +269,48 @@ class AdminPanelProvider extends PanelProvider
                 ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.coupons.index')
                     || request()->routeIs('filament.admin.resources.coupons.edit'))
                 ->url(fn (): string => ListCoupons::getUrl()),
+        ];
+    }
+
+    /** @return array<NavigationItem> */
+    private function accountsNavigationItems(): array
+    {
+        return [
+            NavigationItem::make('Purchases')
+                ->key('accounts-purchases')
+                ->group(AdminNavigationGroup::Accounts)
+                ->icon(Heroicon::OutlinedReceiptPercent)
+                ->sort(0)
+                ->visible(fn (): bool => PurchaseResource::canViewAny())
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.purchases.*'))
+                ->url(fn (): string => ListPurchases::getUrl()),
+
+            NavigationItem::make('Suppliers')
+                ->key('accounts-suppliers')
+                ->group(AdminNavigationGroup::Accounts)
+                ->icon(Heroicon::OutlinedTruck)
+                ->sort(1)
+                ->visible(fn (): bool => SupplierResource::canViewAny())
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.suppliers.*'))
+                ->url(fn (): string => ListSuppliers::getUrl()),
+
+            NavigationItem::make('Fund / Account')
+                ->key('accounts-fund-accounts')
+                ->group(AdminNavigationGroup::Accounts)
+                ->icon(Heroicon::OutlinedBuildingLibrary)
+                ->sort(2)
+                ->visible(fn (): bool => FundAccountResource::canViewAny())
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.fund-accounts.*'))
+                ->url(fn (): string => ListFundAccounts::getUrl()),
+
+            NavigationItem::make('Expenses')
+                ->key('accounts-expenses')
+                ->group(AdminNavigationGroup::Accounts)
+                ->icon(Heroicon::OutlinedBanknotes)
+                ->sort(3)
+                ->visible(fn (): bool => ExpenseResource::canViewAny())
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.expenses.*'))
+                ->url(fn (): string => ListExpenses::getUrl()),
         ];
     }
 
