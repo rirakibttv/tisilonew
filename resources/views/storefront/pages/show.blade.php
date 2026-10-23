@@ -1,7 +1,7 @@
 @extends('layouts.storefront')
 
 @php
-    $contentPageTitle = $page['title'].' — '.($generalSettings['site_name'] ?? 'Tisilo');
+    $contentPageTitle = $page['title'].' — '.($generalSettings['site_title'] ?? 'Tisilo');
     $contentMetaDescription = \App\Support\SeoMetadata::description(
         $page['description'] ?? null,
         $page['title'],

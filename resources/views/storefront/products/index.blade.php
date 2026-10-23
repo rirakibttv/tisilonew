@@ -2,8 +2,8 @@
 
 @php
     $catalogPageTitle = $selectedCategory
-        ? $selectedCategory->name.' — '.($generalSettings['site_name'] ?? 'Tisilo')
-        : 'Shop — '.($generalSettings['site_name'] ?? 'Tisilo');
+        ? $selectedCategory->name.' — '.($generalSettings['site_title'] ?? 'Tisilo')
+        : 'Shop — '.($generalSettings['site_title'] ?? 'Tisilo');
     $catalogMetaDescription = \App\Support\SeoMetadata::description(
         $selectedCategory?->description,
         $selectedCategory ? __('Browse :category products and order securely.', ['category' => $selectedCategory->name]) : null,

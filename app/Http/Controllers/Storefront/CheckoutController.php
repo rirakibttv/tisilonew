@@ -77,7 +77,8 @@ class CheckoutController extends Controller
             'couponDiscount' => (float) ($couponQuote['discount'] ?? 0),
             'couponError' => $couponError,
             'regions' => $regions,
-            'checkoutNote' => SiteSetting::valuesFor('general')['checkout_note'] ?? null,
+            'checkoutNote' => collect(SiteSetting::valuesFor('pages')['pages'] ?? [])
+                ->firstWhere('slug', 'policies-and-notes')['description'] ?? null,
             'paymentMethods' => $enabledPaymentMethods,
             'defaultPaymentMethod' => array_key_exists((string) $preferredPaymentMethod, $enabledPaymentMethods)
                 ? $preferredPaymentMethod

@@ -20,7 +20,6 @@
             @endforelse
         </div>
         <div class="flex items-center justify-center gap-3 text-center font-semibold">
-            <span class="hidden xl:inline">{{ __($generalSettings['top_headline'] ?? 'Fast delivery nationwide') }}</span>
             <a href="tel:{{ $hotline }}" class="transition hover:text-blue-100">
                 {{ __('Phone') }}: {{ $hotline }}
             </a>
@@ -59,14 +58,14 @@
         </button>
 
         <!-- Brand Logo -->
-        <a href="{{ route('store.home') }}" class="flex min-w-0 shrink-0 items-center lg:w-[250px]" aria-label="{{ $generalSettings['site_name'] ?? 'Tisilo' }}">
+        <a href="{{ route('store.home') }}" class="flex min-w-0 shrink-0 items-center lg:w-[250px]" aria-label="{{ $generalSettings['site_title'] ?? 'Tisilo' }}">
             @if(filled($generalSettings['dark_logo'] ?? null))
                 @php
                     $headerLogo = $generalSettings['dark_logo'];
                 @endphp
-                <img src="{{ asset('storage/'.ltrim($headerLogo, '/')) }}?v={{ substr(sha1($headerLogo), 0, 12) }}" alt="{{ $generalSettings['site_name'] ?? 'Tisilo' }}" class="h-11 w-[190px] object-fill sm:h-[58px] sm:w-[245px]">
+                <img src="{{ asset('storage/'.ltrim($headerLogo, '/')) }}?v={{ substr(sha1($headerLogo), 0, 12) }}" alt="{{ $generalSettings['site_title'] ?? 'Tisilo' }}" class="h-11 w-[190px] object-fill sm:h-[58px] sm:w-[245px]">
             @else
-                <span class="font-serif text-4xl font-bold italic leading-none tracking-tight text-red-700 sm:text-6xl">{{ $generalSettings['site_name'] ?? 'Tisilo' }}</span>
+                <span class="font-serif text-4xl font-bold italic leading-none tracking-tight text-red-700 sm:text-6xl">{{ $generalSettings['site_title'] ?? 'Tisilo' }}</span>
             @endif
         </a>
 
@@ -251,7 +250,7 @@
     <div class="flex items-center justify-between border-b border-slate-100 bg-purple-700 px-5 py-4 text-white">
         <div class="flex items-center gap-2">
             <span class="grid size-8 place-items-center rounded-lg bg-white/15 text-lg font-black">T</span>
-            <span class="font-black tracking-tight text-lg">{{ strtoupper($generalSettings['site_name'] ?? 'Tisilo') }}</span>
+            <span class="font-black tracking-tight text-lg">{{ strtoupper($generalSettings['site_title'] ?? 'Tisilo') }}</span>
         </div>
         <button type="button" class="grid size-8 place-items-center rounded-full bg-white/10 hover:bg-white/20 transition" data-drawer-close aria-label="{{ __('Close menu') }}">
             @svg('heroicon-o-x-mark', 'size-5')

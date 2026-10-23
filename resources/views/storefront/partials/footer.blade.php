@@ -16,15 +16,15 @@
                         @php
                             $whiteLogo = $generalSettings['white_logo'];
                         @endphp
-                        <img src="{{ asset('storage/'.ltrim($whiteLogo, '/')) }}" alt="{{ $generalSettings['site_name'] ?? 'Tisilo' }}" class="h-10 w-auto object-contain">
+                        <img src="{{ asset('storage/'.ltrim($whiteLogo, '/')) }}" alt="{{ $generalSettings['site_title'] ?? 'Tisilo' }}" class="h-10 w-auto object-contain">
                     @else
-                        <span class="text-2xl font-black text-white tracking-tight">{{ strtoupper($generalSettings['site_name'] ?? 'Tisilo') }}</span>
+                        <span class="text-2xl font-black text-white tracking-tight">{{ strtoupper($generalSettings['site_title'] ?? 'Tisilo') }}</span>
                         <span class="block text-xs font-bold uppercase tracking-widest text-purple-400">{{ __('Supermarket') }}</span>
                     @endif
                 </a>
-                <p class="max-w-sm text-sm leading-relaxed text-slate-400">
-                    {{ __($generalSettings['footer_about_text'] ?? 'We believe in quality and customer satisfaction. Biggest Online Shopping Zone in Bangladesh.') }}
-                </p>
+                @if(filled($generalSettings['footer_about_text'] ?? null))
+                    <p class="max-w-sm whitespace-pre-line text-sm leading-relaxed text-slate-400">{{ $generalSettings['footer_about_text'] }}</p>
+                @endif
 
                 <!-- Social Icons -->
                 @if(count($socialLinks ?? []))
@@ -53,6 +53,9 @@
                     <li><a href="{{ route('store.pages.show', 'order-procedure') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Order Procedure') }}</a></li>
                     <li><a href="{{ route('store.pages.show', 'delivery-rules') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Delivery Rules') }}</a></li>
                     <li><a href="{{ route('store.pages.show', 'return-policy') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Return Policy') }}</a></li>
+                    @if(collect($contentPages ?? [])->contains('slug', 'policies-and-notes'))
+                        <li><a href="{{ route('store.pages.show', 'policies-and-notes') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Policies and Notes') }}</a></li>
+                    @endif
                     <li><a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Track Order') }}</a></li>
                 </ul>
             </div>
@@ -65,6 +68,9 @@
                 <ul class="mt-4 space-y-2.5 text-sm text-slate-400">
                     <li><a href="{{ route('store.pages.show', 'privacy-policy') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Privacy Policy') }}</a></li>
                     <li><a href="{{ route('store.pages.show', 'terms-and-conditions') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Terms & Conditions') }}</a></li>
+                    @if(collect($contentPages ?? [])->contains('slug', 'order-policy'))
+                        <li><a href="{{ route('store.pages.show', 'order-policy') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Order Policy') }}</a></li>
+                    @endif
                     <li><a href="{{ route('store.shop.index') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Shop All Products') }}</a></li>
                     <li><a href="{{ url('/seller') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Seller Center') }}</a></li>
                 </ul>
@@ -101,7 +107,7 @@
     <!-- Copyright Bar -->
     <div class="border-t border-slate-900 bg-black px-4 py-5 text-center text-sm text-slate-500">
         <div class="storefront-shell flex flex-col items-center justify-between gap-3 sm:flex-row">
-            <p>© {{ date('Y') }} {{ $generalSettings['site_name'] ?? 'Tisilo Supermarket' }}. {{ __('All rights reserved.') }}</p>
+            <p>© {{ date('Y') }} {{ $generalSettings['site_title'] ?? 'Tisilo Supermarket' }}. {{ __('All rights reserved.') }}</p>
             <p class="text-xs text-slate-600">{{ __('Made with passion for online shopping in Bangladesh') }}</p>
         </div>
     </div>

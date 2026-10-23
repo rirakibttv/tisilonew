@@ -34,7 +34,6 @@ class GeneralSettings extends Page
     /** @var array<string, string> */
     public const SECTIONS = [
         'general' => 'General Setting',
-        'seo' => 'SEO Settings',
         'social' => 'Social Media',
         'contact' => 'Contact',
         'pages' => 'Create Page',
@@ -49,6 +48,19 @@ class GeneralSettings extends Page
         abort_unless(array_key_exists($this->section, self::SECTIONS), 404);
 
         $values = SiteSetting::valuesFor($this->section);
+        if ($this->section === 'general') {
+            $legacySeo = SiteSetting::valuesFor('seo');
+            $values['site_title'] ??= $values['site_name'] ?? 'Tisilo';
+            $values['meta_description'] ??= $values['footer_about_text'] ?? '';
+            $values['meta_keywords'] ??= $legacySeo['meta_keywords'] ?? $legacySeo['meta_tags'] ?? '';
+            $values['search_console_verification'] ??= $legacySeo['search_console_verification'] ?? '';
+        }
+
+        if ($this->section === 'pages' && ($pageSlug = request()->string('page')->toString()) !== '' && $pageSlug !== 'create') {
+            $page = collect($values['pages'] ?? [])->firstWhere('slug', $pageSlug);
+            abort_unless($page, 404);
+            $values = $page;
+        }
         $secrets = SiteSetting::secretsFor($this->section);
 
         foreach ($this->secretFields() as $field) {
@@ -62,6 +74,10 @@ class GeneralSettings extends Page
 
     public function getTitle(): string|Htmlable
     {
+        if ($this->section === 'pages' && ($pageSlug = request()->string('page')->toString()) !== '' && $pageSlug !== 'create') {
+            return data_get(collect(SiteSetting::valuesFor('pages')['pages'] ?? [])->firstWhere('slug', $pageSlug), 'name', 'Edit Page');
+        }
+
         return self::SECTIONS[$this->section];
     }
 
@@ -91,7 +107,19 @@ class GeneralSettings extends Page
             }
         }
 
-        if ($this->section === 'pages') {
+        if ($this->section === 'pages' && ($pageSlug = request()->string('page')->toString()) !== '' && $pageSlug !== 'create') {
+            $page = [...$values, 'slug' => Str::slug($values['slug'] ?? $pageSlug)];
+            $pages = collect(SiteSetting::valuesFor('pages')['pages'] ?? [])->values();
+            $index = $pages->search(fn (array $existing): bool => ($existing['slug'] ?? null) === $pageSlug);
+
+            if ($index === false) {
+                $pages->push($page);
+            } else {
+                $pages[$index] = [...$pages[$index], ...$page];
+            }
+
+            $values = ['pages' => $pages->values()->all()];
+        } elseif ($this->section === 'pages') {
             $values['pages'] = collect($values['pages'] ?? [])->map(function (array $page): array {
                 $page['slug'] = Str::slug($page['slug'] ?: $page['name']);
 
@@ -110,8 +138,13 @@ class GeneralSettings extends Page
             ->title(self::SECTIONS[$this->section].' saved')
             ->send();
 
+        $savedValues = SiteSetting::valuesFor($this->section);
+        if ($this->section === 'pages' && ($pageSlug = request()->string('page')->toString()) !== '' && $pageSlug !== 'create') {
+            $savedValues = collect($savedValues['pages'] ?? [])->firstWhere('slug', $pageSlug) ?? [];
+        }
+
         $this->form->fill([
-            ...SiteSetting::valuesFor($this->section),
+            ...$savedValues,
             ...collect(SiteSetting::secretsFor($this->section))
                 ->except(['MAIL_PASSWORD', 'fraud_api_key', 'duplicate_order_api_key'])
                 ->all(),
@@ -132,7 +165,6 @@ class GeneralSettings extends Page
     {
         return match ($this->section) {
             'general' => $this->generalComponents(),
-            'seo' => $this->seoComponents(),
             'social' => $this->socialComponents(),
             'contact' => $this->contactComponents(),
             'pages' => $this->pageComponents(),
@@ -146,14 +178,24 @@ class GeneralSettings extends Page
     private function generalComponents(): array
     {
         return [
-            Section::make('Brand & Store Information')->columns(2)->schema([
-                TextInput::make('site_name')->required()->maxLength(120),
-                TextInput::make('facebook_page_username')->maxLength(120),
-                Textarea::make('top_headline')->rows(2)->columnSpanFull(),
-                Textarea::make('footer_about_text')->rows(3)->columnSpanFull(),
-                TextInput::make('google_play_link')->url(),
-                TextInput::make('app_store_link')->url(),
-            ]),
+            Section::make('Site Title & Homepage SEO')->description('The site title is used for storefront branding and page titles. Homepage metadata is emitted in the storefront HTML; Google may choose a different search snippet.')
+                ->columns(2)->schema([
+                    TextInput::make('site_title')->label('Site Title')->required()->maxLength(120)
+                        ->helperText('Used as the storefront name in the header, footer and page titles.'),
+                    Textarea::make('meta_description')->label('Meta Description')->rows(3)->maxLength(320)
+                        ->helperText('Emitted as entered on the homepage. Google may choose a different search snippet.')
+                        ->columnSpanFull(),
+                    Textarea::make('meta_keywords')->label('Meta Keywords')->rows(3)->maxLength(1000)
+                        ->helperText('Comma-separated keywords. Included in the HTML meta tag; Google does not use this tag for ranking.')
+                        ->columnSpanFull(),
+                    TextInput::make('search_console_verification')->label('Google Search Console Verification Token')
+                        ->maxLength(500)->columnSpanFull()
+                        ->helperText('Paste the token from the HTML tag method. This is separate from the Search Console API connection.'),
+                    TextInput::make('google_play_link')->label('Google Play Link')->url(),
+                    TextInput::make('app_store_link')->label('App Store Link')->url(),
+                    TextInput::make('facebook_page_username')->maxLength(120),
+                    Textarea::make('footer_about_text')->rows(3)->columnSpanFull(),
+                ]),
             Section::make('Theme Appearance')->columns(4)->schema([
                 ColorPicker::make('primary_color')->default('#f97316'),
                 ColorPicker::make('secondary_color')->default('#0f172a'),
@@ -165,33 +207,8 @@ class GeneralSettings extends Page
                 FileUpload::make('og_banner')->image()->disk('public')->directory('settings/social'),
             ]),
             Section::make('Business Logic')->columns(3)->schema([
-                TextInput::make('hot_deal_end_date')->type('date'),
-                TextInput::make('flash_sale_end_date')->type('date'),
-                Toggle::make('show_all_products')->default(true),
-                Toggle::make('show_category_wise_products')->default(true),
                 Toggle::make('vendor_enabled')->default(true),
-                Toggle::make('reseller_enabled')->default(false),
-                TextInput::make('reseller_deposit_min')->numeric()->minValue(0),
-                TextInput::make('reseller_deposit_max')->numeric()->minValue(0),
-                TextInput::make('reseller_wallet_min_balance')->numeric()->minValue(0),
             ]),
-            Section::make('Policies & Notes')->schema([
-                RichEditor::make('checkout_note'),
-                RichEditor::make('order_policy'),
-            ]),
-        ];
-    }
-
-    /** @return array<mixed> */
-    private function seoComponents(): array
-    {
-        return [
-            Section::make('Search Visibility')
-                ->description('SEO title comes from each page title, and meta descriptions are generated automatically from page content.')
-                ->columns(2)->schema([
-                    TextInput::make('meta_tags')->helperText('Comma-separated keywords'),
-                    TextInput::make('search_console_verification'),
-                ]),
         ];
     }
 
@@ -231,6 +248,19 @@ class GeneralSettings extends Page
     /** @return array<mixed> */
     private function pageComponents(): array
     {
+        $pageSlug = request()->string('page')->toString();
+        if ($pageSlug !== '' && $pageSlug !== 'create') {
+            return [
+                Section::make('Page Content')->columns(2)->schema([
+                    TextInput::make('name')->required()->maxLength(120),
+                    TextInput::make('title')->required()->maxLength(180),
+                    TextInput::make('slug')->disabled()->dehydrated()->required(),
+                    Toggle::make('status')->label('Published')->default(false),
+                    RichEditor::make('description')->required()->columnSpanFull(),
+                ]),
+            ];
+        }
+
         return [
             Section::make('Storefront Pages')->schema([
                 Repeater::make('pages')->reorderable()->collapsible()->itemLabel(fn (array $state): ?string => $state['name'] ?? null)->schema([

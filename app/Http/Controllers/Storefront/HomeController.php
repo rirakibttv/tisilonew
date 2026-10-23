@@ -14,6 +14,7 @@ use App\Models\SliderGroup;
 use App\Support\Storefront\MarketplaceProductPresenter;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class HomeController extends Controller
@@ -133,12 +134,15 @@ class HomeController extends Controller
             ->map(fn ($item): array => MarketplaceProductPresenter::summarize($item->product))
             ->values();
 
-        // Hot Deal end date (from setting or fallback to 3 days from now)
-        $generalSettings = SiteSetting::valuesFor('general');
-        $hotDealEndDate = $generalSettings['hot_deal_end_date'] ?? null;
-        if (! $hotDealEndDate || strtotime($hotDealEndDate) < time()) {
-            $hotDealEndDate = date('Y-m-d H:i:s', strtotime('+3 days'));
+        // Hot Deal end date (from Offer Settings or fallback to 3 days from now)
+        $offerSettings = SiteSetting::valuesFor('offers');
+        $hotDealEndDate = filled($offerSettings['hot_deal_end_date'] ?? null)
+            ? Carbon::parse($offerSettings['hot_deal_end_date'])->endOfDay()
+            : null;
+        if (! $hotDealEndDate || $hotDealEndDate->isPast()) {
+            $hotDealEndDate = now()->addDays(3);
         }
+        $hotDealEndDate = $hotDealEndDate->toDateTimeString();
 
         return view('storefront.home', [
             'categories' => $categories,

@@ -1,15 +1,11 @@
 @extends('layouts.storefront')
 
 @php
-    $homePageTitle = ($generalSettings['site_name'] ?? 'Tisilo').' — '.__('Everything you need, in one supermarket');
-    $homeMetaDescription = \App\Support\SeoMetadata::description(
-        $generalSettings['footer_about_text'] ?? null,
-        $generalSettings['top_headline'] ?? null,
-        __('A modern online marketplace with trusted sellers, quality products, secure payments and fast nationwide delivery.'),
-    );
+    $homePageTitle = $generalSettings['site_title'] ?? 'Tisilo';
+    $homeMetaDescription = $generalSettings['meta_description'] ?? '';
 @endphp
 @section('title', $homePageTitle)
-@section('meta_description', $homeMetaDescription)
+@section('meta_description_exact', $homeMetaDescription)
 
 @section('content')
 <div class="bg-slate-50 pb-12">
@@ -112,7 +108,7 @@
                             ⭐ Biggest Online Supermarket
                         </span>
                         <h1 class="mt-5 max-w-[720px] text-4xl font-black leading-[1.15] sm:text-5xl lg:text-6xl">
-                            {{ __('Everything you need, in one supermarket') }}
+                            {{ $generalSettings['site_title'] ?? 'Tisilo' }}
                         </h1>
                         <p class="mt-4 max-w-xl text-sm leading-relaxed text-purple-100/90 sm:text-base">
                             {{ __('Enjoy special discounts, cash on delivery and fast nationwide delivery.') }}

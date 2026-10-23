@@ -2,12 +2,14 @@
 <html lang="{{ app()->getLocale() }}">
 <head>
     @php
-        $siteName = \App\Support\SeoMetadata::title($generalSettings['site_name'] ?? null, 'Tisilo');
+        $siteName = \App\Support\SeoMetadata::title($generalSettings['site_title'] ?? null, 'Tisilo');
         $pageTitle = \App\Support\SeoMetadata::title($__env->yieldContent('title'), $siteName);
-        $pageDescription = \App\Support\SeoMetadata::description(
-            $__env->yieldContent('meta_description'),
-            $pageTitle,
-        );
+        $pageDescription = $__env->hasSection('meta_description_exact')
+            ? (string) $__env->yieldContent('meta_description_exact')
+            : \App\Support\SeoMetadata::description(
+                $__env->yieldContent('meta_description'),
+                $pageTitle,
+            );
         $canonicalUrl = trim($__env->yieldContent('canonical', url()->current()));
         $faviconPath = $generalSettings['favicon'] ?? null;
         $faviconUrl = filled($faviconPath)
@@ -17,7 +19,8 @@
         $ogBannerUrl = filled($ogBannerPath)
             ? asset('storage/'.ltrim($ogBannerPath, '/')).'?v='.substr(sha1($ogBannerPath), 0, 12)
             : null;
-        $searchVerification = $seoSettings['search_console_verification'] ?? null;
+        $searchVerification = $generalSettings['search_console_verification'] ?? $seoSettings['search_console_verification'] ?? null;
+        $metaKeywords = $generalSettings['meta_keywords'] ?? $seoSettings['meta_tags'] ?? null;
         if (filled($searchVerification) && str_contains($searchVerification, '=')) {
             $searchVerification = Illuminate\Support\Str::after($searchVerification, '=');
         }
@@ -26,8 +29,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="{{ $generalSettings['primary_color'] ?? '#f97316' }}">
     <meta name="description" content="{{ $pageDescription }}">
-    @if(filled($seoSettings['meta_tags'] ?? null))
-        <meta name="keywords" content="{{ $seoSettings['meta_tags'] }}">
+    @if(filled($metaKeywords))
+        <meta name="keywords" content="{{ $metaKeywords }}">
     @endif
     @if(filled($searchVerification))
         <meta name="google-site-verification" content="{{ $searchVerification }}">
@@ -38,7 +41,7 @@
         <link rel="apple-touch-icon" href="{{ $faviconUrl }}">
     @endif
     <link rel="canonical" href="{{ $canonicalUrl }}">
-    <meta property="og:site_name" content="{{ $generalSettings['site_name'] ?? 'Tisilo' }}">
+    <meta property="og:site_name" content="{{ $generalSettings['site_title'] ?? 'Tisilo' }}">
     <meta property="og:title" content="{{ $pageTitle }}">
     <meta property="og:description" content="{{ $pageDescription }}">
     <meta property="og:url" content="{{ $canonicalUrl }}">

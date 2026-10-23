@@ -51,7 +51,7 @@
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
             <a href="{{ route('store.home') }}" aria-label="{{ __('Tisilo homepage') }}">
                 @if($logoUrl)
-                    <img src="{{ $logoUrl }}" alt="{{ $generalSettings['site_name'] ?? 'Tisilo' }}" class="h-10 w-auto">
+                    <img src="{{ $logoUrl }}" alt="{{ $generalSettings['site_title'] ?? 'Tisilo' }}" class="h-10 w-auto">
                 @else
                     <span class="text-2xl font-black italic text-slate-950">Tisilo</span>
                 @endif
@@ -187,7 +187,7 @@
     </main>
 
     <footer class="bg-slate-950 px-4 py-10 text-center text-sm text-slate-400">
-        <p class="font-black text-white">{{ $generalSettings['site_name'] ?? 'Tisilo' }}</p>
+        <p class="font-black text-white">{{ $generalSettings['site_title'] ?? 'Tisilo' }}</p>
         <p class="mt-2">{{ __('Secure Order · Cash on Delivery · Nationwide Delivery') }}</p>
     </footer>
 

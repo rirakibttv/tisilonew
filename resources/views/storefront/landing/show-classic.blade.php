@@ -70,9 +70,9 @@
         <div class="storefront-shell grid min-h-24 items-center gap-4 py-4 md:grid-cols-[180px_minmax(0,1fr)_auto]">
             <a href="{{ route('store.home') }}" class="justify-self-center md:justify-self-start" aria-label="{{ __('Tisilo homepage') }}">
                 @if($logoUrl)
-                    <img src="{{ $logoUrl }}" alt="{{ $generalSettings['site_name'] ?? 'Tisilo' }}" class="h-10 w-auto object-contain">
+                    <img src="{{ $logoUrl }}" alt="{{ $generalSettings['site_title'] ?? 'Tisilo' }}" class="h-10 w-auto object-contain">
                 @else
-                    <span class="font-serif text-3xl font-black italic">{{ $generalSettings['site_name'] ?? 'Tisilo' }}</span>
+                    <span class="font-serif text-3xl font-black italic">{{ $generalSettings['site_title'] ?? 'Tisilo' }}</span>
                 @endif
             </a>
             <p class="text-center text-lg font-black sm:text-xl">{{ $headerTitle }}</p>
@@ -165,7 +165,7 @@
         @include('storefront.landing.related-products')
     </main>
 
-    <footer class="campaign-green-bg px-4 py-7 text-center text-sm text-white"><p class="font-black">{{ $generalSettings['site_name'] ?? 'Tisilo' }}</p><p class="mt-1 text-white/80">{{ __('Secure Order · Cash on Delivery · Nationwide Delivery') }}</p></footer>
+    <footer class="campaign-green-bg px-4 py-7 text-center text-sm text-white"><p class="font-black">{{ $generalSettings['site_title'] ?? 'Tisilo' }}</p><p class="mt-1 text-white/80">{{ __('Secure Order · Cash on Delivery · Nationwide Delivery') }}</p></footer>
     <a href="#order-now" data-campaign-sticky-cta class="campaign-bg fixed inset-x-4 bottom-4 z-40 grid h-14 place-items-center rounded-xl text-sm font-black text-white shadow-2xl md:hidden">{{ $landingPage->cta_text }}</a>
 
     @include('storefront.partials.visitor-analytics')

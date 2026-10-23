@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Models\FlashSale;
+use App\Models\SiteSetting;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -16,6 +17,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Carbon;
 
 class FlashSaleResource extends Resource
 {
@@ -53,6 +55,9 @@ class FlashSaleResource extends Resource
                     DateTimePicker::make('ends_at')
                         ->label('Ends At')
                         ->seconds(false)
+                        ->default(fn () => filled(SiteSetting::valuesFor('offers')['flash_sale_default_end_date'] ?? null)
+                            ? Carbon::parse(SiteSetting::valuesFor('offers')['flash_sale_default_end_date'])->endOfDay()
+                            : null)
                         ->after('starts_at')
                         ->required(),
                 ]),

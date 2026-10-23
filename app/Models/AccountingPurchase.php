@@ -14,7 +14,7 @@ class AccountingPurchase extends Model
 
     protected $fillable = [
         'purchase_number', 'supplier_id', 'purchase_date', 'invoice_number', 'total_amount',
-        'paid_amount', 'payment_account_id', 'description', 'created_by',
+        'line_items', 'paid_amount', 'payment_account_id', 'description', 'created_by',
     ];
 
     protected function casts(): array
@@ -23,6 +23,7 @@ class AccountingPurchase extends Model
             'purchase_date' => 'date',
             'total_amount' => 'decimal:2',
             'paid_amount' => 'decimal:2',
+            'line_items' => 'array',
         ];
     }
 
@@ -34,6 +35,29 @@ class AccountingPurchase extends Model
         });
 
         static::saving(function (self $purchase): void {
+            if (is_array($purchase->line_items) && $purchase->line_items !== []) {
+                $productNames = Product::query()
+                    ->whereIn('id', collect($purchase->line_items)->pluck('product_id')->filter()->unique())
+                    ->pluck('name', 'id');
+
+                $purchase->line_items = collect($purchase->line_items)
+                    ->map(function (array $item) use ($productNames): array {
+                        $item['product_name'] = $productNames[$item['product_id'] ?? null] ?? ($item['product_name'] ?? null);
+
+                        return $item;
+                    })
+                    ->all();
+
+                $purchase->total_amount = collect($purchase->line_items)->sum(function (array $item): float {
+                    $quantity = max(0, (int) ($item['quantity'] ?? 0));
+                    $unitCost = max(0, (float) ($item['unit_cost'] ?? 0));
+                    $discount = max(0, (float) ($item['discount'] ?? 0));
+                    $shipping = max(0, (float) ($item['shipping_cost'] ?? 0));
+
+                    return max(0, ($quantity * $unitCost) - $discount + $shipping);
+                });
+            }
+
             if ((float) $purchase->total_amount <= 0 || (float) $purchase->paid_amount < 0 || (float) $purchase->paid_amount > (float) $purchase->total_amount) {
                 throw ValidationException::withMessages([
                     'paid_amount' => 'Paid amount must be between zero and the purchase total.',

@@ -756,7 +756,6 @@ class ApiIntegrationSettings extends Page
                     TextInput::make('search_console_property_url')->label('Property URL')
                         ->regex('/^(?:https?:\/\/.+|sc-domain:[A-Za-z0-9.-]+)$/')->maxLength(500)
                         ->helperText('Example: https://www.tisilo.com/ or sc-domain:tisilo.com'),
-                    TextInput::make('search_console_verification')->label('HTML Meta Verification Token')->maxLength(500)->columnSpanFull(),
                     TextInput::make('search_console_sitemap_url')->url()->default(fn (): string => url('/sitemap.xml'))->maxLength(500),
                     Textarea::make('search_console_service_account_json')->rows(7)->columnSpanFull()
                         ->placeholder('Leave blank to keep the encrypted service-account JSON')

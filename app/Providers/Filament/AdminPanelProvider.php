@@ -8,6 +8,7 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\FraudChecker;
 use App\Filament\Pages\GeneralSettings;
 use App\Filament\Pages\ModuleOverview;
+use App\Filament\Pages\OfferSettings;
 use App\Filament\Pages\PosSystem;
 use App\Filament\Pages\SeoOverview;
 use App\Filament\Resources\Coupons\CouponResource;
@@ -363,6 +364,14 @@ class AdminPanelProvider extends PanelProvider
                 ->sort(2)
                 ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.flash-sales.*'))
                 ->url(fn (): string => FlashSaleResource::getUrl('index')),
+
+            NavigationItem::make('Offer Settings')
+                ->key('offer-panel-settings')
+                ->group(AdminNavigationGroup::OfferPanel)
+                ->icon(Heroicon::OutlinedCog6Tooth)
+                ->sort(3)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.offer-settings'))
+                ->url(fn (): string => OfferSettings::getUrl()),
         ];
     }
 
@@ -470,7 +479,6 @@ class AdminPanelProvider extends PanelProvider
     {
         $items = [
             ['general', 'General Setting', Heroicon::OutlinedCog6Tooth],
-            ['seo', 'SEO Settings', Heroicon::OutlinedMagnifyingGlass],
             ['social', 'Social Media', Heroicon::OutlinedShare],
             ['order_restriction', 'Order Restriction', Heroicon::OutlinedAdjustmentsHorizontal],
             ['email', 'Email Settings', Heroicon::OutlinedEnvelope],
@@ -500,6 +508,8 @@ class AdminPanelProvider extends PanelProvider
             ['contact-us', 'Contact Us', Heroicon::OutlinedPhone],
             ['blog', 'Blog', Heroicon::OutlinedBookOpen],
             ['about-us', 'About Us', Heroicon::OutlinedInformationCircle],
+            ['policies-and-notes', 'Policies and Notes', Heroicon::OutlinedDocumentText],
+            ['order-policy', 'Order Policy', Heroicon::OutlinedDocumentText],
         ];
 
         return array_map(
