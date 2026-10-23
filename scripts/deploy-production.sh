@@ -564,6 +564,7 @@ main() {
 
     if [[ "${previous_commit}" == "${target_commit}" && ${bootstrap_required} -eq 0 ]]; then
         prepare_public_storage_link
+        "${PHP_BIN}" artisan media:restore-product-image-aliases
         sync_public_media
         exit 0
     fi
@@ -600,6 +601,7 @@ main() {
     "${PHP_BIN}" artisan filament:optimize-clear
     "${PHP_BIN}" artisan migrate --force
     prepare_public_storage_link
+    "${PHP_BIN}" artisan media:restore-product-image-aliases
     quarantine_legacy_public_source
     sync_public_files
     quarantine_legacy_public_env
