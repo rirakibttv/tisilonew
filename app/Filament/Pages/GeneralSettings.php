@@ -56,6 +56,32 @@ class GeneralSettings extends Page
             $values['search_console_verification'] ??= $legacySeo['search_console_verification'] ?? '';
         }
 
+        if ($this->section === 'social') {
+            $legacyLinks = collect($values['links'] ?? []);
+            $legacyNames = [
+                'facebook_url' => ['facebook'],
+                'x_url' => ['x', 'twitter'],
+                'linkedin_url' => ['linkedin', 'linked in'],
+                'youtube_url' => ['youtube', 'you tube'],
+                'tiktok_url' => ['tiktok', 'tik tok'],
+            ];
+
+            foreach ($legacyNames as $field => $names) {
+                $values[$field] ??= $legacyLinks
+                    ->first(fn (array $link): bool => in_array(Str::lower(trim($link['title'] ?? '')), $names, true))['link'] ?? '';
+            }
+        }
+
+        if ($this->section === 'contact' && blank($values['whatsapp'] ?? null)) {
+            $legacyWhatsapp = collect(SiteSetting::valuesFor('social')['links'] ?? [])
+                ->first(fn (array $link): bool => Str::lower(trim($link['title'] ?? '')) === 'whatsapp');
+
+            if (filled($legacyWhatsapp['link'] ?? null)) {
+                $digits = preg_replace('/\D+/', '', $legacyWhatsapp['link']);
+                $values['whatsapp'] = preg_match('/01[3-9]\d{8}/', $digits, $matches) ? $matches[0] : '';
+            }
+        }
+
         if ($this->section === 'pages' && ($pageSlug = request()->string('page')->toString()) !== '' && $pageSlug !== 'create') {
             $page = collect($values['pages'] ?? [])->firstWhere('slug', $pageSlug);
             abort_unless($page, 404);
@@ -127,11 +153,34 @@ class GeneralSettings extends Page
             })->values()->all();
         }
 
-        SiteSetting::put(
-            $this->section,
-            [...SiteSetting::valuesFor($this->section), ...$values],
-            $secretUpdates,
-        );
+        $existingValues = SiteSetting::valuesFor($this->section);
+        if ($this->section === 'social') {
+            $legacyWhatsapp = collect($existingValues['links'] ?? [])
+                ->first(fn (array $link): bool => Str::lower(trim($link['title'] ?? '')) === 'whatsapp');
+            $contactValues = SiteSetting::valuesFor('contact');
+
+            if (blank($contactValues['whatsapp'] ?? null) && filled($legacyWhatsapp['link'] ?? null)) {
+                $digits = preg_replace('/\D+/', '', $legacyWhatsapp['link']);
+                if (preg_match('/01[3-9]\d{8}/', $digits, $matches)) {
+                    SiteSetting::put('contact', [...$contactValues, 'whatsapp' => $matches[0]]);
+                }
+            }
+
+            unset($existingValues['links']);
+        }
+
+        SiteSetting::put($this->section, [...$existingValues, ...$values], $secretUpdates);
+
+        if ($this->section === 'contact') {
+            $socialValues = SiteSetting::valuesFor('social');
+            if (isset($socialValues['links']) && is_array($socialValues['links'])) {
+                $socialValues['links'] = collect($socialValues['links'])
+                    ->reject(fn (array $link): bool => Str::lower(trim($link['title'] ?? '')) === 'whatsapp')
+                    ->values()
+                    ->all();
+                SiteSetting::put('social', $socialValues);
+            }
+        }
 
         Notification::make()
             ->success()
@@ -216,14 +265,13 @@ class GeneralSettings extends Page
     private function socialComponents(): array
     {
         return [
-            Section::make('Social Media Links')->schema([
-                Repeater::make('links')->reorderable()->collapsible()->schema([
-                    TextInput::make('title')->required(),
-                    TextInput::make('icon')->placeholder('heroicon-o-share'),
-                    TextInput::make('link')->url()->required(),
-                    ColorPicker::make('color')->default('#2563eb'),
-                    Toggle::make('status')->default(true),
-                ])->columns(5)->defaultItems(0),
+            Section::make('Social Media Links')->description('Add the official profile URL for each social network. Leave a field blank to hide that network from the storefront.')
+                ->columns(2)->schema([
+                    TextInput::make('facebook_url')->label('Facebook')->url()->maxLength(500),
+                    TextInput::make('x_url')->label('X (Twitter)')->url()->maxLength(500),
+                    TextInput::make('linkedin_url')->label('LinkedIn')->url()->maxLength(500),
+                    TextInput::make('youtube_url')->label('YouTube')->url()->maxLength(500),
+                    TextInput::make('tiktok_url')->label('TikTok')->url()->maxLength(500),
             ]),
         ];
     }
@@ -233,13 +281,14 @@ class GeneralSettings extends Page
     {
         return [
             Section::make('Contact Information')->columns(2)->schema([
-                TextInput::make('hotline')->tel(),
-                TextInput::make('phone')->tel(),
-                TextInput::make('email')->email(),
-                TextInput::make('hotmail')->email(),
-                TextInput::make('whatsapp')->tel(),
-                TextInput::make('maplink')->url(),
-                Textarea::make('address')->required()->columnSpanFull(),
+                TextInput::make('phone')->label('Primary Phone Number')->tel(),
+                TextInput::make('hotline')->label('Additional Phone / Hotline')->tel(),
+                TextInput::make('whatsapp')->label('WhatsApp Number')->tel()
+                    ->helperText('Enter the WhatsApp number with country code or local number.'),
+                TextInput::make('email')->label('Primary Email')->email(),
+                TextInput::make('hotmail')->label('Additional Email')->email(),
+                TextInput::make('maplink')->label('Google Maps Link')->url(),
+                Textarea::make('address')->label('Business Address')->columnSpanFull(),
                 Toggle::make('status')->default(true),
             ]),
         ];

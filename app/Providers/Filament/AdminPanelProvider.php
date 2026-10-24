@@ -173,8 +173,6 @@ class AdminPanelProvider extends PanelProvider
 
                 ...$this->reviewNavigationItems(),
 
-                ...$this->marketingNavigationItems(),
-
                 ...$this->apiIntegrationNavigationItems(),
 
                 ...$this->userNavigationItems(),
@@ -487,6 +485,7 @@ class AdminPanelProvider extends PanelProvider
         $items = [
             ['general', 'General Setting', Heroicon::OutlinedCog6Tooth],
             ['social', 'Social Media', Heroicon::OutlinedShare],
+            ['contact', 'Contact Numbers', Heroicon::OutlinedPhone],
             ['order_restriction', 'Order Restriction', Heroicon::OutlinedAdjustmentsHorizontal],
             ['email', 'Email Settings', Heroicon::OutlinedEnvelope],
             ['cronjob', 'Cronjob', Heroicon::OutlinedClock],
@@ -535,21 +534,6 @@ class AdminPanelProvider extends PanelProvider
             $items,
             array_keys($items),
         );
-    }
-
-    /** @return array<NavigationItem> */
-    private function marketingNavigationItems(): array
-    {
-        return [
-            NavigationItem::make('Contact')
-                ->key('marketing-contact')
-                ->group(AdminNavigationGroup::Marketing)
-                ->icon(Heroicon::OutlinedPhone)
-                ->sort(0)
-                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.general-settings')
-                    && request()->string('section')->toString() === 'contact')
-                ->url(fn (): string => GeneralSettings::getUrl(['section' => 'contact'])),
-        ];
     }
 
     /** @return array<NavigationItem> */

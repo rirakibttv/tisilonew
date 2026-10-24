@@ -60,7 +60,7 @@ class GeneralSettingsModuleTest extends TestCase
             ->assertSee('Include Active Pages');
     }
 
-    public function test_create_page_and_contact_are_owned_by_pages_and_marketing_navigation(): void
+    public function test_create_page_and_contact_are_owned_by_pages_and_general_settings_navigation(): void
     {
         $admin = User::factory()->create([
             'role' => UserRole::Admin,
@@ -73,11 +73,11 @@ class GeneralSettingsModuleTest extends TestCase
             ->assertSee('/admin/general-settings?section=contact', false)
             ->assertSee('/admin/general-settings?section=pages&amp;page=create', false)
             ->assertSeeInOrder([
-                'Marketing',
-                '/admin/general-settings?section=contact',
                 'Pages',
                 '/admin/general-settings?section=pages&amp;page=create',
                 'General Settings',
+                '/admin/general-settings?section=social',
+                '/admin/general-settings?section=contact',
             ], false);
 
         $this->actingAs($admin)
@@ -89,6 +89,50 @@ class GeneralSettingsModuleTest extends TestCase
             ->get('/admin/general-settings?section=contact')
             ->assertOk()
             ->assertSee('Contact Information');
+
+        $this->actingAs($admin)
+            ->get('/admin/general-settings?section=social')
+            ->assertOk()
+            ->assertSee('Facebook')
+            ->assertSee('X (Twitter)')
+            ->assertSee('LinkedIn')
+            ->assertSee('YouTube')
+            ->assertSee('TikTok')
+            ->assertDontSee('WhatsApp Number');
+
+        $this->actingAs($admin)
+            ->get('/admin/general-settings?section=contact')
+            ->assertOk()
+            ->assertSee('Primary Phone Number')
+            ->assertSee('WhatsApp Number')
+            ->assertSee('Primary Email')
+            ->assertSee('Additional Email')
+            ->assertSee('Business Address');
+    }
+
+    public function test_legacy_whatsapp_social_link_is_exposed_as_a_contact_number_and_social_profiles_are_listed(): void
+    {
+        SiteSetting::put('social', [
+            'links' => [
+                ['title' => 'Facebook', 'link' => 'https://facebook.com/tisilo', 'status' => true],
+                ['title' => 'WhatsApp', 'link' => 'https://wa.me/8801712345678', 'status' => true],
+            ],
+        ]);
+
+        $admin = User::factory()->create([
+            'role' => UserRole::Admin,
+            'status' => UserStatus::Active,
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/general-settings?section=contact')
+            ->assertOk()
+            ->assertSee('value="01712345678"', false);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('https://facebook.com/tisilo', false)
+            ->assertSee('https://wa.me/8801712345678', false);
     }
 
     public function test_fraud_configuration_only_exists_in_api_integration_master_settings(): void

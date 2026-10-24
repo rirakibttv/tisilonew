@@ -61,18 +61,30 @@ class AppServiceProvider extends ServiceProvider
 
             View::composer('*', function (IlluminateView $view): void {
                 $metaPixel = SiteSetting::valuesFor('facebook_capi');
+                $contactSettings = SiteSetting::valuesFor('contact');
+                $legacySocialLinks = collect(SiteSetting::valuesFor('social')['links'] ?? []);
+
+                if (blank($contactSettings['whatsapp'] ?? null)) {
+                    $legacyWhatsapp = $legacySocialLinks->first(
+                        fn (array $link): bool => mb_strtolower(trim($link['title'] ?? '')) === 'whatsapp',
+                    );
+                    $digits = preg_replace('/\D+/', '', $legacyWhatsapp['link'] ?? '');
+                    if (preg_match('/01[3-9]\d{8}/', $digits, $matches)) {
+                        $contactSettings['whatsapp'] = $matches[0];
+                    }
+                }
 
                 $view->with([
                     'generalSettings' => SiteSetting::valuesFor('general'),
                     'seoSettings' => SiteSetting::valuesFor('seo'),
-                    'contactSettings' => SiteSetting::valuesFor('contact'),
+                    'contactSettings' => $contactSettings,
                     'googleAnalyticsSettings' => SiteSetting::valuesFor('google_analytics'),
                     'metaPixelSettings' => [
                         'enabled' => filter_var($metaPixel['enabled'] ?? false, FILTER_VALIDATE_BOOL),
                         'pixel_id' => $metaPixel['pixel_id'] ?? null,
                         'events' => is_array($metaPixel['events'] ?? null) ? $metaPixel['events'] : [],
                     ],
-                    'socialLinks' => SiteSetting::valuesFor('social')['links'] ?? [],
+                    'socialLinks' => $this->storefrontSocialLinks($legacySocialLinks),
                     'contentPages' => collect(SiteSetting::valuesFor('pages')['pages'] ?? [])
                         ->where('status', true)
                         ->values()
@@ -104,5 +116,36 @@ class AppServiceProvider extends ServiceProvider
         } catch (Throwable $exception) {
             report($exception);
         }
+    }
+
+    /** @return array<array{title: string, link: string, status: bool}> */
+    private function storefrontSocialLinks(\Illuminate\Support\Collection $legacyLinks): array
+    {
+        $social = SiteSetting::valuesFor('social');
+        $platforms = [
+            ['facebook_url', 'Facebook', ['facebook']],
+            ['x_url', 'X', ['x', 'twitter']],
+            ['linkedin_url', 'LinkedIn', ['linkedin', 'linked in']],
+            ['youtube_url', 'YouTube', ['youtube', 'you tube']],
+            ['tiktok_url', 'TikTok', ['tiktok', 'tik tok']],
+        ];
+
+        return collect($platforms)
+            ->map(function (array $platform) use ($social, $legacyLinks): ?array {
+                [$field, $title, $legacyTitles] = $platform;
+                $legacy = $legacyLinks->first(
+                    fn (array $link): bool => in_array(mb_strtolower(trim($link['title'] ?? '')), $legacyTitles, true),
+                );
+                $url = $social[$field] ?? $legacy['link'] ?? null;
+
+                if (blank($url)) {
+                    return null;
+                }
+
+                return ['title' => $title, 'link' => $url, 'status' => true];
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 }
