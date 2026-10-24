@@ -297,9 +297,13 @@
     }
 
     .storefront-theme [class~="bg-white"],
+    .storefront-theme [class*="bg-white/"],
     .storefront-theme [class~="bg-slate-50"],
+    .storefront-theme [class*="bg-slate-50/"],
     .storefront-theme [class~="bg-slate-100"],
+    .storefront-theme [class*="bg-slate-100/"],
     .storefront-theme [class~="bg-gray-50"],
+    .storefront-theme [class*="bg-gray-50/"],
     .storefront-theme [class~="bg-gray-100"] {
         background-color: var(--storefront-surface) !important;
     }
