@@ -42,6 +42,7 @@ use App\Filament\Resources\Suppliers\Pages\ListSuppliers;
 use App\Filament\Resources\Suppliers\SupplierResource;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Support\SiteBranding;
+use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -76,8 +77,14 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->sidebarWidth('15.5rem')
             ->maxContentWidth(Width::Full)
-            ->darkMode(false)
+            ->darkMode()
+            ->defaultThemeMode(ThemeMode::System)
+            ->themeSwitcher(false)
             ->viteTheme('resources/css/filament/admin/theme.css')
+            ->renderHook(
+                PanelsRenderHook::HEAD_START,
+                fn () => view('filament.partials.system-theme'),
+            )
             ->renderHook(
                 PanelsRenderHook::TOPBAR_START,
                 fn () => view('filament.partials.visit-site'),

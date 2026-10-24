@@ -6,6 +6,7 @@ use App\Filament\Seller\Auth\RegisterSeller;
 use App\Filament\Seller\Pages\Dashboard;
 use App\Filament\Seller\Pages\FraudChecker;
 use App\Support\SiteBranding;
+use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -37,8 +38,14 @@ class SellerPanelProvider extends PanelProvider
             ->profile()
             ->brandName('Tisilo Seller Center')
             ->favicon(fn (): string => SiteBranding::faviconUrl())
-            ->darkMode(false)
+            ->darkMode()
+            ->defaultThemeMode(ThemeMode::System)
+            ->themeSwitcher(false)
             ->viteTheme('resources/css/filament/admin/theme.css')
+            ->renderHook(
+                PanelsRenderHook::HEAD_START,
+                fn () => view('filament.partials.system-theme'),
+            )
             ->colors(['primary' => Color::Indigo])
             ->renderHook(
                 PanelsRenderHook::TOPBAR_START,
