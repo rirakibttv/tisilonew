@@ -8,7 +8,7 @@
 <!-- Supermarket Footer -->
 <footer class="bg-slate-950 text-slate-300 pb-20 md:pb-0">
     <div class="storefront-shell py-12">
-        <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-[1.25fr_0.85fr_0.85fr_0.95fr_1.2fr]">
             <!-- Brand Block -->
             <div class="space-y-4">
                 <a href="{{ route('store.home') }}" class="inline-block">
@@ -40,30 +40,39 @@
                 @endif
             </div>
 
-            <!-- Column 2: Useful Links -->
+            <!-- Customer Links -->
             <div>
                 <h3 class="relative inline-block pb-2 text-sm font-black uppercase tracking-wider text-white after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-8 after:bg-purple-600 after:rounded-full">
-                    {{ __('Useful Links') }}
+                    {{ __('Customer') }}
                 </h3>
                 <ul class="mt-4 space-y-2.5 text-sm text-slate-400">
+                    <li><a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('My Account') }}</a></li>
+                    <li><a href="{{ auth()->check() ? route('store.account.orders', 'all') : route('store.account.login') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('My Orders') }}</a></li>
+                    <li><a href="{{ route('store.shop.index') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Shop All Products') }}</a></li>
                     <li><a href="{{ route('store.about') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('About Us') }}</a></li>
                     <li><a href="{{ route('store.contact') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Contact Us') }}</a></li>
                     <li><a href="{{ route('store.blog') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Blog') }}</a></li>
                     <li><a href="{{ route('store.pages.show', 'complaint') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Complaints') }}</a></li>
-                    <li><a href="{{ route('store.pages.show', 'order-procedure') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Order Procedure') }}</a></li>
-                    <li><a href="{{ route('store.pages.show', 'delivery-rules') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Delivery Rules') }}</a></li>
-                    <li><a href="{{ route('store.pages.show', 'return-policy') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Return Policy') }}</a></li>
-                    @if(collect($contentPages ?? [])->contains('slug', 'policies-and-notes'))
-                        <li><a href="{{ route('store.pages.show', 'policies-and-notes') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Policies and Notes') }}</a></li>
-                    @endif
-                    <li><a href="{{ auth()->check() ? route('store.account.dashboard') : route('store.account.login') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Track Order') }}</a></li>
                 </ul>
             </div>
 
-            <!-- Column 3: Legal Links -->
+            <!-- Vendor Links -->
             <div>
                 <h3 class="relative inline-block pb-2 text-sm font-black uppercase tracking-wider text-white after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-8 after:bg-purple-600 after:rounded-full">
-                    {{ __('More Links') }}
+                    {{ __('Vendor') }}
+                </h3>
+                <ul class="mt-4 space-y-2.5 text-sm text-slate-400">
+                    <li><a href="{{ url('/seller') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Seller Central') }}</a></li>
+                    <li><a href="{{ url('/seller/register') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Become a Vendor') }}</a></li>
+                    <li><a href="{{ url('/seller/login') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Vendor Login') }}</a></li>
+                    <li><a href="{{ route('store.contact') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Vendor Support') }}</a></li>
+                </ul>
+            </div>
+
+            <!-- Privacy and Policies -->
+            <div>
+                <h3 class="relative inline-block pb-2 text-sm font-black uppercase tracking-wider text-white after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-8 after:bg-purple-600 after:rounded-full">
+                    {{ __('Privacy Policy') }}
                 </h3>
                 <ul class="mt-4 space-y-2.5 text-sm text-slate-400">
                     <li><a href="{{ route('store.pages.show', 'privacy-policy') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Privacy Policy') }}</a></li>
@@ -71,12 +80,16 @@
                     @if(collect($contentPages ?? [])->contains('slug', 'order-policy'))
                         <li><a href="{{ route('store.pages.show', 'order-policy') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Order Policy') }}</a></li>
                     @endif
-                    <li><a href="{{ route('store.shop.index') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Shop All Products') }}</a></li>
-                    <li><a href="{{ url('/seller') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Seller Center') }}</a></li>
+                    <li><a href="{{ route('store.pages.show', 'order-procedure') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Order Procedure') }}</a></li>
+                    <li><a href="{{ route('store.pages.show', 'delivery-rules') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Delivery Rules') }}</a></li>
+                    <li><a href="{{ route('store.pages.show', 'return-policy') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Return Policy') }}</a></li>
+                    @if(collect($contentPages ?? [])->contains('slug', 'policies-and-notes'))
+                        <li><a href="{{ route('store.pages.show', 'policies-and-notes') }}" class="transition hover:text-purple-400 hover:pl-1">{{ __('Policies and Notes') }}</a></li>
+                    @endif
                 </ul>
             </div>
 
-            <!-- Column 4: Newsletter -->
+            <!-- Newsletter -->
             <div>
                 <h3 class="relative inline-block pb-2 text-sm font-black uppercase tracking-wider text-white after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-8 after:bg-purple-600 after:rounded-full">
                     {{ __('Newsletter') }}
