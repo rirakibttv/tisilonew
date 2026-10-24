@@ -39,6 +39,9 @@ class PosSystemTest extends TestCase
             ->assertSee('Point of Sale')
             ->assertSee($product->name)
             ->assertSee('জেলা লিখে নির্বাচন করুন')
+            ->assertSee('fixed inset-x-0 bottom-0', false)
+            ->assertSee('rounded-none border-gray-300', false)
+            ->assertSee('wire:click="completeSale"', false)
             ->assertDontSee('ডেলিভারি এরিয়া নির্বাচন করুন');
     }
 

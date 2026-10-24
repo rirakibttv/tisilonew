@@ -7,7 +7,7 @@
 @endphp
 
 <x-filament-panels::page>
-    <div class="space-y-4">
+    <div class="space-y-4 pb-24 lg:pb-0">
         @if ($lastOrderNumber)
             <div class="flex flex-col justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-950 sm:flex-row sm:items-center">
                 <div class="flex items-center gap-3">
@@ -76,14 +76,14 @@
                         <div>
                             <h3 class="text-xs font-black uppercase tracking-[0.16em] text-gray-500">Customer & delivery</h3>
                             <div class="mt-3 grid gap-3 sm:grid-cols-2">
-                                <label class="text-xs font-bold text-gray-700">Customer Name <span class="text-red-500">*</span><input wire:model="customerName" autocomplete="name" placeholder="Customer Name" class="mt-1.5 block h-11 w-full rounded-xl border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"></label>
-                                <label class="text-xs font-bold text-gray-700">Mobile Number <span class="text-red-500">*</span><input wire:model="customerPhone" inputmode="tel" autocomplete="tel" placeholder="01XXXXXXXXX" class="mt-1.5 block h-11 w-full rounded-xl border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"></label>
-                                <label class="text-xs font-bold text-gray-700 sm:col-span-2">Address <span class="text-red-500">*</span><textarea wire:model="addressLine" rows="2" autocomplete="street-address" placeholder="বাসা, রোড ও এলাকার বিস্তারিত ঠিকানা" class="mt-1.5 block w-full rounded-xl border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea></label>
+                                <label class="text-xs font-bold text-gray-700">Customer Name <span class="text-red-500">*</span><input wire:model="customerName" autocomplete="name" placeholder="Customer Name" class="mt-1.5 block h-11 w-full rounded-none border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"></label>
+                                <label class="text-xs font-bold text-gray-700">Mobile Number <span class="text-red-500">*</span><input wire:model="customerPhone" inputmode="tel" autocomplete="tel" placeholder="01XXXXXXXXX" class="mt-1.5 block h-11 w-full rounded-none border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"></label>
+                                <label class="text-xs font-bold text-gray-700 sm:col-span-2">Address <span class="text-red-500">*</span><textarea wire:model="addressLine" rows="2" autocomplete="street-address" placeholder="বাসা, রোড ও এলাকার বিস্তারিত ঠিকানা" class="mt-1.5 block w-full rounded-none border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea></label>
 
                                 <div x-data="{ open: false }" @click.outside="open = false" class="relative sm:col-span-2">
                                     <label for="pos-district" class="text-xs font-bold text-gray-700">District / জেলা <span class="text-red-500">*</span></label>
                                     <div class="relative mt-1.5">
-                                        <input id="pos-district" wire:model.live.debounce.250ms="districtSearch" @focus="open = true" @input="open = true" autocomplete="off" placeholder="জেলা লিখে নির্বাচন করুন" class="block h-11 w-full rounded-xl border-gray-300 pr-10 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                        <input id="pos-district" wire:model.live.debounce.250ms="districtSearch" @focus="open = true" @input="open = true" autocomplete="off" placeholder="জেলা লিখে নির্বাচন করুন" class="block h-11 w-full rounded-none border-gray-300 pr-10 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500">
                                         <span class="pointer-events-none absolute inset-y-0 right-3 grid place-items-center text-gray-400">@svg('heroicon-o-chevron-down', 'size-4')</span>
                                     </div>
                                     <div x-show="open" x-transition.opacity class="absolute inset-x-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-white p-1 shadow-xl" style="display: none;">
@@ -99,8 +99,8 @@
                                     @error('shippingRegionId') <p class="mt-1 text-xs font-bold text-red-600">{{ $message }}</p> @enderror
                                 </div>
 
-                                <label class="text-xs font-bold text-gray-700 sm:col-span-2">Thana / Upazila <span class="text-red-500">*</span><input wire:model="thana" autocomplete="address-level3" placeholder="থানা বা উপজেলার নাম" class="mt-1.5 block h-11 w-full rounded-xl border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"><span class="mt-1 block text-[11px] font-normal text-gray-400">Shipping charge নির্বাচিত জেলা অনুযায়ী হিসাব হবে।</span></label>
-                                <label class="text-xs font-bold text-gray-700 sm:col-span-2">Order Note (optional)<textarea wire:model="notes" rows="2" class="mt-1.5 block w-full rounded-xl border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea></label>
+                                <label class="text-xs font-bold text-gray-700 sm:col-span-2">Thana / Upazila <span class="text-red-500">*</span><input wire:model="thana" autocomplete="address-level3" placeholder="থানা বা উপজেলার নাম" class="mt-1.5 block h-11 w-full rounded-none border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"><span class="mt-1 block text-[11px] font-normal text-gray-400">Shipping charge নির্বাচিত জেলা অনুযায়ী হিসাব হবে।</span></label>
+                                <label class="text-xs font-bold text-gray-700 sm:col-span-2">Order Note (optional)<textarea wire:model="notes" rows="2" class="mt-1.5 block w-full rounded-none border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea></label>
                             </div>
                             @foreach (['customerName', 'customerPhone', 'addressLine', 'thana'] as $field) @error($field)<p class="mt-1 text-xs font-bold text-red-600">{{ $message }}</p>@enderror @endforeach
                         </div>
@@ -116,7 +116,7 @@
                                 @if ($selectedQuote)<p class="mt-3 rounded-xl bg-white px-3 py-2 text-xs text-gray-500">{{ $selectedQuote['district'] }} · {{ implode(', ', $selectedQuote['partners']) }} · আনুমানিক {{ $selectedQuote['estimated_min_days'] }}–{{ $selectedQuote['estimated_max_days'] }} দিন</p>@endif
                                 @if ($shippingError)<p class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-700">{{ $shippingError }}</p>@endif
                                 <button type="button" wire:click="completeSale" wire:loading.attr="disabled" wire:target="completeSale" @disabled($cart === [] || ! $selectedQuote) class="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50">
-                                    <span wire:loading.remove wire:target="completeSale">@svg('heroicon-o-check-circle', 'size-5') Complete Sale</span>
+                                    <span wire:loading.remove wire:target="completeSale" class="inline-flex items-center gap-2">@svg('heroicon-o-check-circle', 'size-5') Complete Sale</span>
                                     <span wire:loading.flex wire:target="completeSale" class="items-center gap-2">@svg('heroicon-o-arrow-path', 'size-5 animate-spin') Order তৈরি হচ্ছে</span>
                                 </button>
                             </div>
@@ -152,6 +152,22 @@
                     </div>
                 </div>
             </aside>
+        </div>
+
+        <div class="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-3 pt-3 shadow-[0_-8px_24px_rgba(15,23,42,0.12)] backdrop-blur dark:border-white/10 dark:bg-gray-950/95 lg:hidden" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom))">
+            <div class="mx-auto flex max-w-2xl items-center gap-3">
+                <div class="min-w-0 flex-1">
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-gray-500">Grand Total</p>
+                    <p class="truncate text-lg font-black text-emerald-600">৳{{ number_format($total, 0) }}</p>
+                </div>
+                <button type="button" wire:click="completeSale" wire:loading.attr="disabled" wire:target="completeSale" @disabled($cart === [] || ! $selectedQuote) class="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50">
+                    <span wire:loading.remove wire:target="completeSale" class="inline-flex items-center gap-2">@svg('heroicon-o-check-circle', 'size-5') Complete Sale</span>
+                    <span wire:loading.flex wire:target="completeSale" class="items-center gap-2">@svg('heroicon-o-arrow-path', 'size-5 animate-spin') Processing</span>
+                </button>
+            </div>
+            @if ($cart !== [] && ! $selectedQuote)
+                <p class="mx-auto mt-1 max-w-2xl text-right text-[10px] font-semibold text-amber-700">বিক্রি সম্পন্ন করতে আগে জেলা নির্বাচন করুন।</p>
+            @endif
         </div>
     </div>
 </x-filament-panels::page>
