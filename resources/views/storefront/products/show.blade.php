@@ -1,15 +1,22 @@
 @extends('layouts.storefront')
 
 @php
-    $productPageTitle = $product->name.' — '.($generalSettings['site_title'] ?? 'Tisilo');
+    $productPageTitle = $product->name;
     $productMetaDescription = \App\Support\SeoMetadata::description(
         $product->short_description,
         $product->description,
         $product->name,
     );
+    $productMetaKeywords = collect(explode(',', (string) $product->meta_keywords))
+        ->map(fn (string $tag): string => trim($tag))
+        ->filter()
+        ->unique()
+        ->take(10)
+        ->implode(', ');
 @endphp
 @section('title', $productPageTitle)
 @section('meta_description', $productMetaDescription)
+@section('meta_keywords_exact', $productMetaKeywords)
 
 @push('scripts')
     <script>

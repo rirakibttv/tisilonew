@@ -20,7 +20,9 @@
             ? asset('storage/'.ltrim($ogBannerPath, '/')).'?v='.substr(sha1($ogBannerPath), 0, 12)
             : null;
         $searchVerification = $generalSettings['search_console_verification'] ?? $seoSettings['search_console_verification'] ?? null;
-        $metaKeywords = $generalSettings['meta_keywords'] ?? $seoSettings['meta_tags'] ?? null;
+        $metaKeywords = $__env->hasSection('meta_keywords_exact')
+            ? trim((string) $__env->yieldContent('meta_keywords_exact'))
+            : ($generalSettings['meta_keywords'] ?? $seoSettings['meta_tags'] ?? null);
         if (filled($searchVerification) && str_contains($searchVerification, '=')) {
             $searchVerification = Illuminate\Support\Str::after($searchVerification, '=');
         }

@@ -7,6 +7,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -68,12 +69,6 @@ class ProductForm
                             ->searchable()
                             ->preload(),
 
-                        Select::make('tags')
-                            ->label('Product Tags')
-                            ->relationship('tags', 'name')
-                            ->multiple()
-                            ->searchable()
-                            ->preload(),
                     ]),
 
                 /*
@@ -510,6 +505,19 @@ class ProductForm
                                 'products/gallery'
                             )
                             ->visibility('public'),
+                    ]),
+
+                Section::make('Product SEO Tags')
+                    ->description('Add up to 10 tags for this product. Type a tag and press comma or Enter.')
+                    ->schema([
+                        TagsInput::make('meta_keywords')
+                            ->label('Product Tags')
+                            ->separator(',')
+                            ->trim()
+                            ->rules(['array', 'max:10'])
+                            ->nestedRecursiveRules(['string', 'max:80'])
+                            ->placeholder('e.g. cotton bed sheet, king size, twill')
+                            ->helperText('These tags belong only to this product. Separate tags with commas.'),
                     ]),
 
                 /*

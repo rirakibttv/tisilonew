@@ -636,6 +636,7 @@ class StorefrontTest extends TestCase
             'description' => '<p><strong>Rich product details</strong></p>',
             'seo_title' => 'Legacy Product SEO Title',
             'meta_description' => 'Legacy product meta description.',
+            'meta_keywords' => 'Twill bed sheet, King size',
         ]);
         $masterOnly = ProductVariation::query()->create([
             'product_id' => $product->id, 'sku' => 'MASTER-ONLY', 'regular_price' => 1500,
@@ -662,8 +663,11 @@ class StorefrontTest extends TestCase
             ->assertSee(asset('storage/products/master.jpg'), false)
             ->assertSee(asset('storage/products/variations/own.jpg'), false)
             ->assertSee('<p><strong>Rich product details</strong></p>', false)
-            ->assertSee('<title>Visual Variation Product — ', false)
+            ->assertSee('<title>Visual Variation Product</title>', false)
+            ->assertSee('property="og:title" content="Visual Variation Product"', false)
+            ->assertSee('name="twitter:title" content="Visual Variation Product"', false)
             ->assertSee('<meta name="description" content="Rich product details">', false)
+            ->assertSee('<meta name="keywords" content="Twill bed sheet, King size">', false)
             ->assertDontSee('Legacy Product SEO Title')
             ->assertDontSee('Legacy product meta description.')
             ->assertDontSee('&lt;p&gt;&lt;strong&gt;Rich product details', false);
