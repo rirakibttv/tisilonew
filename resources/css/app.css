@@ -279,6 +279,97 @@
     }
 }
 
+/* Follow the visitor's operating-system appearance preference on storefront pages. */
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
+        --storefront-page: #0f172a;
+        --storefront-surface: #172033;
+        --storefront-surface-raised: #1e293b;
+        --storefront-border: #334155;
+        --storefront-text: #e2e8f0;
+        --storefront-muted: #a8b4c7;
+    }
+
+    .storefront-theme {
+        color: var(--storefront-text) !important;
+        background-color: var(--storefront-page) !important;
+    }
+
+    .storefront-theme [class~="bg-white"],
+    .storefront-theme [class~="bg-slate-50"],
+    .storefront-theme [class~="bg-slate-100"],
+    .storefront-theme [class~="bg-gray-50"],
+    .storefront-theme [class~="bg-gray-100"] {
+        background-color: var(--storefront-surface) !important;
+    }
+
+    .storefront-theme [class~="bg-slate-200"],
+    .storefront-theme [class~="bg-gray-200"] {
+        background-color: var(--storefront-surface-raised) !important;
+    }
+
+    .storefront-theme [class~="text-slate-950"],
+    .storefront-theme [class~="text-slate-900"],
+    .storefront-theme [class~="text-slate-800"],
+    .storefront-theme [class~="text-slate-700"],
+    .storefront-theme [class~="text-gray-900"],
+    .storefront-theme [class~="text-gray-800"],
+    .storefront-theme [class~="text-gray-700"] {
+        color: var(--storefront-text) !important;
+    }
+
+    .storefront-theme [class~="text-slate-600"],
+    .storefront-theme [class~="text-slate-500"],
+    .storefront-theme [class~="text-gray-600"],
+    .storefront-theme [class~="text-gray-500"] {
+        color: var(--storefront-muted) !important;
+    }
+
+    .storefront-theme [class~="border-slate-50"],
+    .storefront-theme [class~="border-slate-100"],
+    .storefront-theme [class~="border-slate-200"],
+    .storefront-theme [class~="border-slate-300"],
+    .storefront-theme [class~="border-gray-100"],
+    .storefront-theme [class~="border-gray-200"],
+    .storefront-theme [class~="border-gray-300"] {
+        border-color: var(--storefront-border) !important;
+    }
+
+    .storefront-theme input:not([type="checkbox"]):not([type="radio"]),
+    .storefront-theme select,
+    .storefront-theme textarea {
+        color: var(--storefront-text);
+        background-color: var(--storefront-surface-raised);
+        border-color: var(--storefront-border);
+        color-scheme: dark;
+    }
+
+    .storefront-theme input::placeholder,
+    .storefront-theme textarea::placeholder {
+        color: var(--storefront-muted);
+    }
+
+    .storefront-theme .catalog-price-slider__track {
+        background-color: #475569;
+    }
+
+    .storefront-theme .catalog-price-slider input[type="range"]::-webkit-slider-thumb,
+    .storefront-theme .catalog-price-slider input[type="range"]::-moz-range-thumb {
+        background-color: var(--storefront-surface-raised);
+    }
+
+    .storefront-theme [class~="bg-purple-50"],
+    .storefront-theme [class~="bg-violet-50"],
+    .storefront-theme [class~="bg-orange-50"],
+    .storefront-theme [class~="bg-rose-50"],
+    .storefront-theme [class~="bg-amber-50"],
+    .storefront-theme [class~="bg-emerald-50"],
+    .storefront-theme [class~="bg-sky-50"] {
+        background-color: var(--storefront-surface-raised) !important;
+    }
+}
+
 /* Tisilo admin shell */
 .fi-body {
     background: #f4f6fa;

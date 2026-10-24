@@ -55,7 +55,7 @@
     <title>{{ $pageTitle }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
+<body class="storefront-theme min-h-screen bg-slate-50 text-slate-900 antialiased">
     @include('storefront.partials.header')
 
     <main>
