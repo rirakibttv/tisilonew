@@ -69,6 +69,23 @@
         $masterImage = $summary['image'];
         $selectedVariationImage = data_get($variationOptions->firstWhere('id', $selectedVariation?->id), 'image');
         $initialImage = $masterImage ?: $selectedVariationImage;
+        $productDimensions = collect([
+            $product->length ? $product->length.' cm' : null,
+            $product->width ? $product->width.' cm' : null,
+            $product->height ? $product->height.' cm' : null,
+        ])->filter()->implode(' × ');
+        $variationSpecifications = $activeVariations
+            ->flatMap(fn ($variation) => $variation->attributeValues->map(fn ($value) => $value->attribute->name.': '.$value->value))
+            ->unique()
+            ->values()
+            ->implode(', ');
+        $productSpecifications = collect([
+            __('Brand') => $product->brand?->name,
+            __('Category') => $product->category?->name,
+            __('Weight') => $product->weight ? $product->weight.' kg' : null,
+            __('Dimensions') => $productDimensions ?: null,
+            __('Available Options') => $variationSpecifications ?: null,
+        ])->filter(fn ($value) => filled($value));
     @endphp
 
     <section class="storefront-shell grid items-start gap-7 py-6 lg:grid-cols-[minmax(0,.86fr)_minmax(0,1.04fr)] lg:gap-8">
@@ -235,9 +252,18 @@
         </div>
     </section>
 
-    <section class="border-y border-slate-200 bg-white py-12">
+    <nav aria-label="{{ __('Product information') }}" class="storefront-shell mt-8 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
+        <div class="flex min-w-max gap-1">
+            <a href="#product-description" class="rounded-xl px-4 py-3 text-sm font-black text-slate-600 transition hover:bg-orange-50 hover:text-orange-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500">{{ __('Description') }}</a>
+            <a href="#product-specifications" class="rounded-xl px-4 py-3 text-sm font-black text-slate-600 transition hover:bg-orange-50 hover:text-orange-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500">{{ __('Specification') }}</a>
+            <a href="#product-reviews" class="rounded-xl px-4 py-3 text-sm font-black text-slate-600 transition hover:bg-orange-50 hover:text-orange-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500">{{ __('Review') }}</a>
+            <a href="#product-qa" class="rounded-xl px-4 py-3 text-sm font-black text-slate-600 transition hover:bg-orange-50 hover:text-orange-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500">{{ __('Q&A') }}</a>
+        </div>
+    </nav>
+
+    <section id="product-description" class="scroll-mt-28 border-y border-slate-200 bg-white py-12">
         <div class="storefront-shell">
-            <h2 class="text-2xl font-black text-slate-950">{{ __('Product Details') }}</h2>
+            <h2 class="text-2xl font-black text-slate-950">{{ __('Description') }}</h2>
             <div class="prose prose-slate mt-5 max-w-none text-sm leading-7 text-slate-600">
                 @if ($product->description)
                     {!! $product->description !!}
@@ -246,6 +272,22 @@
                 @endif
             </div>
         </div>
+    </section>
+
+    <section id="product-specifications" class="storefront-shell scroll-mt-28 py-12">
+        <h2 class="text-2xl font-black text-slate-950">{{ __('Specification') }}</h2>
+        @if ($productSpecifications->isNotEmpty())
+            <dl class="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                @foreach ($productSpecifications as $label => $value)
+                    <div class="grid gap-1 border-b border-slate-100 px-4 py-3 last:border-b-0 sm:grid-cols-[minmax(10rem,.35fr)_1fr] sm:gap-4 sm:px-5">
+                        <dt class="text-sm font-bold text-slate-500">{{ $label }}</dt>
+                        <dd class="text-sm font-semibold text-slate-900">{{ $value }}</dd>
+                    </div>
+                @endforeach
+            </dl>
+        @else
+            <p class="mt-5 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500">{{ __('Product specifications will be added soon.') }}</p>
+        @endif
     </section>
 
     <section id="product-reviews" class="storefront-shell scroll-mt-24 py-12">
@@ -352,6 +394,14 @@
                     @endif
                 @endguest
             </aside>
+        </div>
+    </section>
+
+    <section id="product-qa" class="storefront-shell scroll-mt-28 py-12">
+        <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <h2 class="text-2xl font-black text-slate-950">{{ __('Questions & Answers') }}</h2>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{{ __('Need more information about this product? Contact our team and we will be happy to help.') }}</p>
+            <a href="{{ route('store.contact') }}" class="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl bg-orange-500 px-5 text-sm font-black text-white transition hover:bg-orange-600">{{ __('Ask a Question') }}</a>
         </div>
     </section>
 

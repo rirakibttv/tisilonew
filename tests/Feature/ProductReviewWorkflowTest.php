@@ -36,6 +36,25 @@ class ProductReviewWorkflowTest extends TestCase
         $this->actingAs($admin)->get('/admin/product-reviews')->assertOk()->assertSee('All Reviews');
     }
 
+    public function test_product_details_page_has_description_specification_review_and_qa_sections_in_order(): void
+    {
+        $product = $this->product();
+
+        $this->get(route('store.products.show', $product))
+            ->assertOk()
+            ->assertSeeInOrder([
+                'href="#product-description"',
+                'href="#product-specifications"',
+                'href="#product-reviews"',
+                'href="#product-qa"',
+            ], false)
+            ->assertSee('id="product-description"', false)
+            ->assertSee('id="product-specifications"', false)
+            ->assertSee('id="product-reviews"', false)
+            ->assertSee('id="product-qa"', false)
+            ->assertSee('Ask a Question');
+    }
+
     public function test_only_customer_with_a_delivered_purchase_can_submit_a_pending_review(): void
     {
         $customer = $this->user(UserRole::Customer);
