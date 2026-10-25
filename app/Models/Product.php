@@ -27,6 +27,7 @@ class Product extends Model
         'stock_status',
         'short_description',
         'description',
+        'specifications',
         'featured_image',
         'gallery_images',
         'shipping_class_id',
@@ -54,6 +55,7 @@ class Product extends Model
             'low_stock_threshold' => 'integer',
 
             'gallery_images' => 'array',
+            'specifications' => 'array',
 
             'weight' => 'decimal:2',
             'length' => 'decimal:2',

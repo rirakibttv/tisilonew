@@ -17,6 +17,8 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -33,8 +35,7 @@ class ProfessionalProductForm
                     Grid::make(1)
                         ->schema([
                             static::basicInformationSection(),
-                            static::variationAttributesSection(),
-                            static::productVariantsSection(),
+                            static::productDataTabs(),
                             static::pricingSection(),
                             static::descriptionSection(),
                             static::shippingSection(),
@@ -117,6 +118,52 @@ class ProfessionalProductForm
                     ->columnSpanFull(),
             ])
             ->visible(fn (Get $get): bool => $get('product_type') === 'variable');
+    }
+
+    protected static function productDataTabs(): Tabs
+    {
+        return Tabs::make('Product Data')
+            ->tabs([
+                Tab::make('Variation')
+                    ->schema([
+                        static::variationAttributesSection(),
+                        static::productVariantsSection(),
+                    ]),
+                Tab::make('Specification')
+                    ->schema([
+                        static::specificationSection(),
+                    ]),
+            ])
+            ->columnSpanFull();
+    }
+
+    protected static function specificationSection(): Section
+    {
+        return Section::make('Product Specifications')
+            ->description('Add product-specific details such as material, thread count, size, or care instructions.')
+            ->schema([
+                Repeater::make('specifications')
+                    ->label('Specifications')
+                    ->addActionLabel('Add Specification')
+                    ->defaultItems(0)
+                    ->reorderable()
+                    ->collapsible()
+                    ->itemLabel(fn (array $state): ?string => filled($state['name'] ?? null)
+                        ? $state['name']
+                        : 'New Specification')
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Specification Name')
+                            ->required()
+                            ->maxLength(100),
+                        TextInput::make('value')
+                            ->label('Value')
+                            ->required()
+                            ->maxLength(255),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
+            ]);
     }
 
     protected static function productVariantsSection(): Section

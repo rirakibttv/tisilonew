@@ -14,6 +14,7 @@ use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -39,6 +40,12 @@ class ProductReviewWorkflowTest extends TestCase
     public function test_product_details_page_has_description_specification_review_and_qa_sections_in_order(): void
     {
         $product = $this->product();
+        $product->update([
+            'specifications' => [
+                ['name' => 'Material', 'value' => '100% Cotton'],
+                ['name' => 'Care', 'value' => 'Machine washable'],
+            ],
+        ]);
 
         $this->get(route('store.products.show', $product))
             ->assertOk()
@@ -52,11 +59,35 @@ class ProductReviewWorkflowTest extends TestCase
             ->assertSee('id="product-specifications"', false)
             ->assertSee('id="product-reviews"', false)
             ->assertSee('id="product-qa"', false)
-            ->assertSee('Ask a Question');
+            ->assertSee('Ask a Question')
+            ->assertSee('Material')
+            ->assertSee('100% Cotton')
+            ->assertDontSee('Write Your Review');
+    }
+
+    public function test_product_create_and_edit_forms_include_variation_and_specification_tabs(): void
+    {
+        $admin = $this->user(UserRole::Admin);
+        $product = $this->product();
+
+        $this->actingAs($admin)
+            ->get('/admin/products/create')
+            ->assertOk()
+            ->assertSee('Variation')
+            ->assertSee('Specification')
+            ->assertSee('Add Specification');
+
+        $this->actingAs($admin)
+            ->get('/admin/products/'.$product->getKey().'/edit')
+            ->assertOk()
+            ->assertSee('Variation')
+            ->assertSee('Specification')
+            ->assertSee('Add Specification');
     }
 
     public function test_only_customer_with_a_delivered_purchase_can_submit_a_pending_review(): void
     {
+        Queue::fake();
         $customer = $this->user(UserRole::Customer);
         $product = $this->product();
         $order = $this->orderWithProduct($customer, $product, OrderStatus::Pending);
@@ -94,12 +125,13 @@ class ProductReviewWorkflowTest extends TestCase
 
         $this->get(route('store.products.show', $product))
             ->assertOk()
-            ->assertSee('আপনার রিভিউটি এখন অনুমোদনের অপেক্ষায় আছে।')
+            ->assertDontSee('Write Your Review')
             ->assertDontSee($payload['review']);
     }
 
     public function test_approved_reviews_are_public_and_customers_cannot_submit_duplicates(): void
     {
+        Queue::fake();
         $customer = $this->user(UserRole::Customer);
         $product = $this->product();
         $this->orderWithProduct($customer, $product, OrderStatus::Delivered);
@@ -117,7 +149,7 @@ class ProductReviewWorkflowTest extends TestCase
         $this->get(route('store.products.show', $product))
             ->assertOk()
             ->assertSee($reviewText)
-            ->assertSee('যাচাইকৃত ক্রয়')
+            ->assertSee('Verified Purchase')
             ->assertSee('4.0');
 
         $this->actingAs($customer)

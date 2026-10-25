@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers\Storefront;
 
-use App\Enums\OrderStatus;
-use App\Enums\UserRole;
 use App\Enums\VendorListingItemStatus;
 use App\Enums\VendorListingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Attribute;
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductReview;
 use App\Support\Storefront\MarketplaceProductPresenter;
@@ -370,32 +367,7 @@ class ProductController extends Controller
             ->get()
             ->map(fn (Product $product): array => MarketplaceProductPresenter::summarize($product));
 
-        $customer = $request->user()?->role === UserRole::Customer ? $request->user() : null;
-        $viewerReview = $customer
-            ? ProductReview::query()
-                ->where('product_id', $product->getKey())
-                ->where('user_id', $customer->getKey())
-                ->first()
-            : null;
-        $hasDeliveredPurchase = $customer
-            ? OrderItem::query()
-                ->where('product_id', $product->getKey())
-                ->whereHas('order', fn (Builder $query) => $query
-                    ->where('user_id', $customer->getKey())
-                    ->where('status', OrderStatus::Delivered->value))
-                ->exists()
-            : false;
-        $canSubmitReview = $hasDeliveredPurchase
-            && (! $viewerReview || $viewerReview->status === ProductReview::STATUS_REJECTED);
-
-        return view('storefront.products.show', compact(
-            'product',
-            'summary',
-            'related',
-            'viewerReview',
-            'hasDeliveredPurchase',
-            'canSubmitReview',
-        ));
+        return view('storefront.products.show', compact('product', 'summary', 'related'));
     }
 
     /** @return array<int|string, mixed> */
