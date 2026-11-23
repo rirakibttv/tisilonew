@@ -296,8 +296,13 @@ class ProfessionalProductForm
                         TextInput::make('weight')
                             ->label('Weight')
                             ->numeric()
-                            ->minValue(0)
-                            ->suffix('kg'),
+                            ->minValue(0.01),
+
+                        Select::make('weight_unit')
+                            ->label('Weight Unit')
+                            ->options(['kg' => 'Kilogram (kg)', 'g' => 'Gram (g)'])
+                            ->default('kg')
+                            ->required(),
 
                         TextInput::make('sort_order')
                             ->label('Sort Order')
@@ -384,8 +389,14 @@ class ProfessionalProductForm
                 TextInput::make('weight')
                     ->label('Weight')
                     ->numeric()
-                    ->minValue(0)
-                    ->suffix('kg'),
+                    ->minValue(0.01)
+                    ->required(),
+
+                Select::make('weight_unit')
+                    ->label('Weight Unit')
+                    ->options(['kg' => 'Kilogram (kg)', 'g' => 'Gram (g)'])
+                    ->default('kg')
+                    ->required(),
 
                 TextInput::make('length')
                     ->label('Length')

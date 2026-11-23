@@ -101,7 +101,7 @@ class DeploymentDataSnapshot
             'shipping_partners' => ShippingPartner::query()->orderBy('code')->get()->map(
                 fn (ShippingPartner $partner): array => Arr::only(
                     $partner->toArray(),
-                    ['name', 'code', 'contact_name', 'phone', 'email', 'tracking_url', 'api_provider', 'estimated_min_days', 'estimated_max_days', 'notes', 'is_active'],
+                    ['name', 'code', 'contact_name', 'phone', 'email', 'tracking_url', 'api_provider', 'estimated_min_days', 'estimated_max_days', 'inside_city_first_kg_charge', 'outside_city_first_kg_charge', 'additional_kg_charge', 'notes', 'is_active'],
                 ),
             )->all(),
             'shipping_regions' => ShippingRegion::query()
@@ -110,7 +110,7 @@ class DeploymentDataSnapshot
                 ->get()
                 ->map(fn (ShippingRegion $region): array => [
                     ...Arr::only($region->toArray(), [
-                        'division', 'district', 'upazila', 'postal_code', 'location_key', 'is_active', 'sort_order',
+                        'division', 'district', 'upazila', 'postal_code', 'is_inside_city', 'location_key', 'is_active', 'sort_order',
                     ]),
                     'rates' => $region->rates->map(fn (ShippingRegionRate $rate): array => [
                         ...Arr::only($rate->toArray(), [
@@ -198,7 +198,7 @@ class DeploymentDataSnapshot
                     ...Arr::only($product->toArray(), [
                         'name', 'slug', 'product_type', 'sku', 'barcode', 'regular_price', 'sale_price',
                         'purchase_price', 'manage_stock', 'stock_quantity', 'low_stock_threshold', 'stock_status',
-                        'short_description', 'description', 'featured_image', 'gallery_images', 'weight',
+                        'short_description', 'description', 'featured_image', 'gallery_images', 'weight', 'weight_unit',
                         'length', 'width', 'height', 'status', 'featured', 'sort_order', 'seo_title',
                         'meta_description', 'meta_keywords',
                     ]),
@@ -211,7 +211,7 @@ class DeploymentDataSnapshot
                     'variations' => $product->variations->map(fn (ProductVariation $variation): array => [
                         ...Arr::only($variation->toArray(), [
                             'sku', 'barcode', 'purchase_price', 'regular_price', 'sale_price',
-                            'stock_quantity', 'low_stock_threshold', 'stock_status', 'image', 'weight',
+                            'stock_quantity', 'low_stock_threshold', 'stock_status', 'image', 'weight', 'weight_unit',
                             'status', 'is_default', 'sort_order',
                         ]),
                         'attribute_values' => $variation->attributeValues

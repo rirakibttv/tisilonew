@@ -68,6 +68,14 @@ class ShippingPartnerResource extends Resource
                         ->default(3)
                         ->required(),
                 ]),
+            Section::make('Weight-based Delivery Charges')
+                ->description('First-kilogram pricing depends on whether the selected delivery region is inside or outside the city. Each additional kilogram uses the third rate.')
+                ->columns(3)
+                ->schema([
+                    TextInput::make('inside_city_first_kg_charge')->label('Inside City — First 1 kg')->numeric()->prefix('৳')->minValue(0)->default(75)->required(),
+                    TextInput::make('outside_city_first_kg_charge')->label('Outside City — First 1 kg')->numeric()->prefix('৳')->minValue(0)->default(135)->required(),
+                    TextInput::make('additional_kg_charge')->label('Each Additional 1 kg')->numeric()->prefix('৳')->minValue(0)->default(20)->required(),
+                ]),
         ]);
     }
 

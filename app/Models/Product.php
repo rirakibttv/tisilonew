@@ -32,6 +32,7 @@ class Product extends Model
         'gallery_images',
         'shipping_class_id',
         'weight',
+        'weight_unit',
         'length',
         'width',
         'height',

@@ -21,6 +21,7 @@ class ProductVariation extends Model
         'stock_status',
         'image',
         'weight',
+        'weight_unit',
         'status',
         'is_default',
         'sort_order',

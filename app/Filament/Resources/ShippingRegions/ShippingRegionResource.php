@@ -54,6 +54,7 @@ class ShippingRegionResource extends Resource
                 TextInput::make('district')->required()->maxLength(120),
                 TextInput::make('upazila')->label('Upazila / Police Station')->required()->maxLength(120),
                 TextInput::make('postal_code')->maxLength(20),
+                Toggle::make('is_inside_city')->label('Inside City')->helperText('Select this for city delivery zones; otherwise the outside-city first-kilogram rate applies.'),
                 TextInput::make('sort_order')->numeric()->minValue(0)->default(0),
                 Toggle::make('is_active')->label('Active')->default(true),
             ]),
@@ -67,17 +68,15 @@ class ShippingRegionResource extends Resource
                     TextInput::make('pathao_area_id')->label('Pathao Area ID')->numeric()->minValue(1),
                 ]),
             Section::make('Shipping Class Rates')
-                ->description('For each product class, configure its courier partner and delivery charges for this Upazila. Delivery time is managed from Shipping Partner.')
+                ->description('Assign a courier partner to each shipping class in this region. Charges come from the partner’s weight-based rates above.')
                 ->schema([
-                    Repeater::make('rates')->relationship('rates')->defaultItems(0)->reorderable(false)->columns(4)->schema([
+                    Repeater::make('rates')->relationship('rates')->defaultItems(0)->reorderable(false)->columns(3)->schema([
                         Select::make('shipping_class_id')->label('Shipping Class')
                             ->relationship('shippingClass', 'name', fn ($query) => $query->where('is_active', true))
                             ->searchable()->preload()->required()->disableOptionsWhenSelectedInSiblingRepeaterItems(),
                         Select::make('shipping_partner_id')->label('Shipping Partner')
                             ->relationship('partner', 'name', fn ($query) => $query->where('is_active', true))
                             ->searchable()->preload()->required(),
-                        TextInput::make('base_charge')->label('First Item Charge')->numeric()->prefix('৳')->minValue(0)->required(),
-                        TextInput::make('additional_item_charge')->label('Each Additional Item')->numeric()->prefix('৳')->minValue(0)->default(0)->required(),
                         Toggle::make('is_active')->label('Rate Active')->default(true),
                     ]),
                 ]),
