@@ -92,7 +92,6 @@ class CheckoutController extends Controller
         CheckoutService $checkout,
         BkashPaymentService $bkash,
         PaymentMethodService $paymentMethods,
-        VisitorAnalyticsService $analytics,
         ShippingRateService $shippingRates,
     ): RedirectResponse {
         $cart = collect($request->session()->get('store_cart', []));
@@ -160,21 +159,11 @@ class CheckoutController extends Controller
             'meta_checkout_tracking',
         ]);
 
-        $purchaseEvent = $analytics->purchaseEvent($order);
-        try {
-            $analytics->record($request, [
-                ...$purchaseEvent,
-                'attribution' => $order->marketing_attribution ?? [],
-            ]);
-        } catch (Throwable) {
-            // Analytics must never block order confirmation.
-        }
-
         return redirect(URL::temporarySignedRoute(
             'store.checkout.success',
             now()->addDay(),
             ['order' => $order],
-        ))->with('meta_browser_events', [$purchaseEvent]);
+        ));
     }
 
     public function success(Order $order): View
@@ -212,6 +201,9 @@ class CheckoutController extends Controller
             if (filled($request->cookie($cookie))) {
                 $safe[$key] = str((string) $request->cookie($cookie))->stripTags()->limit(255, '')->toString();
             }
+        }
+        if (Str::isUuid((string) $request->cookie('tisilo_vid'))) {
+            $safe['visitor_id'] = (string) $request->cookie('tisilo_vid');
         }
         if (filled($request->cookie('tisilo_ga_cid'))) {
             $safe['ga_client_id'] = str((string) $request->cookie('tisilo_ga_cid'))->stripTags()->limit(255, '')->toString();

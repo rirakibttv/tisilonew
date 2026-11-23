@@ -10,13 +10,13 @@ use App\Services\CheckoutService;
 use App\Services\LandingCheckoutService;
 use App\Services\PaymentMethodService;
 use App\Services\ShippingRateService;
-use App\Services\VisitorAnalyticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -44,7 +44,6 @@ class LandingCheckoutController extends Controller
         CheckoutService $checkout,
         BkashPaymentService $bkash,
         PaymentMethodService $paymentMethods,
-        VisitorAnalyticsService $analytics,
     ): RedirectResponse {
         $this->ensurePublished($landingPage);
         $sessionKey = 'landing_checkout.'.$landingPage->id;
@@ -125,6 +124,9 @@ class LandingCheckoutController extends Controller
                     $attribution[$key] = str((string) $request->cookie($cookie))->stripTags()->limit(255, '')->toString();
                 }
             }
+            if (Str::isUuid((string) $request->cookie('tisilo_vid'))) {
+                $attribution['visitor_id'] = (string) $request->cookie('tisilo_vid');
+            }
             if (filled($request->cookie('tisilo_ga_cid'))) {
                 $attribution['ga_client_id'] = str((string) $request->cookie('tisilo_ga_cid'))->stripTags()->limit(255, '')->toString();
             }
@@ -156,17 +158,7 @@ class LandingCheckoutController extends Controller
         }
 
         $request->session()->put($sessionKey.'.order_id', $order->id);
-        $purchaseEvent = $analytics->purchaseEvent($order);
-        try {
-            $analytics->record($request, [
-                ...$purchaseEvent,
-                'attribution' => $order->marketing_attribution ?? [],
-            ]);
-        } catch (Throwable) {
-            // Analytics must not interrupt a confirmed order.
-        }
-
-        return $this->receipt($order, $purchaseEvent);
+        return $this->receipt($order);
     }
 
     private function ensurePublished(LandingPage $campaign): void
@@ -183,13 +175,8 @@ class LandingCheckoutController extends Controller
         ];
     }
 
-    /** @param array<string, mixed>|null $browserEvent */
-    private function receipt(Order $order, ?array $browserEvent = null): RedirectResponse
+    private function receipt(Order $order): RedirectResponse
     {
-        $response = redirect(URL::temporarySignedRoute('store.checkout.success', now()->addDay(), ['order' => $order]));
-
-        return $browserEvent
-            ? $response->with('meta_browser_events', [$browserEvent])
-            : $response;
+        return redirect(URL::temporarySignedRoute('store.checkout.success', now()->addDay(), ['order' => $order]));
     }
 }

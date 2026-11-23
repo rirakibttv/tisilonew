@@ -2,10 +2,13 @@
 
 namespace App\Observers;
 
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Services\GoogleAnalyticsService;
 use App\Services\MetaConversionsApiService;
 use App\Services\SmsGatewayService;
+use App\Services\VisitorAnalyticsService;
 use Throwable;
 
 class OrderObserver
@@ -21,7 +24,23 @@ class OrderObserver
 
     public function updated(Order $order): void
     {
-        if (! $order->wasChanged('status')) {
+        $statusChanged = $order->wasChanged('status');
+        $paymentStatusChanged = $order->wasChanged('payment_status');
+        if (! $statusChanged && ! $paymentStatusChanged) {
+            return;
+        }
+
+        $isVerifiedWebsiteOrder = $order->channel === 'website'
+            && ($order->status === OrderStatus::Confirmed || $order->payment_status === PaymentStatus::Paid);
+        if ($isVerifiedWebsiteOrder) {
+            try {
+                app(VisitorAnalyticsService::class)->recordVerifiedOrderPurchase($order);
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        if (! $statusChanged) {
             return;
         }
 

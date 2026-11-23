@@ -41,7 +41,7 @@ class MetaConversionsApiService
         OrderStatus::Refunded->value => 'OrderRefunded',
     ];
 
-    public function queueVisitorEvent(Request $request, VisitorEvent $visitorEvent): void
+    public function queueVisitorEvent(?Request $request, VisitorEvent $visitorEvent): void
     {
         $eventName = self::VISITOR_EVENTS[$visitorEvent->event_type] ?? null;
         if (! $eventName || ! $this->isEnabledFor($eventName)) {
@@ -49,7 +49,7 @@ class MetaConversionsApiService
         }
 
         $order = $visitorEvent->order_id
-            ? Order::query()->with('items')->find($visitorEvent->order_id)
+            ? Order::query()->with(['items', 'landingPage'])->find($visitorEvent->order_id)
             : null;
 
         SendMetaConversionEvent::dispatch($eventName, array_filter([
@@ -181,7 +181,9 @@ class MetaConversionsApiService
     private function customData(VisitorEvent $visitorEvent, ?Order $order): ?array
     {
         if ($order) {
-            return $this->orderCustomData($order, $order->status instanceof OrderStatus ? $order->status->value : (string) $order->status);
+            return $visitorEvent->event_type === 'purchase'
+                ? $this->orderPurchaseData($order)
+                : $this->orderCustomData($order, $order->status instanceof OrderStatus ? $order->status->value : (string) $order->status);
         }
 
         $metadata = $visitorEvent->metadata ?? [];
@@ -253,6 +255,18 @@ class MetaConversionsApiService
         ];
     }
 
+    /** @return array<string, mixed> */
+    private function orderPurchaseData(Order $order): array
+    {
+        $data = $this->orderCustomData(
+            $order,
+            $order->status instanceof OrderStatus ? $order->status->value : (string) $order->status,
+        );
+        unset($data['status']);
+
+        return $data;
+    }
+
     private function text(string $value): string
     {
         return preg_replace('/[^\pL\pN]/u', '', mb_strtolower(trim($value))) ?? '';
@@ -275,10 +289,16 @@ class MetaConversionsApiService
         return $value !== '' ? hash('sha256', $value) : null;
     }
 
-    private function eventSourceUrl(Request $request, VisitorEvent $visitorEvent): string
+    private function eventSourceUrl(?Request $request, VisitorEvent $visitorEvent): string
     {
+        if (! $request && $visitorEvent->order_id) {
+            $order = Order::query()->with('landingPage')->find($visitorEvent->order_id);
+
+            return $order?->landingPage?->public_url ?: url('/checkout');
+        }
+
         $eventPath = '/'.ltrim((string) $visitorEvent->path, '/');
-        $requestPath = '/'.ltrim($request->path(), '/');
+        $requestPath = '/'.ltrim((string) $request?->path(), '/');
 
         // Browser events arrive through our first-party analytics endpoint.
         // Meta needs the storefront URL where the action happened, not the
@@ -287,7 +307,7 @@ class MetaConversionsApiService
             return url($eventPath);
         }
 
-        return $request->fullUrl();
+        return $request?->fullUrl() ?: url($eventPath);
     }
 
     /** @return array<string, mixed> */

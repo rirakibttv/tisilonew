@@ -10,7 +10,6 @@ use App\Models\Order;
 use App\Models\PaymentTransaction;
 use App\Services\BkashPaymentGateway;
 use App\Services\CheckoutService;
-use App\Services\VisitorAnalyticsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -25,7 +24,6 @@ class BkashPaymentController extends Controller
         Request $request,
         BkashPaymentGateway $gateway,
         CheckoutService $checkout,
-        VisitorAnalyticsService $analytics,
     ): RedirectResponse {
         $paymentId = trim((string) $request->query('paymentID'));
         $transaction = PaymentTransaction::query()
@@ -92,17 +90,7 @@ class BkashPaymentController extends Controller
         }
         $request->session()->forget('bkash_payment');
 
-        $purchaseEvent = $analytics->purchaseEvent($order);
-        try {
-            $analytics->record($request, [
-                ...$purchaseEvent,
-                'attribution' => $order->marketing_attribution ?? [],
-            ]);
-        } catch (Throwable) {
-            // Analytics must never block a paid order receipt.
-        }
-
-        return $this->receipt($order, $purchaseEvent);
+        return $this->receipt($order);
     }
 
     /** @param array<string, mixed> $payload */
@@ -154,18 +142,13 @@ class BkashPaymentController extends Controller
         return to_route('store.checkout.index')->withErrors(['payment_method' => $message]);
     }
 
-    /** @param array<string, mixed>|null $browserEvent */
-    private function receipt(Order $order, ?array $browserEvent = null): RedirectResponse
+    private function receipt(Order $order): RedirectResponse
     {
-        $response = redirect(URL::temporarySignedRoute(
+        return redirect(URL::temporarySignedRoute(
             'store.checkout.success',
             now()->addDay(),
             ['order' => $order],
         ));
-
-        return $browserEvent
-            ? $response->with('meta_browser_events', [$browserEvent])
-            : $response;
     }
 
     private function completeIncompleteOrder(Request $request, Order $order): void

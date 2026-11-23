@@ -105,6 +105,78 @@ class VisitorAnalyticsService
         ];
     }
 
+    /** Record a website sale after it is confirmed or successfully paid. */
+    public function recordVerifiedOrderPurchase(Order $order): ?VisitorEvent
+    {
+        $order->loadMissing(['items', 'landingPage']);
+        $marketing = is_array($order->marketing_attribution) ? $order->marketing_attribution : [];
+        $purchase = $this->purchaseEvent($order);
+        $sourceUrl = $order->landingPage?->public_url ?: url('/checkout');
+        $path = parse_url($sourceUrl, PHP_URL_PATH) ?: '/checkout';
+        $contents = $purchase['metadata']['contents'] ?? [];
+        $attribution = [
+            'source' => $this->cleanAttribution($marketing['source'] ?? null, 100, true),
+            'medium' => $this->cleanAttribution($marketing['medium'] ?? null, 100, true),
+            'campaign' => $this->cleanAttribution($marketing['campaign'] ?? null, 191),
+            'content' => $this->cleanAttribution($marketing['content'] ?? null, 191),
+            'term' => $this->cleanAttribution($marketing['term'] ?? null, 191),
+            'click_source' => in_array($marketing['click_source'] ?? null, ['facebook', 'google'], true)
+                ? $marketing['click_source']
+                : null,
+        ];
+        $attribution = array_filter($attribution, fn (mixed $value): bool => filled($value));
+        $storedVisitorId = trim((string) ($marketing['visitor_id'] ?? ''));
+        $visitorId = Str::isUuid($storedVisitorId)
+            ? $storedVisitorId
+            : Uuid::uuid5(Uuid::NAMESPACE_URL, 'https://tisilo.com/order/'.$order->order_number)->toString();
+        $eventId = 'purchase-'.$order->order_number;
+        $firstProductId = $order->items->first()?->product_id;
+
+        $event = VisitorEvent::query()->firstOrCreate(
+            ['event_key' => $eventId],
+            [
+                'visitor_id' => $visitorId,
+                'session_id' => null,
+                'customer_id' => $order->user_id,
+                'event_type' => 'purchase',
+                'path' => '/'.ltrim($path, '/'),
+                'referrer_host' => null,
+                'traffic_source' => $attribution['source'] ?? null,
+                'traffic_medium' => $attribution['medium'] ?? null,
+                'traffic_campaign' => $attribution['campaign'] ?? null,
+                'traffic_content' => $attribution['content'] ?? null,
+                'traffic_term' => $attribution['term'] ?? null,
+                'click_source' => $attribution['click_source'] ?? null,
+                'product_id' => $firstProductId,
+                'order_id' => $order->getKey(),
+                'value' => round((float) $order->total_amount, 2),
+                'device_type' => 'unknown',
+                'browser' => null,
+                'ip_hash' => null,
+                'metadata' => [
+                    'currency' => strtoupper((string) ($order->currency ?: 'BDT')),
+                    'invoice_id' => $order->order_number,
+                    'payment_method' => $order->payment_method,
+                    'coupon_code' => $order->coupon_code,
+                    'content_ids' => collect($contents)->pluck('id')->unique()->values()->all(),
+                    'contents' => $contents,
+                    'num_items' => collect($contents)->sum('quantity'),
+                ],
+                'occurred_at' => now(),
+            ],
+        );
+
+        if ($event->wasRecentlyCreated) {
+            try {
+                $this->meta->queueVisitorEvent(null, $event);
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        return $event;
+    }
+
     public function recordBotRequest(Request $request): ?VisitorEvent
     {
         $bot = $this->botTraffic->identify($request->userAgent());
