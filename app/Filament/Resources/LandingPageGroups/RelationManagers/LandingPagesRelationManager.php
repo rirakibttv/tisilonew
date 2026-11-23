@@ -53,7 +53,7 @@ class LandingPagesRelationManager extends RelationManager
                 Action::make('preview')
                     ->label('Preview')
                     ->icon(Heroicon::OutlinedEye)
-                    ->url(fn ($record): string => URL::temporarySignedRoute('store.landing.preview', now()->addHour(), ['landingPage' => $record]))
+                    ->url(fn ($record): string => URL::temporarySignedRoute('store.landing.preview', now()->addDay(), ['landingPage' => $record]))
                     ->openUrlInNewTab(),
                 Action::make('edit')
                     ->label('Edit')

@@ -40,7 +40,7 @@ class LandingPagesTable
             ->recordActions([
                 Action::make('preview')
                     ->icon(Heroicon::OutlinedEye)
-                    ->url(fn ($record): string => URL::temporarySignedRoute('store.landing.preview', now()->addHour(), ['landingPage' => $record]))
+                    ->url(fn ($record): string => URL::temporarySignedRoute('store.landing.preview', now()->addDay(), ['landingPage' => $record]))
                     ->openUrlInNewTab(),
                 Action::make('edit')
                     ->label('Edit')
