@@ -1,5 +1,33 @@
 const variationForm = document.querySelector('[data-product-variation-form]');
 const variationData = document.getElementById('product-variation-data');
+const productGallery = document.querySelector('[data-product-gallery-options]');
+const productMainImage = document.querySelector('[data-product-main-image]');
+const productImagePlaceholder = document.querySelector('[data-product-image-placeholder]');
+
+const showProductImage = source => {
+    if (!source || !productMainImage) return;
+
+    productMainImage.src = source;
+    productMainImage.classList.remove('hidden');
+    productImagePlaceholder?.classList.add('hidden');
+    productImagePlaceholder?.classList.remove('grid');
+};
+
+const selectProductGalleryImage = selectedButton => {
+    productGallery?.querySelectorAll('[data-product-gallery-image]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button === selectedButton));
+    });
+};
+
+if (!variationForm && productGallery) {
+    productGallery.addEventListener('click', event => {
+        const button = event.target.closest('[data-product-gallery-image]');
+        if (!button) return;
+
+        showProductImage(button.dataset.productGalleryImage);
+        selectProductGalleryImage(button);
+    });
+}
 
 if (variationForm && variationData) {
     const data = JSON.parse(variationData.textContent);
@@ -22,12 +50,12 @@ if (variationForm && variationData) {
     const money = value => `৳${Number(value).toLocaleString(locale, {maximumFractionDigits: 0})}`;
     const selected = () => data.variations.find(item => String(item.id) === select.value);
 
-    const setGallerySelection = (type, variationId = null) => {
-        gallery?.querySelector('[data-product-gallery-master]')?.setAttribute('aria-pressed', String(type === 'master'));
-        gallery?.querySelectorAll('[data-product-gallery-variation]').forEach(card => {
+    const setGallerySelection = (type, variationId = null, imageButton = null) => {
+        gallery?.querySelectorAll('[data-product-gallery-image]').forEach(button => {
+            const isSelectedMaster = type === 'master' && button.hasAttribute('data-product-gallery-master');
             const isSelectedVariation = type === 'variation'
-                && card.dataset.productGalleryVariation === String(variationId);
-            card.setAttribute('aria-pressed', String(isSelectedVariation));
+                && button.dataset.productGalleryVariation === String(variationId);
+            button.setAttribute('aria-pressed', String(isSelectedMaster || isSelectedVariation || button === imageButton));
         });
     };
 
@@ -95,7 +123,18 @@ if (variationForm && variationData) {
             return;
         }
 
-        chooseVariation(event.target.closest('[data-product-gallery-variation]'));
+        const variationButton = event.target.closest('[data-product-gallery-variation]');
+        if (variationButton) {
+            chooseVariation(variationButton);
+
+            return;
+        }
+
+        const galleryButton = event.target.closest('[data-product-gallery-image]');
+        if (galleryButton) {
+            showImage(galleryButton.dataset.productGalleryImage);
+            setGallerySelection('image', null, galleryButton);
+        }
     });
     select.addEventListener('change', () => apply(selected(), true));
     variationForm.querySelectorAll('[data-product-quantity-step]').forEach(button => {

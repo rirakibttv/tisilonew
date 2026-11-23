@@ -68,7 +68,12 @@
         })->values();
         $masterImage = $summary['image'];
         $selectedVariationImage = data_get($variationOptions->firstWhere('id', $selectedVariation?->id), 'image');
-        $initialImage = $masterImage ?: $selectedVariationImage;
+        $galleryImages = collect($product->gallery_images ?? [])
+            ->filter(fn ($image) => filled($image))
+            ->map(fn ($image) => asset('storage/'.ltrim($image, '/')))
+            ->unique()
+            ->values();
+        $initialImage = $masterImage ?: $selectedVariationImage ?: $galleryImages->first();
         $productDimensions = collect([
             $product->length ? $product->length.' cm' : null,
             $product->width ? $product->width.' cm' : null,
@@ -118,15 +123,20 @@
                     </div>
                 </div>
             </div>
-            @if($masterImage || $variationOptions->whereNotNull('image')->isNotEmpty())
+            @if($masterImage || $galleryImages->isNotEmpty() || $variationOptions->whereNotNull('image')->isNotEmpty())
                 <div data-product-gallery-options class="mt-3 flex flex-wrap gap-2" role="group" aria-label="{{ __('Product Images') }}">
                     @if($masterImage)
-                        <button type="button" data-product-gallery-master aria-label="{{ $product->name }} — {{ __('Main Image') }}" aria-pressed="true" class="product-gallery-option size-16 overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-1 transition hover:border-orange-300">
+                        <button type="button" data-product-gallery-master data-product-gallery-image="{{ $masterImage }}" aria-label="{{ $product->name }} — {{ __('Main Image') }}" aria-pressed="true" class="product-gallery-option size-16 overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-1 transition hover:border-orange-300">
                             <img src="{{ $masterImage }}" alt="" loading="lazy" class="size-full rounded-lg object-cover">
                         </button>
                     @endif
+                    @foreach($galleryImages as $image)
+                        <button type="button" data-product-gallery-image="{{ $image }}" aria-label="{{ $product->name }} — {{ __('Gallery image :number', ['number' => $loop->iteration]) }}" aria-pressed="{{ $loop->first && ! $masterImage && ! $selectedVariationImage ? 'true' : 'false' }}" class="product-gallery-option size-16 overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-1 transition hover:border-orange-300">
+                            <img src="{{ $image }}" alt="" loading="lazy" class="size-full rounded-lg object-cover">
+                        </button>
+                    @endforeach
                     @foreach($variationOptions->whereNotNull('image') as $option)
-                        <button type="button" data-product-gallery-variation="{{ $option['id'] }}" aria-label="{{ $option['label'] }}" aria-pressed="{{ ! $masterImage && $selectedVariation?->id === $option['id'] ? 'true' : 'false' }}" class="product-gallery-option size-16 overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-1 transition hover:border-orange-300">
+                        <button type="button" data-product-gallery-variation="{{ $option['id'] }}" data-product-gallery-image="{{ $option['image'] }}" aria-label="{{ $option['label'] }}" aria-pressed="{{ ! $masterImage && $selectedVariation?->id === $option['id'] ? 'true' : 'false' }}" class="product-gallery-option size-16 overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-1 transition hover:border-orange-300">
                             <img src="{{ $option['image'] }}" alt="" loading="lazy" class="size-full rounded-lg object-cover">
                         </button>
                     @endforeach
