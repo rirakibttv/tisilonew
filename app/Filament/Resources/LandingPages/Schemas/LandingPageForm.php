@@ -92,7 +92,7 @@ class LandingPageForm
                         ->visibility('public'),
                 ]),
 
-            Section::make('Offer Story')
+            Section::make('Product Description')
                 ->columns(2)
                 ->schema([
                     TextInput::make('offer_title')->maxLength(255)->columnSpanFull(),

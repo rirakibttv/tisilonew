@@ -120,7 +120,7 @@
         </section>
 
         <section class="storefront-shell border-x border-slate-200 py-7">
-            <h2 class="border-b border-slate-200 pb-3 text-center font-serif text-2xl font-black">{{ $landingPage->offer_title ?: $primaryProduct->name }}</h2>
+            <h2 class="border-b border-slate-200 pb-3 text-center font-serif text-2xl font-black">{{ __('Product Description') }}</h2>
             <article class="campaign-copy mt-4 text-sm leading-7 text-slate-700">{!! $detailBody !!}</article>
             @if(count($landingPage->benefits ?? []))
                 <div class="mt-8 grid gap-4 sm:grid-cols-3">

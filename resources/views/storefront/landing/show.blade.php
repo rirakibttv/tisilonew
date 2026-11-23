@@ -109,7 +109,7 @@
 
         @if($landingPage->offer_title || $landingPage->offer_body)
             <section class="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6">
-                @if($landingPage->offer_title)<h2 class="text-3xl font-black text-slate-950 sm:text-4xl">{{ $landingPage->offer_title }}</h2>@endif
+                <h2 class="text-3xl font-black text-slate-950 sm:text-4xl">{{ __('Product Description') }}</h2>
                 @if($landingPage->offer_body)<div class="prose prose-lg mx-auto mt-6 max-w-none text-left leading-8 text-slate-600 sm:text-center">{!! $landingPage->offer_body !!}</div>@endif
             </section>
         @endif
