@@ -3,9 +3,10 @@
 namespace App\Filament\Resources\LandingPageGroups\RelationManagers;
 
 use App\Filament\Resources\LandingPages\Schemas\LandingPageForm;
+use App\Filament\Resources\LandingPages\LandingPageResource;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -49,12 +50,15 @@ class LandingPagesRelationManager extends RelationManager
                 CreateAction::make()->label('Add Advertisement'),
             ])
             ->recordActions([
-                \Filament\Actions\Action::make('preview')
+                Action::make('preview')
                     ->label('Preview')
                     ->icon(Heroicon::OutlinedEye)
                     ->url(fn ($record): string => URL::temporarySignedRoute('store.landing.preview', now()->addHour(), ['landingPage' => $record]))
                     ->openUrlInNewTab(),
-                EditAction::make(),
+                Action::make('edit')
+                    ->label('Edit')
+                    ->icon(Heroicon::OutlinedPencilSquare)
+                    ->url(fn ($record): string => LandingPageResource::getUrl('edit', ['record' => $record])),
                 DeleteAction::make(),
             ])
             ->defaultSort('created_at', 'desc');

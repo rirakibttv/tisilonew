@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\LandingPages\Tables;
 
+use App\Filament\Resources\LandingPages\LandingPageResource;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -42,7 +42,10 @@ class LandingPagesTable
                     ->icon(Heroicon::OutlinedEye)
                     ->url(fn ($record): string => URL::temporarySignedRoute('store.landing.preview', now()->addHour(), ['landingPage' => $record]))
                     ->openUrlInNewTab(),
-                EditAction::make(),
+                Action::make('edit')
+                    ->label('Edit')
+                    ->icon(Heroicon::OutlinedPencilSquare)
+                    ->url(fn ($record): string => LandingPageResource::getUrl('edit', ['record' => $record])),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
