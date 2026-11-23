@@ -124,7 +124,7 @@ class LandingPageForm
                 ->columns(1)
                 ->schema([
                     FileUpload::make('gallery_images')
-                        ->label('Product & Customer Gallery')
+                        ->label('Product Photo Gallery')
                         ->multiple()
                         ->reorderable()
                         ->image()

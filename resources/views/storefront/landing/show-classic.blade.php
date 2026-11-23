@@ -133,7 +133,7 @@
 
         <section class="storefront-shell mt-6">
             <div class="campaign-green-border rounded-md border-4 bg-white p-3 sm:p-6">
-                <h2 class="rounded-md bg-[#28633a] px-5 py-3 text-center font-serif text-2xl font-black text-white shadow-md">{{ $landingPage->offer_title ?: $headerTitle }}</h2>
+                <h2 class="rounded-md bg-[#28633a] px-5 py-3 text-center font-serif text-2xl font-black text-white shadow-md">{{ __('Product Photo Gallery') }}</h2>
                 @if($galleryImages->isNotEmpty())
                     <div class="mt-5 grid gap-2 sm:grid-cols-3">@foreach($galleryImages as $image)<img src="{{ $image }}" alt="{{ __(':product image :number', ['product' => $primaryProduct->name, 'number' => $loop->iteration]) }}" loading="lazy" class="aspect-square w-full object-cover">@endforeach</div>
                 @endif
