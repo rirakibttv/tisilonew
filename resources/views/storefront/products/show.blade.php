@@ -46,6 +46,9 @@
             ->sortBy(fn ($offer) => (float) ($offer['item']->sale_price ?? $offer['item']->regular_price));
         $activeVariations = $product->variations->where('status', true)->sortBy([['is_default', 'desc'], ['sort_order', 'asc']])->values();
         $selectedVariation = $activeVariations->first(fn ($variation) => $variation->stock_status !== 'out_of_stock' && $variation->stock_quantity > 0) ?? $activeVariations->first();
+        $productInStock = $selectedVariation
+            ? $selectedVariation->stock_quantity > 0 || $selectedVariation->stock_status === 'on_backorder'
+            : $summary['can_purchase'];
         $isFlashSale = (bool) ($summary['is_flash_sale'] ?? false);
         $displayPrice = $isFlashSale
             ? (float) $summary['price']
@@ -155,7 +158,7 @@
                 <span class="font-bold text-amber-500">★ {{ number_format($summary['review_rating'], 1) }} <span class="font-medium text-slate-400">{{ __('(:count reviews)', ['count' => $summary['review_count']]) }}</span></span>
                 <span class="text-slate-300">|</span>
                 <span class="text-slate-500">{{ __('SKU') }}: <span data-product-sku>{{ $selectedVariation?->sku ?: ($product->sku ?: __('N/A')) }}</span></span>
-                <span data-product-stock class="{{ ($selectedVariation ? $selectedVariation->stock_quantity > 0 : $summary['available'] > 0) ? 'text-emerald-600' : 'text-amber-600' }} font-bold">{{ __(($selectedVariation ? $selectedVariation->stock_quantity > 0 : $summary['available'] > 0) ? 'In Stock' : 'Out of Stock') }}</span>
+                <span data-product-stock class="{{ $productInStock ? 'text-emerald-600' : 'text-amber-600' }} font-bold">{{ __($productInStock ? 'In Stock' : 'Out of Stock') }}</span>
             </div>
 
             <div class="mt-6 rounded-2xl bg-orange-50 px-5 py-4">
