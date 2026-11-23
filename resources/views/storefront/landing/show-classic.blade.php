@@ -20,11 +20,12 @@
         $whatsapp = $contactSettings['whatsapp'] ?? $phone;
         $whatsappUrl = 'https://wa.me/88'.ltrim(preg_replace('/[^0-9]/', '', $whatsapp), '88');
         $detailBody = filled(strip_tags((string) $landingPage->offer_body)) ? $landingPage->offer_body : $primaryProduct->description;
-        $campaignImages = collect([$heroUrl])
-            ->merge(collect($landingPage->gallery_images ?? [])->map(fn ($image) => asset('storage/'.ltrim($image, '/'))))
-            ->merge(collect($primaryProduct->gallery_images ?? [])->map(fn ($image) => asset('storage/'.ltrim($image, '/'))))
-            ->filter()->unique()->values();
-        $galleryImages = collect(range(0, 2))->map(fn ($index) => $campaignImages->isNotEmpty() ? $campaignImages[$index % $campaignImages->count()] : null)->filter();
+        $landingGallery = collect($landingPage->gallery_images ?? [])
+            ->merge(collect($primaryProduct->gallery_images ?? []))
+            ->filter()->unique()->take(4)
+            ->map(fn ($image) => asset('storage/'.ltrim($image, '/')))->values();
+        $campaignImages = collect([$heroUrl])->merge($landingGallery)->filter()->unique()->values();
+        $galleryImages = $landingGallery;
         $reviewImages = collect(range(0, 4))->map(fn ($index) => $campaignImages->isNotEmpty() ? $campaignImages[$index % $campaignImages->count()] : null)->filter();
         $deadline = $landingPage->countdown_ends_at?->toIso8601String();
         $headerTitle = $landingPage->header_title ?: $landingPage->headline;
@@ -135,7 +136,7 @@
             <div class="campaign-green-border rounded-md border-4 bg-white p-3 sm:p-6">
                 <h2 class="rounded-md bg-[#28633a] px-5 py-3 text-center font-serif text-2xl font-black text-white shadow-md">{{ __('Product Photo Gallery') }}</h2>
                 @if($galleryImages->isNotEmpty())
-                    <div class="mt-5 grid gap-2 sm:grid-cols-3">@foreach($galleryImages as $image)<img src="{{ $image }}" alt="{{ __(':product image :number', ['product' => $primaryProduct->name, 'number' => $loop->iteration]) }}" loading="lazy" class="aspect-square w-full object-cover">@endforeach</div>
+                    <div class="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">@foreach($galleryImages as $image)<img src="{{ $image }}" alt="{{ __(':product image :number', ['product' => $primaryProduct->name, 'number' => $loop->iteration]) }}" loading="lazy" class="aspect-square w-full object-cover">@endforeach</div>
                 @endif
                 <div class="mt-4 text-center"><a href="#order-now" class="campaign-bg inline-flex rounded-md border-2 border-amber-500 px-7 py-3 text-lg font-black text-white shadow-lg">{{ __('Click to Order') }} 🛒</a></div>
             </div>

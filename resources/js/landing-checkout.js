@@ -31,15 +31,16 @@ if (campaignForm && campaignData) {
     const selectedOption = () => selectedProduct()?.variations.find(item => String(item.id) === variation.value);
     const districtLabel = item => String(item?.district || item?.name || '').trim();
     const districtQuotes = () => {
-        const seen = new Set();
-
-        return regions.filter(item => {
+        const selected = new Map();
+        regions.forEach(item => {
             const key = districtLabel(item).toLocaleLowerCase(locale);
-            if (!key || seen.has(key)) return false;
-            seen.add(key);
-
-            return true;
+            if (!key) return;
+            const insideCount = (item.breakdown || []).filter(rate => rate.inside_city).length;
+            const existing = selected.get(key);
+            if (!existing || insideCount > existing.insideCount) selected.set(key, {item, insideCount});
         });
+
+        return Array.from(selected.values(), selection => selection.item);
     };
     const closeDistrictOptions = () => {
         districtOptions?.classList.add('hidden');

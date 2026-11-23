@@ -77,12 +77,6 @@ class LandingPageForm
                     Textarea::make('subheadline')->rows(3)->maxLength(600)->columnSpanFull(),
                     TextInput::make('cta_text')->default('এখনই অর্ডার করুন')->required()->maxLength(80),
                     DateTimePicker::make('countdown_ends_at')->label('Offer Countdown Ends'),
-                    FileUpload::make('hero_image')
-                        ->image()
-                        ->imageEditor()
-                        ->disk('public')
-                        ->directory('landing-pages/heroes')
-                        ->visibility('public'),
                     FileUpload::make('og_image')
                         ->label('Facebook Share Image')
                         ->image()
@@ -90,6 +84,32 @@ class LandingPageForm
                         ->disk('public')
                         ->directory('landing-pages/social')
                         ->visibility('public'),
+                ]),
+
+            Section::make('Product Images')
+                ->columns(2)
+                ->schema([
+                    FileUpload::make('hero_image')
+                        ->label('Featured Image')
+                        ->image()
+                        ->imageEditor()
+                        ->disk('public')
+                        ->directory('landing-pages/heroes')
+                        ->visibility('public')
+                        ->imagePreviewHeight('220')
+                        ->panelLayout('integrated'),
+                    FileUpload::make('gallery_images')
+                        ->label('Product Photo Gallery')
+                        ->multiple()
+                        ->maxFiles(4)
+                        ->reorderable()
+                        ->image()
+                        ->imageEditor()
+                        ->disk('public')
+                        ->directory('landing-pages/gallery')
+                        ->visibility('public')
+                        ->imagePreviewHeight('110')
+                        ->panelLayout('grid'),
                 ]),
 
             Section::make('Product Description')
@@ -123,15 +143,6 @@ class LandingPageForm
             Section::make('Social Proof')
                 ->columns(1)
                 ->schema([
-                    FileUpload::make('gallery_images')
-                        ->label('Product Photo Gallery')
-                        ->multiple()
-                        ->reorderable()
-                        ->image()
-                        ->imageEditor()
-                        ->disk('public')
-                        ->directory('landing-pages/gallery')
-                        ->visibility('public'),
                     Repeater::make('reviews')
                         ->schema([
                             TextInput::make('name')->required()->maxLength(100),

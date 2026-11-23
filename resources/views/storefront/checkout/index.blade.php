@@ -5,7 +5,9 @@
 @section('content')
     @php
         $selectedQuote = $regions->get((int) old('shipping_region_id'));
-        $districtRegions = $regions->unique(fn (array $quote): string => mb_strtolower(trim((string) $quote['district'])))->values();
+        $districtRegions = $regions->groupBy(fn (array $quote): string => mb_strtolower(trim((string) $quote['district'])))
+            ->map(fn ($quotes) => $quotes->sortByDesc(fn (array $quote): int => collect($quote['breakdown'] ?? [])->where('inside_city', true)->count())->first())
+            ->values();
     @endphp
     <section class="border-b border-slate-200 bg-white">
         <div class="storefront-shell py-10">
@@ -187,15 +189,16 @@
             const money = value => `৳${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value)}`;
             const districtLabel = quote => String(quote?.district || quote?.name || '').trim();
             const districtQuotes = () => {
-                const seen = new Set();
-
-                return quoteList.filter(quote => {
+                const selected = new Map();
+                quoteList.forEach(quote => {
                     const key = districtLabel(quote).toLocaleLowerCase(locale);
-                    if (! key || seen.has(key)) return false;
-                    seen.add(key);
-
-                    return true;
+                    if (! key) return;
+                    const insideCount = (quote.breakdown || []).filter(rate => rate.inside_city).length;
+                    const existing = selected.get(key);
+                    if (! existing || insideCount > existing.insideCount) selected.set(key, {quote, insideCount});
                 });
+
+                return Array.from(selected.values(), item => item.quote);
             };
             const closeOptions = () => {
                 districtOptions.classList.add('hidden');

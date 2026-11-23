@@ -2,7 +2,9 @@
     $selectedProduct = collect($checkoutProducts)->firstWhere('id', $initialSelection['product_id']);
     $selectedVariation = collect($selectedProduct['variations'])->firstWhere('id', $initialSelection['product_variation_id']);
     $selectedQuote = $regions->get((int) old('shipping_region_id'));
-    $districtRegions = $regions->unique(fn (array $quote): string => mb_strtolower(trim((string) $quote['district'])))->values();
+    $districtRegions = $regions->groupBy(fn (array $quote): string => mb_strtolower(trim((string) $quote['district'])))
+        ->map(fn ($quotes) => $quotes->sortByDesc(fn (array $quote): int => collect($quote['breakdown'] ?? [])->where('inside_city', true)->count())->first())
+        ->values();
 @endphp
 
 <section id="order-now" class="storefront-shell scroll-mt-5 py-8 pb-28 md:pb-10">
