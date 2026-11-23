@@ -19,7 +19,7 @@ const selectProductGalleryImage = selectedButton => {
     });
 };
 
-if (!variationForm && productGallery) {
+if (!variationData && productGallery) {
     productGallery.addEventListener('click', event => {
         const button = event.target.closest('[data-product-gallery-image]');
         if (!button) return;
