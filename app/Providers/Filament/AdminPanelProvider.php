@@ -23,6 +23,7 @@ use App\Filament\Resources\FundAccounts\Pages\ListFundAccounts;
 use App\Filament\Resources\IncompleteOrders\Pages\ListIncompleteOrders;
 use App\Filament\Resources\LandingPages\Pages\CreateLandingPage;
 use App\Filament\Resources\LandingPages\Pages\ListLandingPages;
+use App\Filament\Resources\LandingPageGroups\Pages\ListLandingPageGroups;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\ListPendingOrders;
 use App\Filament\Resources\Orders\Pages\ListVendorOrders;
@@ -339,6 +340,14 @@ class AdminPanelProvider extends PanelProvider
                 ->sort(1)
                 ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.landing-pages.index'))
                 ->url(fn (): string => ListLandingPages::getUrl()),
+
+            NavigationItem::make('Landing Page Groups')
+                ->key('landing-page-groups')
+                ->group(AdminNavigationGroup::LandingPage)
+                ->icon(Heroicon::OutlinedRectangleGroup)
+                ->sort(2)
+                ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.resources.landing-page-groups.*'))
+                ->url(fn (): string => ListLandingPageGroups::getUrl()),
         ];
     }
 

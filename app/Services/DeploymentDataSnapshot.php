@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\FlashSale;
 use App\Models\InventoryStock;
 use App\Models\LandingPage;
+use App\Models\LandingPageGroup;
 use App\Models\Permission;
 use App\Models\PopupOffer;
 use App\Models\Product;
@@ -229,8 +230,11 @@ class DeploymentDataSnapshot
                 ->get(['users.email as user_email', 'products.slug as product_slug'])
                 ->map(fn ($item): array => (array) $item)
                 ->all(),
+            'landing_page_groups' => LandingPageGroup::query()->orderBy('slug')->get()->map(
+                fn (LandingPageGroup $group): array => Arr::only($group->toArray(), ['name', 'slug']),
+            )->all(),
             'landing_pages' => LandingPage::query()
-                ->with('products:id,slug')
+                ->with(['products:id,slug', 'group:id,slug'])
                 ->orderBy('slug')
                 ->get()
                 ->map(fn (LandingPage $landingPage): array => [
@@ -241,6 +245,7 @@ class DeploymentDataSnapshot
                         'countdown_ends_at', 'meta_title', 'meta_description',
                         'og_image', 'published_at',
                     ]),
+                    'group_slug' => $landingPage->group?->slug,
                     'product_slugs' => $landingPage->products->pluck('slug')->values()->all(),
                 ])->all(),
             'slider_groups' => SliderGroup::query()
@@ -325,7 +330,7 @@ class DeploymentDataSnapshot
         }
 
         return DB::transaction(function () use ($snapshot): array {
-            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'permissions' => 0, 'roles' => 0, 'users' => 0, 'site_settings' => 0, 'shipping_classes' => 0, 'shipping_partners' => 0, 'shipping_regions' => 0, 'shipping_region_rates' => 0, 'products' => 0, 'product_variations' => 0, 'wishlists' => 0, 'landing_pages' => 0, 'slider_groups' => 0, 'banner_sliders' => 0, 'popup_offers' => 0, 'flash_sales' => 0, 'flash_sale_items' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
+            $counts = ['brands' => 0, 'categories' => 0, 'attributes' => 0, 'attribute_values' => 0, 'product_tags' => 0, 'permissions' => 0, 'roles' => 0, 'users' => 0, 'site_settings' => 0, 'shipping_classes' => 0, 'shipping_partners' => 0, 'shipping_regions' => 0, 'shipping_region_rates' => 0, 'products' => 0, 'product_variations' => 0, 'wishlists' => 0, 'landing_page_groups' => 0, 'landing_pages' => 0, 'slider_groups' => 0, 'banner_sliders' => 0, 'popup_offers' => 0, 'flash_sales' => 0, 'flash_sale_items' => 0, 'vendors' => 0, 'vendor_members' => 0, 'vendor_warehouses' => 0, 'vendor_listings' => 0, 'vendor_listing_items' => 0, 'inventory_stocks' => 0];
 
             foreach ($snapshot['brands'] ?? [] as $data) {
                 Brand::query()->updateOrCreate(['slug' => $data['slug']], $data);
@@ -592,8 +597,19 @@ class DeploymentDataSnapshot
                 $counts['wishlists']++;
             }
 
+            foreach ($snapshot['landing_page_groups'] ?? [] as $data) {
+                LandingPageGroup::query()->updateOrCreate(['slug' => $data['slug']], $data);
+                $counts['landing_page_groups']++;
+            }
+
             foreach ($snapshot['landing_pages'] ?? [] as $data) {
                 $productSlugs = Arr::pull($data, 'product_slugs', []);
+                if (array_key_exists('group_slug', $data)) {
+                    $groupSlug = Arr::pull($data, 'group_slug');
+                    $data['group_id'] = filled($groupSlug)
+                        ? LandingPageGroup::query()->where('slug', $groupSlug)->value('id')
+                        : null;
+                }
                 $landingPage = LandingPage::query()->updateOrCreate(
                     ['slug' => $data['slug']],
                     $data,

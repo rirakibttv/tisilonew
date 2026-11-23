@@ -22,6 +22,7 @@ class LandingPagesTable
             ->columns([
                 ImageColumn::make('hero_image')->label('Hero')->disk('public')->square(),
                 TextColumn::make('name')->label('Campaign')->description(fn ($record): string => '/offer/'.$record->slug)->searchable()->sortable(),
+                TextColumn::make('group.name')->label('Group')->badge()->placeholder('Ungrouped')->sortable(),
                 TextColumn::make('header_title')->label('Header Title')->placeholder('Uses headline')->searchable()->toggleable(),
                 TextColumn::make('products_count')->label('Products')->counts('products')->sortable(),
                 TextColumn::make('orders_count')->label('Orders')->counts('orders')->sortable(),
@@ -34,6 +35,7 @@ class LandingPagesTable
             ])
             ->filters([
                 SelectFilter::make('status')->options(['draft' => 'Draft', 'published' => 'Published']),
+                SelectFilter::make('group_id')->label('Group')->relationship('group', 'name')->searchable()->preload(),
             ])
             ->recordActions([
                 Action::make('preview')
