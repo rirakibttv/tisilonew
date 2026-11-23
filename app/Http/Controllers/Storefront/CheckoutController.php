@@ -162,7 +162,10 @@ class CheckoutController extends Controller
 
         $purchaseEvent = $analytics->purchaseEvent($order);
         try {
-            $analytics->record($request, $purchaseEvent);
+            $analytics->record($request, [
+                ...$purchaseEvent,
+                'attribution' => $order->marketing_attribution ?? [],
+            ]);
         } catch (Throwable) {
             // Analytics must never block order confirmation.
         }

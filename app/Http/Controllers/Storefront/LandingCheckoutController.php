@@ -158,7 +158,10 @@ class LandingCheckoutController extends Controller
         $request->session()->put($sessionKey.'.order_id', $order->id);
         $purchaseEvent = $analytics->purchaseEvent($order);
         try {
-            $analytics->record($request, $purchaseEvent);
+            $analytics->record($request, [
+                ...$purchaseEvent,
+                'attribution' => $order->marketing_attribution ?? [],
+            ]);
         } catch (Throwable) {
             // Analytics must not interrupt a confirmed order.
         }

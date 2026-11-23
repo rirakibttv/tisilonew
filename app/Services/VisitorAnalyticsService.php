@@ -193,11 +193,9 @@ class VisitorAnalyticsService
     /** @return array<string, string> */
     protected function attribution(Request $request, mixed $candidate, mixed $referrer): array
     {
-        $values = is_array($candidate) ? $candidate : [];
-        if ($values === []) {
-            $decoded = json_decode(urldecode((string) $request->cookie('tisilo_attr')), true);
-            $values = is_array($decoded) ? $decoded : [];
-        }
+        $decoded = json_decode(urldecode((string) $request->cookie('tisilo_attr')), true);
+        $cookieValues = is_array($decoded) ? $decoded : [];
+        $values = array_merge($cookieValues, is_array($candidate) ? $candidate : []);
 
         $source = $this->cleanAttribution($values['source'] ?? $request->query('utm_source'), 100, true);
         $medium = $this->cleanAttribution($values['medium'] ?? $request->query('utm_medium'), 100, true);
