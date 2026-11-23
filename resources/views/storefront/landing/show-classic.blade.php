@@ -89,23 +89,23 @@
 
     <main>
         <section class="storefront-shell grid items-stretch gap-4 py-6 lg:grid-cols-2">
-            <div class="flex flex-col gap-5 py-1">
-                <div class="campaign-green-border grid min-h-28 place-items-center border-2 border-dashed px-6 py-5 text-center">
-                    <h1 class="text-3xl font-black leading-tight sm:text-4xl">{{ $landingPage->headline }}</h1>
-                </div>
-                <div class="campaign-green-border flex min-h-64 flex-1 items-start justify-center border-x-2 border-y-4 border-dashed px-7 py-7 text-center">
-                    <p class="max-w-xl whitespace-pre-line text-2xl font-semibold leading-relaxed sm:text-3xl">{{ $landingPage->subheadline ?: $primaryProduct->short_description }}</p>
-                </div>
-                <div class="text-center">
-                    <a href="#order-now" class="campaign-bg inline-flex min-h-14 items-center justify-center rounded-md border-2 border-amber-500 px-8 py-3 text-lg font-black text-white shadow-lg transition hover:-translate-y-0.5">{{ __('Click to Order') }} 🛒</a>
-                </div>
-            </div>
             <div class="overflow-hidden bg-slate-100 shadow-sm">
                 @if($heroUrl)
                     <img src="{{ $heroUrl }}" alt="{{ $primaryProduct->name }}" fetchpriority="high" class="aspect-square h-full w-full object-cover">
                 @else
                     <div class="campaign-green-bg grid aspect-square h-full w-full place-items-center text-8xl font-black text-white/30">{{ mb_strtoupper(mb_substr($primaryProduct->name, 0, 1)) }}</div>
                 @endif
+            </div>
+            <div class="flex flex-col justify-center gap-5 py-1">
+                <div class="campaign-green-border grid min-h-28 place-items-center border-2 border-dashed px-6 py-5 text-center">
+                    <h1 class="text-2xl font-black leading-tight sm:text-3xl">{{ $landingPage->headline }}</h1>
+                </div>
+                <div class="campaign-green-border flex min-h-64 flex-1 items-center justify-center border-x-2 border-y-4 border-dashed px-7 py-7 text-center">
+                    <p class="max-w-xl whitespace-pre-line text-base font-semibold leading-relaxed sm:text-lg">{{ $landingPage->subheadline ?: $primaryProduct->short_description }}</p>
+                </div>
+                <div class="text-center">
+                    <a href="#order-now" class="campaign-bg inline-flex min-h-14 items-center justify-center rounded-md border-2 border-amber-500 px-8 py-3 text-lg font-black text-white shadow-lg transition hover:-translate-y-0.5">{{ __('Click to Order') }} 🛒</a>
+                </div>
             </div>
         </section>
 
