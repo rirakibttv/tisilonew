@@ -31,6 +31,7 @@ class LandingPage extends Model
         'trust_title',
         'benefits',
         'gallery_images',
+        'review_images',
         'reviews',
         'faqs',
         'video_url',
@@ -45,6 +46,7 @@ class LandingPage extends Model
         return [
             'benefits' => 'array',
             'gallery_images' => 'array',
+            'review_images' => 'array',
             'reviews' => 'array',
             'faqs' => 'array',
             'countdown_ends_at' => 'datetime',

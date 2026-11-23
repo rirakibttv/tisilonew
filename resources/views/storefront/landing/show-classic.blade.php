@@ -24,9 +24,9 @@
             ->merge(collect($primaryProduct->gallery_images ?? []))
             ->filter()->unique()->take(4)
             ->map(fn ($image) => asset('storage/'.ltrim($image, '/')))->values();
-        $campaignImages = collect([$heroUrl])->merge($landingGallery)->filter()->unique()->values();
         $galleryImages = $landingGallery;
-        $reviewImages = collect(range(0, 4))->map(fn ($index) => $campaignImages->isNotEmpty() ? $campaignImages[$index % $campaignImages->count()] : null)->filter();
+        $reviewImages = collect($landingPage->review_images ?? [])
+            ->filter()->unique()->map(fn ($image) => asset('storage/'.ltrim($image, '/')))->values();
         $deadline = $landingPage->countdown_ends_at?->toIso8601String();
         $headerTitle = $landingPage->header_title ?: $landingPage->headline;
     @endphp
@@ -151,7 +151,7 @@
         <section class="storefront-shell pb-12">
             <h2 class="campaign-green-bg px-5 py-3 text-center text-2xl font-black text-white">{{ __('Customer Reviews') }}</h2>
             @if($reviewImages->isNotEmpty())
-                <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">@foreach($reviewImages as $image)<img src="{{ $image }}" alt="{{ __('Customer review image :number', ['number' => $loop->iteration]) }}" loading="lazy" class="aspect-square w-full object-cover">@endforeach</div>
+                <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">@foreach($reviewImages as $image)<img src="{{ $image }}" alt="{{ __('Customer review screenshot :number', ['number' => $loop->iteration]) }}" loading="lazy" class="max-h-[520px] w-full border border-slate-200 bg-white object-contain">@endforeach</div>
             @endif
             @if(count($landingPage->reviews ?? []))
                 <div class="mt-6 grid gap-4 md:grid-cols-3">@foreach($landingPage->reviews as $review)<figure class="rounded-xl border border-slate-200 p-5"><div class="text-amber-500">{{ str_repeat('★', (int) ($review['rating'] ?? 5)) }}</div><blockquote class="mt-3 text-sm leading-6 text-slate-600">“{{ $review['quote'] ?? '' }}”</blockquote><figcaption class="mt-3 font-black">{{ $review['name'] ?? __('Verified Customer') }}</figcaption></figure>@endforeach</div>

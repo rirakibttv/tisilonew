@@ -241,7 +241,7 @@ class DeploymentDataSnapshot
                     ...Arr::only($landingPage->toArray(), [
                         'name', 'header_title', 'slug', 'status', 'hero_badge', 'headline', 'subheadline', 'cta_text',
                         'hero_image', 'theme_color', 'offer_title', 'offer_body', 'trust_title',
-                        'benefits', 'gallery_images', 'reviews', 'faqs', 'video_url',
+                        'benefits', 'gallery_images', 'review_images', 'reviews', 'faqs', 'video_url',
                         'countdown_ends_at', 'meta_title', 'meta_description',
                         'og_image', 'published_at',
                     ]),

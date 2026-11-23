@@ -143,6 +143,17 @@ class LandingPageForm
             Section::make('Social Proof')
                 ->columns(1)
                 ->schema([
+                    FileUpload::make('review_images')
+                        ->label('Customer Review Screenshots')
+                        ->multiple()
+                        ->reorderable()
+                        ->image()
+                        ->imageEditor()
+                        ->disk('public')
+                        ->directory('landing-pages/reviews')
+                        ->visibility('public')
+                        ->imagePreviewHeight('160')
+                        ->panelLayout('grid'),
                     Repeater::make('reviews')
                         ->schema([
                             TextInput::make('name')->required()->maxLength(100),
