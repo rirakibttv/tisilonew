@@ -105,6 +105,20 @@ class MarketplaceProductPresenter
         $discount = $regularPrice > $price && $regularPrice > 0
             ? (int) round((($regularPrice - $price) / $regularPrice) * 100)
             : 0;
+        $imagePath = $product->featured_image;
+
+        if (! filled($imagePath)) {
+            $imagePath = $product->variations
+                ->where('status', true)
+                ->filter(fn ($variation): bool => filled($variation->image))
+                ->sortBy([
+                    ['is_default', 'desc'],
+                    ['sort_order', 'asc'],
+                    ['id', 'asc'],
+                ])
+                ->first()
+                ?->image;
+        }
 
         return app(FlashSalePricingService::class)->applyToSummary([
             'product' => $product,
@@ -119,8 +133,8 @@ class MarketplaceProductPresenter
             'can_purchase' => $canPurchase,
             'product_variation_id' => $productVariationId,
             'vendor_listing_item_id' => $vendorListingItemId,
-            'image' => filled($product->featured_image)
-                ? asset('storage/'.ltrim($product->featured_image, '/'))
+            'image' => filled($imagePath)
+                ? asset('storage/'.ltrim($imagePath, '/'))
                 : null,
         ]);
     }
