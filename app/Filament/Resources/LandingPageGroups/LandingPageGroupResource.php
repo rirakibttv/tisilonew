@@ -58,7 +58,10 @@ class LandingPageGroupResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            TextColumn::make('name')->searchable()->sortable(),
+            TextColumn::make('name')
+                ->searchable()
+                ->sortable()
+                ->url(fn (LandingPageGroup $record): string => EditLandingPageGroup::getUrl(['record' => $record])),
             TextColumn::make('slug')->badge()->searchable(),
             TextColumn::make('landing_pages_count')->label('Landing Pages')->counts('landingPages')->sortable(),
             TextColumn::make('updated_at')->since()->sortable(),

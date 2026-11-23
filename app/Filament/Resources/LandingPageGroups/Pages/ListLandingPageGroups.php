@@ -9,7 +9,7 @@ use Filament\Resources\Pages\ListRecords;
 class ListLandingPageGroups extends ListRecords
 {
     protected static string $resource = LandingPageGroupResource::class;
-    protected static ?string $title = 'Landing Page Groups';
+    protected static ?string $title = 'All Landing Pages';
 
     protected function getHeaderActions(): array
     {
