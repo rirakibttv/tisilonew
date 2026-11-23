@@ -54,7 +54,6 @@ class ShippingRegionResource extends Resource
                 TextInput::make('district')->required()->maxLength(120),
                 TextInput::make('upazila')->label('Upazila / Police Station')->required()->maxLength(120),
                 TextInput::make('postal_code')->maxLength(20),
-                Toggle::make('is_inside_city')->label('Inside City')->helperText('Select this for city delivery zones; otherwise the outside-city first-kilogram rate applies.'),
                 TextInput::make('sort_order')->numeric()->minValue(0)->default(0),
                 Toggle::make('is_active')->label('Active')->default(true),
             ]),

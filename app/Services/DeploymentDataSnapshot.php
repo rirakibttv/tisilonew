@@ -92,11 +92,11 @@ class DeploymentDataSnapshot
                 'key' => $setting->key,
                 'values' => $this->exportableSettingValues($setting),
             ])->all(),
-            'shipping_classes' => ShippingClass::query()->orderBy('code')->get()->map(
-                fn (ShippingClass $class): array => Arr::only(
-                    $class->toArray(),
-                    ['name', 'code', 'description', 'is_active', 'sort_order'],
-                ),
+            'shipping_classes' => ShippingClass::query()->with('defaultRegion:id,location_key')->orderBy('code')->get()->map(
+                fn (ShippingClass $class): array => [
+                    ...Arr::only($class->toArray(), ['name', 'code', 'description', 'is_active', 'sort_order']),
+                    'default_region_location_key' => $class->defaultRegion?->location_key,
+                ],
             )->all(),
             'shipping_partners' => ShippingPartner::query()->orderBy('code')->get()->map(
                 fn (ShippingPartner $partner): array => Arr::only(
@@ -110,7 +110,7 @@ class DeploymentDataSnapshot
                 ->get()
                 ->map(fn (ShippingRegion $region): array => [
                     ...Arr::only($region->toArray(), [
-                        'division', 'district', 'upazila', 'postal_code', 'is_inside_city', 'location_key', 'is_active', 'sort_order',
+                        'division', 'district', 'upazila', 'postal_code', 'location_key', 'is_active', 'sort_order',
                     ]),
                     'rates' => $region->rates->map(fn (ShippingRegionRate $rate): array => [
                         ...Arr::only($rate->toArray(), [
@@ -423,7 +423,11 @@ class DeploymentDataSnapshot
                 $counts['site_settings']++;
             }
 
+            $defaultRegionLocations = [];
             foreach ($snapshot['shipping_classes'] ?? [] as $data) {
+                if (array_key_exists('default_region_location_key', $data)) {
+                    $defaultRegionLocations[$data['code']] = Arr::pull($data, 'default_region_location_key');
+                }
                 ShippingClass::query()->updateOrCreate(['code' => $data['code']], $data);
                 $counts['shipping_classes']++;
             }
@@ -474,6 +478,14 @@ class DeploymentDataSnapshot
                     );
                     $counts['shipping_region_rates']++;
                 }
+            }
+
+            foreach ($defaultRegionLocations as $classCode => $locationKey) {
+                ShippingClass::query()->where('code', $classCode)->update([
+                    'default_region_id' => filled($locationKey)
+                        ? ShippingRegion::query()->where('location_key', $locationKey)->value('id')
+                        : null,
+                ]);
             }
 
             foreach ($snapshot['products'] ?? [] as $data) {

@@ -13,14 +13,13 @@ class ShippingRegion extends Model
     protected $fillable = [
         'division', 'district', 'upazila', 'postal_code', 'location_key',
         'pathao_city_id', 'pathao_zone_id', 'pathao_area_id',
-        'is_inside_city', 'is_active', 'sort_order',
+        'is_active', 'sort_order',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
-            'is_inside_city' => 'boolean',
             'sort_order' => 'integer',
             'pathao_city_id' => 'integer',
             'pathao_zone_id' => 'integer',

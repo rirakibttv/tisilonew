@@ -13,6 +13,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
@@ -44,6 +45,15 @@ class ShippingClassResource extends Resource
                     ->afterStateUpdated(fn ($state, callable $set) => $set('code', Str::slug((string) $state))),
                 TextInput::make('code')->required()->maxLength(80)->unique(ignoreRecord: true),
                 Textarea::make('description')->rows(3)->columnSpanFull(),
+                Select::make('default_region_id')
+                    ->label('Default City Region')
+                    ->relationship('defaultRegion', 'upazila', fn ($query) => $query->where('is_active', true))
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => $record->full_name)
+                    ->searchable(['division', 'district', 'upazila'])
+                    ->preload()
+                    ->required()
+                    ->helperText('Customer delivery to this region uses this class’s inside-city rate. Other regions use the outside-city rate.')
+                    ->columnSpanFull(),
                 TextInput::make('sort_order')->numeric()->minValue(0)->default(0),
                 Toggle::make('is_active')->label('Active')->default(true),
             ]),
@@ -55,6 +65,7 @@ class ShippingClassResource extends Resource
         return $table->columns([
             TextColumn::make('name')->searchable()->sortable(),
             TextColumn::make('code')->badge()->searchable(),
+            TextColumn::make('defaultRegion.upazila')->label('Default City Region')->placeholder('Not set'),
             TextColumn::make('products_count')->label('Products')->counts('products')->sortable(),
             TextColumn::make('rates_count')->label('Region Rates')->counts('rates')->sortable(),
             IconColumn::make('is_active')->label('Active')->boolean(),

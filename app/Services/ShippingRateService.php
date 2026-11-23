@@ -19,13 +19,13 @@ class ShippingRateService
     {
         $productIds = $cart->pluck('product_id')->filter()->unique()->values();
         $products = Product::query()
-            ->with('shippingClass:id,name,is_active')
+            ->with('shippingClass:id,name,is_active,default_region_id')
             ->whereIn('id', $productIds)
             ->get(['id', 'name', 'shipping_class_id', 'weight', 'weight_unit'])
             ->keyBy('id');
 
         $listingItems = VendorListingItem::query()
-            ->with(['listing.shippingClass:id,name,is_active', 'productVariation:id,weight,weight_unit'])
+            ->with(['listing.shippingClass:id,name,is_active,default_region_id', 'productVariation:id,weight,weight_unit'])
             ->whereIn('id', $cart->pluck('vendor_listing_item_id')->filter()->unique())
             ->get(['id', 'vendor_listing_id', 'product_variation_id'])
             ->keyBy('id');
@@ -83,7 +83,7 @@ class ShippingRateService
                 ->where('is_active', true)
                 ->whereNotNull('shipping_partner_id')
                 ->whereIn('shipping_class_id', $classIds)
-                ->with(['shippingClass:id,name', 'partner:id,name,estimated_min_days,estimated_max_days,inside_city_first_kg_charge,outside_city_first_kg_charge,additional_kg_charge'])])
+                ->with(['shippingClass:id,name,default_region_id', 'partner:id,name,estimated_min_days,estimated_max_days,inside_city_first_kg_charge,outside_city_first_kg_charge,additional_kg_charge'])])
             ->orderBy('sort_order')
             ->orderBy('division')
             ->orderBy('district')
@@ -98,7 +98,8 @@ class ShippingRateService
                 $breakdown = $classTotals->map(function (array $totals, int $classId) use ($rates, $region): array {
                     $rate = $rates->get($classId);
                     $partner = $rate->partner;
-                    $firstKgCharge = (float) ($region->is_inside_city
+                    $insideCity = (int) $rate->shippingClass->default_region_id === (int) $region->getKey();
+                    $firstKgCharge = (float) ($insideCity
                         ? $partner?->inside_city_first_kg_charge
                         : $partner?->outside_city_first_kg_charge);
                     $additionalKgCharge = (float) ($partner?->additional_kg_charge ?? 0);
@@ -113,7 +114,7 @@ class ShippingRateService
                         'quantity' => $totals['quantity'],
                         'total_weight_kg' => round($totals['weight_kg'], 3),
                         'chargeable_weight_kg' => $chargeableKg,
-                        'inside_city' => (bool) $region->is_inside_city,
+                        'inside_city' => $insideCity,
                         'first_kg_charge' => $firstKgCharge,
                         'additional_kg_charge' => $additionalKgCharge,
                         'amount' => round($amount, 2),
@@ -133,7 +134,6 @@ class ShippingRateService
                     'district' => $region->district,
                     'upazila' => $region->upazila,
                     'postal_code' => $region->postal_code,
-                    'is_inside_city' => (bool) $region->is_inside_city,
                     'amount' => round((float) $breakdown->sum('amount'), 2),
                     'estimated_min_days' => (int) $breakdown->max('estimated_min_days'),
                     'estimated_max_days' => (int) $breakdown->max('estimated_max_days'),
