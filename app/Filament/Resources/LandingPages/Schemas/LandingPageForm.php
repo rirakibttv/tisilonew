@@ -45,6 +45,7 @@ class LandingPageForm
                                 ->afterStateUpdated(fn ($state, callable $set) => $set('slug', Str::slug((string) $state))),
                             TextInput::make('slug')->required()->maxLength(255)->unique(table: 'landing_page_groups'),
                         ])
+                        ->required()
                         ->helperText('Group related landing pages for easier campaign management.')] : []),
                     TextInput::make('header_title')
                         ->label('Header Title')
