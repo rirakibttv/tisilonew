@@ -15,6 +15,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -49,11 +50,10 @@ class ShippingRegionResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Division, District & Upazila / Police Station')->columns(2)->schema([
-                TextInput::make('division')->required()->maxLength(120),
+            Section::make('District & Upazila / Police Station')->columns(2)->schema([
+                Hidden::make('division')->default(''),
                 TextInput::make('district')->required()->maxLength(120),
                 TextInput::make('upazila')->label('Upazila / Police Station')->required()->maxLength(120),
-                TextInput::make('postal_code')->maxLength(20),
                 TextInput::make('sort_order')->numeric()->minValue(0)->default(0),
                 Toggle::make('is_active')->label('Active')->default(true),
             ]),
@@ -90,10 +90,8 @@ class ShippingRegionResource extends Resource
                 ->rowIndex()
                 ->alignCenter(),
 
-            TextColumn::make('division')->searchable()->sortable(),
             TextColumn::make('district')->searchable()->sortable(),
             TextColumn::make('upazila')->label('Upazila / Police Station')->searchable()->sortable(),
-            TextColumn::make('postal_code')->label('Post Code'),
             TextColumn::make('rates_count')->label('Class Rates')->counts('rates')->sortable(),
             IconColumn::make('is_active')->label('Active')->boolean(),
         ])->recordActions([
