@@ -12,6 +12,9 @@ class EditLandingPageGroup extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [DeleteAction::make()];
+        return [
+            DeleteAction::make()
+                ->modalDescription('Deleting this group leaves its landing page ads in place as ungrouped pages.'),
+        ];
     }
 }

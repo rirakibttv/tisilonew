@@ -5,6 +5,7 @@ namespace App\Filament\Resources\LandingPageGroups;
 use App\Filament\Resources\LandingPageGroups\Pages\CreateLandingPageGroup;
 use App\Filament\Resources\LandingPageGroups\Pages\EditLandingPageGroup;
 use App\Filament\Resources\LandingPageGroups\Pages\ListLandingPageGroups;
+use App\Filament\Resources\LandingPageGroups\RelationManagers\LandingPagesRelationManager;
 use App\Models\LandingPageGroup;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -49,6 +50,11 @@ class LandingPageGroupResource extends Resource
         ]);
     }
 
+    public static function getRelations(): array
+    {
+        return [LandingPagesRelationManager::class];
+    }
+
     public static function table(Table $table): Table
     {
         return $table->columns([
@@ -57,7 +63,7 @@ class LandingPageGroupResource extends Resource
             TextColumn::make('landing_pages_count')->label('Landing Pages')->counts('landingPages')->sortable(),
             TextColumn::make('updated_at')->since()->sortable(),
         ])->recordActions([
-            EditAction::make(),
+            EditAction::make()->label('Manage Ads'),
             DeleteAction::make(),
         ])->toolbarActions([
             BulkActionGroup::make([DeleteBulkAction::make()]),

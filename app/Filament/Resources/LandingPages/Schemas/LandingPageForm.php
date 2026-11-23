@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 
 class LandingPageForm
 {
-    public static function configure(Schema $schema): Schema
+    public static function configure(Schema $schema, bool $showGroup = true): Schema
     {
         return $schema->components([
             Section::make('Campaign Basics')
@@ -35,7 +35,7 @@ class LandingPageForm
                         ->required()
                         ->maxLength(255)
                         ->unique(ignoreRecord: true),
-                    Select::make('group_id')
+                    ...($showGroup ? [Select::make('group_id')
                         ->label('Landing Page Group')
                         ->relationship('group', 'name')
                         ->searchable()
@@ -45,7 +45,7 @@ class LandingPageForm
                                 ->afterStateUpdated(fn ($state, callable $set) => $set('slug', Str::slug((string) $state))),
                             TextInput::make('slug')->required()->maxLength(255)->unique(table: 'landing_page_groups'),
                         ])
-                        ->helperText('Group related landing pages for easier campaign management.'),
+                        ->helperText('Group related landing pages for easier campaign management.')] : []),
                     TextInput::make('header_title')
                         ->label('Header Title')
                         ->helperText('Landing page-এর সবুজ header bar-এ এই title দেখাবে।')
