@@ -40,6 +40,20 @@ class OrderForm
                 TextInput::make('customer_name')->required()->maxLength(255),
                 TextInput::make('customer_email')->email()->maxLength(255),
                 TextInput::make('customer_phone')->tel()->maxLength(32),
+                TextInput::make('shipping_address.district')
+                    ->label('Shipping District')
+                    ->disabled()
+                    ->dehydrated(false),
+                TextInput::make('shipping_address.upazila')
+                    ->label('Shipping Thana / Upazila')
+                    ->disabled()
+                    ->dehydrated(false),
+                Textarea::make('shipping_address.address_line')
+                    ->label('Full Shipping Address')
+                    ->rows(3)
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->columnSpanFull(),
             ]),
 
             Section::make('Amounts')->columns(3)->schema([
