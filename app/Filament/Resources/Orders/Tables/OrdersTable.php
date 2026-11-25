@@ -35,9 +35,25 @@ class OrdersTable
                     ->separator(', ')
                     ->limitList(2)
                     ->toggleable(),
+                TextColumn::make('marketing_source')
+                    ->label('Traffic Source')
+                    ->state(fn (Order $record): string => $record->marketingSourceLabel())
+                    ->badge()
+                    ->color(fn (Order $record): string => match ($record->marketingSourceLabel()) {
+                        'Facebook' => 'info',
+                        'Google' => 'success',
+                        'Unattributed' => 'gray',
+                        default => 'gray',
+                    })
+                    ->description(fn (Order $record): ?string => $record->marketingCampaignLabel())
+                    ->searchable(query: fn ($query, string $search) => $query->where(function ($query) use ($search): void {
+                        $query->where('marketing_attribution->source', 'like', '%'.$search.'%')
+                            ->orWhere('marketing_attribution->campaign', 'like', '%'.$search.'%');
+                    }))
+                    ->toggleable(),
                 TextColumn::make('landingPage.name')
-                    ->label('Landing Campaign')
-                    ->placeholder('Direct / Storefront')
+                    ->label('Landing Page')
+                    ->placeholder('No landing page')
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('status')

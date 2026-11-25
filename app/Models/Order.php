@@ -154,4 +154,42 @@ class Order extends Model
     {
         return $this->hasMany(CouponUsage::class);
     }
+
+    public function marketingSourceLabel(): string
+    {
+        $attribution = is_array($this->marketing_attribution) ? $this->marketing_attribution : [];
+        $source = strtolower(trim((string) ($attribution['source'] ?? $attribution['click_source'] ?? '')));
+
+        if ($source === '' && filled($attribution['fbc'] ?? null)) {
+            $source = 'facebook';
+        }
+
+        if (str_contains($source, 'facebook') || str_contains($source, 'instagram') || in_array($source, ['fb', 'meta'], true)) {
+            return 'Facebook';
+        }
+        if (str_contains($source, 'google') || in_array($source, ['g', 'adwords'], true)) {
+            return 'Google';
+        }
+        if (in_array($source, ['direct', 'none'], true)) {
+            return 'Direct / Storefront';
+        }
+        if ($source !== '') {
+            return Str::of($source)->replace(['_', '-'], ' ')->title()->toString();
+        }
+
+        return match ($this->channel) {
+            'pos' => 'POS',
+            'manual' => 'Manual',
+            default => 'Unattributed',
+        };
+    }
+
+    public function marketingCampaignLabel(): ?string
+    {
+        $campaign = $this->marketing_attribution['campaign'] ?? null;
+
+        return is_scalar($campaign) && trim((string) $campaign) !== ''
+            ? trim((string) $campaign)
+            : null;
+    }
 }

@@ -11,6 +11,7 @@ use App\Models\SiteSetting;
 use App\Services\BkashPaymentService;
 use App\Services\CheckoutService;
 use App\Services\CouponService;
+use App\Services\MarketingAttributionService;
 use App\Services\PaymentMethodService;
 use App\Services\ShippingRateService;
 use App\Services\VisitorAnalyticsService;
@@ -92,6 +93,7 @@ class CheckoutController extends Controller
         CheckoutService $checkout,
         BkashPaymentService $bkash,
         PaymentMethodService $paymentMethods,
+        MarketingAttributionService $marketingAttribution,
         ShippingRateService $shippingRates,
     ): RedirectResponse {
         $cart = collect($request->session()->get('store_cart', []));
@@ -124,7 +126,7 @@ class CheckoutController extends Controller
         $validated['upazila'] = $validated['thana'];
         $validated['postal_code'] = $quote['postal_code'];
         $validated['landing_page_id'] = $this->activeLandingPage($request)?->getKey();
-        $validated['marketing_attribution'] = $this->marketingAttribution($request);
+        $validated['marketing_attribution'] = $marketingAttribution->capture($request);
         $validated['coupon_code'] = $request->session()->get('store_coupon_code');
         if ($validated['payment_method'] === 'bkash') {
             try {
@@ -183,33 +185,6 @@ class CheckoutController extends Controller
         }
 
         return LandingPage::query()->published()->find($landingPageIds->first());
-    }
-
-    /** @return array<string, string>|null */
-    private function marketingAttribution(Request $request): ?array
-    {
-        $decoded = json_decode(urldecode((string) $request->cookie('tisilo_attr')), true);
-        $decoded = is_array($decoded) ? $decoded : [];
-
-        $safe = [];
-        foreach (['source', 'medium', 'campaign', 'content', 'term', 'click_source'] as $key) {
-            if (isset($decoded[$key]) && is_scalar($decoded[$key])) {
-                $safe[$key] = str((string) $decoded[$key])->stripTags()->limit(191, '')->toString();
-            }
-        }
-        foreach (['fbp' => '_fbp', 'fbc' => '_fbc'] as $key => $cookie) {
-            if (filled($request->cookie($cookie))) {
-                $safe[$key] = str((string) $request->cookie($cookie))->stripTags()->limit(255, '')->toString();
-            }
-        }
-        if (Str::isUuid((string) $request->cookie('tisilo_vid'))) {
-            $safe['visitor_id'] = (string) $request->cookie('tisilo_vid');
-        }
-        if (filled($request->cookie('tisilo_ga_cid'))) {
-            $safe['ga_client_id'] = str((string) $request->cookie('tisilo_ga_cid'))->stripTags()->limit(255, '')->toString();
-        }
-
-        return $safe ?: null;
     }
 
     /** @param Collection<string, array<string, mixed>> $cart */

@@ -75,6 +75,21 @@
             current.click_source = 'google';
         }
 
+        if (!Object.keys(current).length && document.referrer) {
+            var referrerHost = '';
+            try { referrerHost = new URL(document.referrer).hostname.toLowerCase(); } catch (error) {}
+
+            if (referrerHost.indexOf('facebook.') !== -1 || referrerHost.indexOf('instagram.') !== -1 || referrerHost === 'fb.com' || referrerHost.endsWith('.fb.com')) {
+                current.source = 'facebook';
+                current.medium = 'referral';
+                current.click_source = 'facebook';
+            } else if (referrerHost.indexOf('google.') !== -1 || referrerHost.indexOf('googleadservices.') !== -1) {
+                current.source = 'google';
+                current.medium = 'organic';
+                current.click_source = 'google';
+            }
+        }
+
         if (Object.keys(current).length) {
             try { window.localStorage.setItem(attributionKey, JSON.stringify(current)); } catch (error) {}
             document.cookie = 'tisilo_attr=' + encodeURIComponent(JSON.stringify(current)) + '; Max-Age=7776000; Path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');

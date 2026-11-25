@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Services\BkashPaymentService;
 use App\Services\CheckoutService;
 use App\Services\LandingCheckoutService;
+use App\Services\MarketingAttributionService;
 use App\Services\PaymentMethodService;
 use App\Services\ShippingRateService;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -44,6 +44,7 @@ class LandingCheckoutController extends Controller
         CheckoutService $checkout,
         BkashPaymentService $bkash,
         PaymentMethodService $paymentMethods,
+        MarketingAttributionService $marketingAttribution,
     ): RedirectResponse {
         $this->ensurePublished($landingPage);
         $sessionKey = 'landing_checkout.'.$landingPage->id;
@@ -112,25 +113,7 @@ class LandingCheckoutController extends Controller
             $validated['postal_code'] = $quote['postal_code'];
             $validated['landing_page_id'] = $landingPage->id;
             $validated['checkout_reference'] = $reference;
-            $decoded = json_decode(urldecode((string) $request->cookie('tisilo_attr')), true);
-            $attribution = [];
-            foreach (['source', 'medium', 'campaign', 'content', 'term', 'click_source'] as $key) {
-                if (is_array($decoded) && isset($decoded[$key]) && is_scalar($decoded[$key])) {
-                    $attribution[$key] = str((string) $decoded[$key])->stripTags()->limit(191, '')->toString();
-                }
-            }
-            foreach (['fbp' => '_fbp', 'fbc' => '_fbc'] as $key => $cookie) {
-                if (filled($request->cookie($cookie))) {
-                    $attribution[$key] = str((string) $request->cookie($cookie))->stripTags()->limit(255, '')->toString();
-                }
-            }
-            if (Str::isUuid((string) $request->cookie('tisilo_vid'))) {
-                $attribution['visitor_id'] = (string) $request->cookie('tisilo_vid');
-            }
-            if (filled($request->cookie('tisilo_ga_cid'))) {
-                $attribution['ga_client_id'] = str((string) $request->cookie('tisilo_ga_cid'))->stripTags()->limit(255, '')->toString();
-            }
-            $validated['marketing_attribution'] = $attribution ?: null;
+            $validated['marketing_attribution'] = $marketingAttribution->capture($request);
             if ($validated['payment_method'] === 'bkash') {
                 $payment = DB::transaction(function () use ($checkout, $bkash, $cart, $validated, $quote): array {
                     $order = $checkout->place($cart, $validated, $quote);
