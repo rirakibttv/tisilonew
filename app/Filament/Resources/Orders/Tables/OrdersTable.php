@@ -76,8 +76,8 @@ class OrdersTable
                     ->label('Shipping')
                     ->placeholder('Not assigned')
                     ->toggleable(),
-                TextColumn::make('tracking_number')
-                    ->label('Shipping ID')
+                TextColumn::make('parcel_id')
+                    ->label('Parcel ID')
                     ->placeholder('Not booked')
                     ->searchable()
                     ->copyable()
@@ -156,6 +156,7 @@ class OrdersTable
                                 'confirmed_at' => now(),
                                 'confirmed_by' => auth()->id(),
                                 'shipping_partner_id' => $partner->getKey(),
+                                'parcel_id' => $shipment['parcel_id'],
                                 'tracking_number' => $shipment['tracking_number'],
                                 'shipping_status' => $shipment['shipping_status'],
                                 'shipping_status_synced_at' => now(),
@@ -163,7 +164,7 @@ class OrdersTable
 
                             Notification::make()
                                 ->title('Order confirmed and shipment created')
-                                ->body("Shipping ID: {$shipment['tracking_number']}")
+                                ->body('Parcel ID: '.($shipment['parcel_id'] ?? 'Not provided'))
                                 ->success()
                                 ->send();
                         } catch (Throwable $exception) {

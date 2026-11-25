@@ -42,6 +42,7 @@ class Order extends Model
         'shipping_breakdown',
         'billing_address',
         'marketing_attribution',
+        'parcel_id',
         'tracking_number',
         'shipping_status',
         'shipping_status_synced_at',

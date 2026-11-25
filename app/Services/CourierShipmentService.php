@@ -35,7 +35,7 @@ class CourierShipmentService
             ->all();
     }
 
-    /** @return array{tracking_number: string, shipping_status: string} */
+    /** @return array{parcel_id: string|null, tracking_number: string, shipping_status: string} */
     public function book(Order $order, ShippingPartner $partner): array
     {
         $provider = $this->providerFor($partner);
@@ -62,7 +62,7 @@ class CourierShipmentService
         };
     }
 
-    /** @return array{tracking_number: string, shipping_status: string} */
+    /** @return array{parcel_id: string|null, tracking_number: string, shipping_status: string} */
     private function bookSteadfast(Order $order): array
     {
         $configuration = $this->configuration('steadfast');
@@ -82,13 +82,15 @@ class CourierShipmentService
         $decoded = $response->json();
         $payload = is_array($decoded) ? $decoded : null;
         $consignment = data_get($payload, 'consignment', data_get($payload, 'data', []));
-        $trackingNumber = data_get($consignment, 'tracking_code') ?: data_get($consignment, 'consignment_id');
+        $parcelId = data_get($consignment, 'consignment_id') ?: data_get($consignment, 'parcel_id');
+        $trackingNumber = data_get($consignment, 'tracking_code') ?: $parcelId;
 
         if (! $response->successful() || ! is_array($payload) || blank($trackingNumber)) {
             throw new RuntimeException($this->failureMessage($payload, 'Steadfast shipment তৈরি করা যায়নি।'));
         }
 
         return [
+            'parcel_id' => filled($parcelId) ? (string) $parcelId : null,
             'tracking_number' => (string) $trackingNumber,
             'shipping_status' => $this->normalizeStatus((string) (data_get($consignment, 'status') ?: 'in_review')),
         ];
@@ -110,7 +112,7 @@ class CourierShipmentService
         return $this->normalizeStatus((string) $status);
     }
 
-    /** @return array{tracking_number: string, shipping_status: string} */
+    /** @return array{parcel_id: string|null, tracking_number: string, shipping_status: string} */
     private function bookPathao(Order $order): array
     {
         $configuration = $this->configuration('pathao');
@@ -154,6 +156,7 @@ class CourierShipmentService
         }
 
         return [
+            'parcel_id' => (string) $trackingNumber,
             'tracking_number' => (string) $trackingNumber,
             'shipping_status' => $this->normalizeStatus((string) (data_get($payload, 'data.order_status') ?: 'pending')),
         ];
